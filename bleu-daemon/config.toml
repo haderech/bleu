@@ -1,0 +1,21 @@
+[ethereum]
+
+[email]
+smtp-username="smtp_username"
+smtp-password="smtp_password"
+smtp-relay="smtp.gmail.com"
+from="NoBody <nobody@domain.dev>"
+reply-to="NoBody <nobody@domain.dev>"
+
+[telegram]
+bot-token="TELEGRAM_BOT_TOKEN"
+
+[postgres]
+host="localhost"
+port="5432"
+dbname="postgres"
+user="root"
+password="postgresql"
+
+[app]
+plugin=[]
