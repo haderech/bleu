@@ -72,6 +72,9 @@
       "total_difficulty": {
         "type": "string",
         "description": "totalDifficulty"
+      },
+      "is_forked": {
+        "type": "boolean"
       }
     },
     "indexes": [
@@ -142,6 +145,9 @@
       "value": {
         "type": "string",
         "description": "value"
+      },
+      "is_forked": {
+        "type": "boolean"
       }
     },
     "indexes": [

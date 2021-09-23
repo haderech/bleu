@@ -11,11 +11,12 @@ reply-to="NoBody <nobody@domain.dev>"
 bot-token="TELEGRAM_BOT_TOKEN"
 
 [postgres]
-host="localhost"
-port="5432"
-dbname="postgres"
-user="root"
-password="postgresql"
+url="postgres://root:postgresql@localhost:5432/postgres"
+
+[slack]
+info="https://hooks.slack.com/services/"
+warn="https://hooks.slack.com/services/"
+error="https://hooks.slack.com/services/"
 
 [app]
 plugin=[]
