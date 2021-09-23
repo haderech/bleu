@@ -7,7 +7,7 @@ pub trait Enumeration {
 #[macro_export]
 macro_rules! enumeration {
     ($enum:ident; $({$types:ident: $values:expr}),*) => {
-        #[derive(Debug, PartialEq, Eq, Clone)]
+        #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
         pub enum $enum {
             $($types,)*
         }

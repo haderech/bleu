@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate diesel;
+
 use appbase::prelude::*;
 
 use crate::plugin::ethereum::EthereumPlugin;
@@ -8,6 +11,7 @@ mod validation;
 mod libs;
 mod error;
 mod repository;
+mod schema;
 
 fn main() {
     env_logger::init();

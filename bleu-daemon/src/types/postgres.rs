@@ -17,7 +17,7 @@ pub struct PostgresSchema {
 #[derive(Clone, Debug)]
 pub struct Attribute {
     pub name: String,
-    pub(crate) description: String,
+    pub description: String,
     _type: String,
     max_length: Option<u32>,
     nullable: bool,
@@ -83,7 +83,6 @@ impl PostgresSchema {
             create_index,
         })
     }
-
 
     fn create_table(schema_name: String, attributes: &Vec<Attribute>, uniques: &Vec<Value>) -> String {
         let mut query_line: Vec<String> = Vec::new();

@@ -47,6 +47,15 @@ pub fn find_value(values: &Map<String, Value>, target_name: &str) -> Value {
     }
 }
 
+pub fn find_value_string(values: &Map<String, Value>, target_name: &str) -> String {
+    let value = find_value(values, target_name);
+    match value {
+        Value::Null => String::from(""),
+        Value::String(v) => String::from(v.as_str()),
+        _ => value.to_string(),
+    }
+}
+
 pub fn unwrap<'a>(params: &'a Map<String, Value>, name: &'a str) -> Result<&'a Value, ExpectedError> {
     let opt_val = params.get(name);
     match opt_val {
@@ -231,13 +240,6 @@ fn filter_calc(bool_stack: &mut Vec<bool>, calc_stack: &mut Vec<String>) -> Resu
         Ok(top & second)
     } else {
         Ok(top | second)
-    }
-}
-
-pub fn convert_to_string(value: Value) -> String {
-    match value.as_str() {
-        None => String::from(""),
-        Some(value) => String::from(value)
     }
 }
 
