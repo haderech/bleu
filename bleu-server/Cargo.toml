@@ -1,0 +1,14 @@
+[package]
+name = "bleu-server"
+version = "0.1.0"
+authors = ["jungyongum <ian.jungyong.um@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "3.3.2"
+diesel = { version = "1.4.8", features = ["r2d2", "postgres"] }
+log = "0.4.14"
+r2d2 = "0.8.9"
+serde = "1.0.130"
