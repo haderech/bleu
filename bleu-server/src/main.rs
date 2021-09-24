@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate diesel;
 
-use actix_web::{App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use diesel::{PgConnection, r2d2};
 use diesel::r2d2::ConnectionManager;
 
@@ -23,7 +23,9 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(pool.clone())
-            .service(get_eth_block_by_id)
+            .service(web::scope("/api/v1")
+                .route("/ethereum/block/{eth_blocks_id}", web::get().to(get_eth_block_by_id))
+            )
     })
         .bind("127.0.0.1:8080")?
         .run()
