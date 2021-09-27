@@ -35,8 +35,10 @@ macro_rules! enumeration {
 
 #[cfg(test)]
 mod enumeration_test {
-    use crate::types::enumeration::Enumeration;
+    use serde::{Deserialize, Serialize};
+
     use crate::enumeration;
+    use crate::types::enumeration::Enumeration;
 
     enumeration!(TestType; {A: "a"}, {B: "b"});
 

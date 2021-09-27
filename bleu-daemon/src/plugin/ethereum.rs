@@ -13,6 +13,7 @@ use crate::libs::opts::{opt_ref_to_result, opt_to_result};
 use crate::libs::request;
 use crate::libs::rocks::{get_by_prefix_static, get_static};
 use crate::libs::serde::{get_object, get_str, get_string};
+use crate::plugin::elasticsearch::{ElasticsearchMsg, ElasticsearchPlugin};
 use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::plugin::postgres::{PostgresMethod, PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::{RocksMethod, RocksMsg, RocksPlugin};
@@ -21,7 +22,7 @@ use crate::types::enumeration::Enumeration;
 use crate::types::subscribe::{SubscribeEvent, SubscribeStatus, SubscribeTask};
 use crate::validation::{get_task, resubscribe, stop_subscribe, subscribe, unsubscribe};
 
-#[appbase_plugin(JsonRpcPlugin, RocksPlugin, PostgresPlugin)]
+#[appbase_plugin(JsonRpcPlugin, RocksPlugin, PostgresPlugin, ElasticsearchPlugin)]
 pub struct EthereumPlugin {
     sub_events: Option<SubscribeEvents>,
     channels: Option<MultiChannel>,
@@ -56,6 +57,7 @@ impl Plugin for EthereumPlugin {
 
         let mut rocks_channel = self.channels.as_ref().unwrap().get("rocks");
         let postgres_channel = self.channels.as_ref().unwrap().get("postgres");
+        let elasticsearch_channel = self.channels.as_ref().unwrap().get("elasticsearch");
         let app = APP.quit_handle().unwrap();
 
         APP.spawn_blocking(move || {
@@ -76,10 +78,13 @@ impl Plugin for EthereumPlugin {
                     if sub_event.is_workable() {
                         let block_result = Self::poll_block(sub_event);
                         match block_result {
-                            Ok(block) => {
-                                log::info!("event_id={}, block={}", sub_event.event_id(), block.to_string());
+                            Ok(block_value) => {
+                                log::info!("event_id={}, block={}", sub_event.event_id(), block_value.to_string());
 
-                                let _ = postgres_channel.send(PostgresMsg::new(PostgresMethod::CreateEthBlock, block));
+                                let _ = postgres_channel.send(PostgresMsg::new(PostgresMethod::CreateEthBlock, block_value.clone()));
+                                let parsed_block = block_value.as_object().unwrap();
+                                let index_id = get_str(parsed_block, "hash").unwrap();
+                                let _ = elasticsearch_channel.send(ElasticsearchMsg::new(String::from("eth_blocks"), String::from(index_id), block_value));
 
                                 Self::sync_event(&rocks_channel, sub_event);
                                 sub_event.curr_height += 1;
@@ -98,7 +103,7 @@ impl Plugin for EthereumPlugin {
 impl EthereumPlugin {
     fn pre_init(&mut self) {
         self.sub_events = Some(Arc::new(FutureMutex::new(HashMap::new())));
-        let channels = MultiChannel::new(vec!("ethereum", "rocks", "postgres"));
+        let channels = MultiChannel::new(vec!("ethereum", "rocks", "postgres", "elasticsearch"));
         self.channels = Some(channels.to_owned());
         self.monitor = Some(APP.channels.subscribe("ethereum"));
     }

@@ -10,7 +10,7 @@ use crate::plugin::postgres::Client;
 use crate::schema::ethereum::eth_blocks::dsl::*;
 use crate::schema::ethereum::eth_txs::dsl::eth_txs;
 use crate::types::postgres::PostgresSchema;
-use crate::schema::ethereum::{NewEthBlock, EthBlock, NewEthTx, EthTx};
+use crate::schema::ethereum::{NewEthBlock, NewEthTx};
 
 pub fn create_eth_table(conn: Client, schema_map: &HashMap<String, PostgresSchema>) -> Result<(), ExpectedError> {
     for (_, schema) in schema_map.iter() {
@@ -24,7 +24,7 @@ pub fn create_eth_table(conn: Client, schema_map: &HashMap<String, PostgresSchem
 
 pub fn create_eth_block(conn: Client, block: &Map<String, Value>) -> Result<(), ExpectedError> {
     let new_eth_block = NewEthBlock::new(block);
-    let _ = diesel::insert_into(eth_blocks).values(&new_eth_block).get_result::<EthBlock>(&conn)?;
+    let _ = diesel::insert_into(eth_blocks).values(&new_eth_block).execute(&conn)?;
     Ok(())
 }
 
@@ -32,7 +32,7 @@ pub fn create_eth_txs(conn: Client, txs: &Vec<Value>) -> Result<(), ExpectedErro
     for raw_tx in txs.iter() {
         let tx = opt_to_result(raw_tx.as_object())?;
         let new_eth_tx = NewEthTx::new(tx);
-        let _ = diesel::insert_into(eth_txs).values(&new_eth_tx).get_result::<EthTx>(&conn)?;
+        let _ = diesel::insert_into(eth_txs).values(&new_eth_tx).execute(&conn)?;
     }
     Ok(())
 }

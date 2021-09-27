@@ -49,7 +49,7 @@ impl Plugin for PostgresPlugin {
         let pool = Self::create_pool().expect("failed to create pool!");
         if let Err(err) = create_eth_table(pool.get().unwrap(), &schema_map) {
             log::warn!("{}", err.to_string());
-        }
+        };
         let channels = MultiChannel::new(vec!("slack"));
 
         self.channels = Some(channels.to_owned());

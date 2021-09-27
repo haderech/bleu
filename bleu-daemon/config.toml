@@ -18,5 +18,8 @@ info="https://hooks.slack.com/services/"
 warn="https://hooks.slack.com/services/"
 error="https://hooks.slack.com/services/"
 
+[elasticsearch]
+url="http://localhost:9200"
+
 [app]
 plugin=[]
