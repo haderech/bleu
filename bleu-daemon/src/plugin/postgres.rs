@@ -2,19 +2,17 @@ use std::collections::HashMap;
 use std::fs;
 
 use appbase::prelude::*;
-use diesel::{PgConnection, r2d2};
-use diesel::r2d2::{ConnectionManager, PooledConnection};
+use r2d2_postgres::{PostgresConnectionManager, r2d2};
+use r2d2_postgres::postgres::NoTls;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::{enumeration, message};
+use crate::message;
 use crate::error::error::ExpectedError;
-use crate::libs::opts;
-use crate::libs::opts::opt_to_result;
-use crate::libs::serde::{find_value, get_object, get_str};
+use crate::libs::postgres::{create_table, insert_value};
+use crate::libs::serde::{get_object, get_str};
 use crate::plugin::slack::{SlackMsg, SlackMsgLevel};
 use crate::plugin::slack::SlackPlugin;
-use crate::repository::ethereum::{create_eth_block, create_eth_table, create_eth_txs};
 use crate::types::channel::MultiChannel;
 use crate::types::enumeration::Enumeration;
 use crate::types::postgres::PostgresSchema;
@@ -27,10 +25,9 @@ pub struct PostgresPlugin {
     schema_map: Option<HashMap<String, PostgresSchema>>,
 }
 
-pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
-pub type Client = PooledConnection<ConnectionManager<PgConnection>>;
+pub type Pool = r2d2::Pool<PostgresConnectionManager<NoTls>>;
 
-message!((PostgresMsg; {value: Value}); (PostgresMethod; {CreateEthBlock: "create_eth_block"}));
+message!(PostgresMsg; {schema: String}, {value: Value});
 
 impl Plugin for PostgresPlugin {
     fn new() -> Self {
@@ -47,7 +44,7 @@ impl Plugin for PostgresPlugin {
     fn init(&mut self) {
         let schema_map = Self::load_schema().expect("failed to load schema!");
         let pool = Self::create_pool().expect("failed to create pool!");
-        if let Err(err) = create_eth_table(pool.get().unwrap(), &schema_map) {
+        if let Err(err) = create_table(pool.clone(), &schema_map) {
             log::warn!("{}", err.to_string());
         };
         let channels = MultiChannel::new(vec!("slack"));
@@ -76,24 +73,12 @@ impl PostgresPlugin {
         APP.spawn_blocking(move || {
             if let Ok(msg) = monitor.try_recv() {
                 let parsed_msg = msg.as_object().unwrap();
-                let method = PostgresMethod::find(get_str(parsed_msg, "method").unwrap()).unwrap();
-                let value = get_object(parsed_msg, "value").unwrap();
-
-                match method {
-                    PostgresMethod::CreateEthBlock => {
-                        let conn = pool.get().unwrap();
-                        if let Err(err) = create_eth_block(conn, value) {
-                            Self::error_handler(err, &channels);
-                        };
-
-                        let raw_txs = find_value(value, "transactions");
-                        let txs = opt_to_result(raw_txs.as_array()).unwrap();
-                        let conn = pool.get().unwrap();
-                        if let Err(err) = create_eth_txs(conn, txs) {
-                            Self::error_handler(err, &channels);
-                        };
-                    }
-                };
+                let schema_name = get_str(parsed_msg, "schema").unwrap();
+                let selected_schema = schema_map.get(schema_name).unwrap();
+                let values = get_object(parsed_msg, "value").unwrap();
+                if let Err(error) = insert_value(pool.clone(), selected_schema, values) {
+                    Self::error_handler(error, &channels);
+                }
             }
             if !app.is_quitting() {
                 Self::recv(pool, schema_map, channels, monitor, app);
@@ -114,24 +99,13 @@ impl PostgresPlugin {
     }
 
     fn create_pool() -> Result<Pool, ExpectedError> {
-        let url = opts::string("postgres::url")?;
-
-        let manager = ConnectionManager::<PgConnection>::new(url);
+        let manager = PostgresConnectionManager::new("dbname=postgres host=localhost user=root password=postgresql".parse().unwrap(), NoTls);
         let pool: Pool = r2d2::Pool::builder().build(manager).expect("failed to create pool.");
         Ok(pool)
     }
 
     fn error_handler(error: ExpectedError, channels: &MultiChannel) {
-        let slack_err_msg = match error {
-            ExpectedError::DieselError(err) => {
-                log::error!("{}", err.to_string());
-                SlackMsg::new(SlackMsgLevel::Error.value(), err.clone())
-            }
-            _ => {
-                log::warn!("{}", error.to_string());
-                SlackMsg::new(SlackMsgLevel::Warn.value(), error.to_string().clone())
-            }
-        };
+        let slack_err_msg = SlackMsg::new(SlackMsgLevel::Warn.value(), error.to_string());
         let slack_channel = channels.get("slack");
         let _ = slack_channel.send(slack_err_msg);
     }

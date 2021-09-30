@@ -12,6 +12,7 @@ pub struct PostgresSchema {
     pub attributes: Vec<Attribute>,
     pub create_table: String,
     pub create_index: Vec<String>,
+    pub insert_query: String,
 }
 
 #[derive(Clone, Debug)]
@@ -75,12 +76,14 @@ impl PostgresSchema {
         let indexes = get_array(map, "indexes")?;
         let create_table = Self::create_table(schema_name.clone(), &attributes, uniques);
         let create_index = Self::create_index(schema_name.clone(), indexes);
+        let insert_query = Self::insert_query(schema_name.clone(), &attributes);
 
         Ok(PostgresSchema {
             schema_name: schema_name.clone(),
             attributes,
             create_table,
             create_index,
+            insert_query,
         })
     }
 
@@ -116,6 +119,19 @@ impl PostgresSchema {
         index_query
     }
 
+    fn insert_query(schema_name: String, attributes: &Vec<Attribute>) -> String {
+        let mut column_vec = Vec::new();
+        let mut value_vec = Vec::new();
+        for attribute in attributes.iter() {
+            column_vec.push(attribute.name.clone());
+            value_vec.push(format!("'{}'", attribute.description.clone()));
+        }
+        let columns = column_vec.join(", ");
+        let values = value_vec.join(", ");
+
+        format!("INSERT INTO {} ({}) VALUES ({})", schema_name, columns, values)
+    }
+
     fn null_or_not(nullable: bool) -> String {
         if nullable {
             String::from("NULL")
@@ -146,5 +162,21 @@ mod postgres_test {
             result_map.insert(schema_name.clone(), schema);
         }
         assert_eq!(result_map.len(), 2);
+    }
+
+    #[test]
+    fn insert_query_test() {
+        let json_str = fs::read_to_string("schema/ethereum.json").unwrap();
+        let json_schema: Value = serde_json::from_str(json_str.as_str()).unwrap();
+        let schema_map = json_schema.as_object().unwrap();
+
+        let mut result_map = HashMap::new();
+        for (schema_name, values) in schema_map {
+            let schema = PostgresSchema::from(schema_name.clone(), values).unwrap();
+            result_map.insert(schema_name.clone(), schema);
+        }
+        let selected_schema = result_map.get("eth_blocks").unwrap().to_owned();
+        let created_insert_query = selected_schema.insert_query;
+        assert_eq!(created_insert_query, "INSERT INTO eth_blocks (base_fee_per_gas, block_number, block_size, block_timestamp, difficulty, extra_data, gas_limit, gas_used, hash, is_forked, logs_bloom, miner, mix_hash, nonce, parent_hash, receipts_root, sha3_uncles, state_root, total_difficulty) VALUES (:baseFeePerGas, :number, :size, :timestamp, :difficulty, :extraData, :gasLimit, :gasUsed, :hash, :is_forked, :logsBloom, :miner, :mixHash, :nonce, :parentHash, :receiptsRoot, :sha3Uncles, :stateRoot, :totalDifficulty)");
     }
 }

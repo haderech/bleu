@@ -22,6 +22,6 @@ rand = "0.8.4"
 lettre = "0.10.0-rc.3"
 clap = "3.0.0-beta.2"
 teloxide = { version = "0.4", features = ["auto-send", "macros"] }
-diesel = { version = "1.4.7", features = ["postgres", "r2d2"] }
 chrono = "0.4.19"
 elasticsearch = "7.14.0-alpha.1"
+r2d2_postgres = "0.18.1"
