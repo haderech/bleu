@@ -53,7 +53,7 @@ fn create_insert_query(insert_query: &String, value_names: Vec<String>, values: 
     let mut temp_query = insert_query.clone();
     for value_name in value_names.iter() {
         let to_value = get_query_value(&values, value_name);
-        let from = format!("'{}'", value_name);
+        let from = format!("#[{}]", value_name);
         temp_query = temp_query.replace(&from, &to_value);
     }
     Ok(temp_query)
@@ -81,7 +81,7 @@ mod postgres {
 
     #[test]
     fn create_insert_query_test() {
-        let insert_query = String::from("INSERT INTO test (a, b, c) VALUES (:a, :b, :c)");
+        let insert_query = String::from("INSERT INTO test (a, b, c) VALUES (#[a], #[b], #[c])");
         let value_names = vec![String::from("a"), String::from("b"), String::from("c")];
         let mut values = Map::new();
         values.insert(String::from("a"), Value::String(String::from("x")));

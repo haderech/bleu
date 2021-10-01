@@ -124,7 +124,7 @@ impl PostgresSchema {
         let mut value_vec = Vec::new();
         for attribute in attributes.iter() {
             column_vec.push(attribute.name.clone());
-            value_vec.push(format!("'{}'", attribute.description.clone()));
+            value_vec.push(format!("#[{}]", attribute.description.clone()));
         }
         let columns = column_vec.join(", ");
         let values = value_vec.join(", ");
@@ -177,6 +177,6 @@ mod postgres_test {
         }
         let selected_schema = result_map.get("eth_blocks").unwrap().to_owned();
         let created_insert_query = selected_schema.insert_query;
-        assert_eq!(created_insert_query, "INSERT INTO eth_blocks (base_fee_per_gas, block_number, block_size, block_timestamp, difficulty, extra_data, gas_limit, gas_used, hash, is_forked, logs_bloom, miner, mix_hash, nonce, parent_hash, receipts_root, sha3_uncles, state_root, total_difficulty) VALUES (:baseFeePerGas, :number, :size, :timestamp, :difficulty, :extraData, :gasLimit, :gasUsed, :hash, :is_forked, :logsBloom, :miner, :mixHash, :nonce, :parentHash, :receiptsRoot, :sha3Uncles, :stateRoot, :totalDifficulty)");
+        assert_eq!(created_insert_query, "INSERT INTO eth_blocks (base_fee_per_gas, block_number, block_size, block_timestamp, difficulty, extra_data, gas_limit, gas_used, hash, is_forked, logs_bloom, miner, mix_hash, nonce, parent_hash, receipts_root, sha3_uncles, state_root, total_difficulty) VALUES (#[baseFeePerGas], #[number], #[size], #[timestamp], #[difficulty], #[extraData], #[gasLimit], #[gasUsed], #[hash], #[is_forked], #[logsBloom], #[miner], #[mixHash], #[nonce], #[parentHash], #[receiptsRoot], #[sha3Uncles], #[stateRoot], #[totalDifficulty])");
     }
 }
