@@ -7,7 +7,7 @@ use r2d2_postgres::postgres::NoTls;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::message;
+use crate::{libs, message};
 use crate::error::error::ExpectedError;
 use crate::libs::postgres::{create_table, insert_value};
 use crate::libs::serde::{get_object, get_str};
@@ -31,7 +31,11 @@ message!(PostgresMsg; {schema: String}, {value: Value});
 
 impl Plugin for PostgresPlugin {
     fn new() -> Self {
-        APP.options.arg(clap::Arg::new("postgres::url").long("postgres-url").takes_value(true));
+        APP.options.arg(clap::Arg::new("postgres::host").long("postgres-host").takes_value(true));
+        APP.options.arg(clap::Arg::new("postgres::port").long("postgres-port").takes_value(true));
+        APP.options.arg(clap::Arg::new("postgres::dbname").long("postgres-dbname").takes_value(true));
+        APP.options.arg(clap::Arg::new("postgres::user").long("postgres-user").takes_value(true));
+        APP.options.arg(clap::Arg::new("postgres::password").long("postgres-password").takes_value(true));
 
         PostgresPlugin {
             monitor: None,
@@ -99,7 +103,15 @@ impl PostgresPlugin {
     }
 
     fn create_pool() -> Result<Pool, ExpectedError> {
-        let manager = PostgresConnectionManager::new("dbname=postgres host=localhost user=root password=postgresql".parse().unwrap(), NoTls);
+        let host = libs::opts::string("postgres::host")?;
+        let port = libs::opts::string("postgres::port")?;
+        let dbname = libs::opts::string("postgres::dbname")?;
+        let user = libs::opts::string("postgres::user")?;
+        let password = libs::opts::string("postgres::password")?;
+
+        let config = format!("host={host} port={port} dbname={dbname} user={user} password={password}", host = host, port = port, dbname = dbname, user = user, password = password);
+
+        let manager = PostgresConnectionManager::new(config.parse().unwrap(), NoTls);
         let pool: Pool = r2d2::Pool::builder().build(manager).expect("failed to create pool.");
         Ok(pool)
     }
