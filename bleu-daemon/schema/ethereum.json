@@ -91,59 +91,59 @@
   "eth_txs": {
     "attributes": {
       "block_hash": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "blockHash"
       },
       "block_number": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "blockNumber"
       },
       "chain_id": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "chainId"
       },
       "from_address": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "from"
       },
       "to_address": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "to"
       },
       "gas": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "gas"
       },
       "gas_price": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "gasPrice"
       },
       "hash": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "hash"
       },
       "tx_input": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "input"
       },
       "max_fee_per_gas": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "maxFeePerGas"
       },
       "max_priority_fee_per_gas": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "maxPriorityFeePerGas"
       },
       "nonce": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "nonce"
       },
       "tx_index": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "transactionIndex"
       },
       "value": {
-        "type": "string",
+        "type": ["string", "null"],
         "description": "value"
       },
       "is_forked": {

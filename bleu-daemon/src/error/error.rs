@@ -16,7 +16,7 @@ pub enum ExpectedError {
     ChannelError(String),
     FilterError(String),
     BlockHeightError(String),
-    DieselError(String),
+    PostgresError(String),
 }
 
 impl From<smtp::Error> for ExpectedError {
@@ -64,9 +64,9 @@ impl From<ParseIntError> for ExpectedError {
     }
 }
 
-impl From<diesel::result::Error> for ExpectedError {
-    fn from(err: diesel::result::Error) -> Self {
-        ExpectedError::DieselError(err.to_string())
+impl From<r2d2_postgres::postgres::Error> for ExpectedError {
+    fn from(err: r2d2_postgres::postgres::Error) -> Self {
+        ExpectedError::PostgresError(err.to_string())
     }
 }
 
@@ -82,7 +82,7 @@ impl Display for ExpectedError {
             ExpectedError::ChannelError(err) => write!(f, "{}", err),
             ExpectedError::FilterError(err) => write!(f, "{}", err),
             ExpectedError::BlockHeightError(err) => write!(f, "{}", err),
-            ExpectedError::DieselError(err) => write!(f, "{}", err),
+            ExpectedError::PostgresError(err) => write!(f, "{}", err),
         }
     }
 }
