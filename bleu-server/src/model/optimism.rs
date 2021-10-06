@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct OptimismBatch {
-    eth_blocks_id: i32,
+    optimism_batches_id: i32,
     batch_index: Option<String>,
     timestamp: Option<String>,
     batch_size: Option<String>,
