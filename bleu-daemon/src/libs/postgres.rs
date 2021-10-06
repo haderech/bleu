@@ -30,15 +30,18 @@ pub fn convert_type(_type: String, max_length: Option<u32>) -> Result<String, Ex
     Ok(String::from(converted))
 }
 
-pub fn create_table(pool: Pool, schema_map: &HashMap<String, PostgresSchema>) -> Result<(), ExpectedError> {
+pub fn create_table(pool: Pool, schema_map: &HashMap<String, PostgresSchema>) {
     let mut client = pool.get().unwrap();
     for (_, schema) in schema_map.iter() {
-        let _ = client.execute(schema.create_table.as_str(), &[])?;
+        if let Err(err) = client.execute(schema.create_table.as_str(), &[]) {
+            log::warn!("{}", err.to_string());
+        }
         for create_index in schema.create_index.iter() {
-            let _ = client.execute(create_index.as_str(), &[])?;
+            if let Err(err) = client.execute(create_index.as_str(), &[]) {
+                log::warn!("{}", err.to_string());
+            }
         }
     }
-    Ok(())
 }
 
 pub fn insert_value(pool: Pool, schema: &PostgresSchema, values: &Map<String, Value>) -> Result<(), ExpectedError> {

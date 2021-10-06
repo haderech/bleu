@@ -9,6 +9,7 @@ use serde_json::{json, Value};
 
 use crate::{libs, message};
 use crate::error::error::ExpectedError;
+use crate::libs::opts::opt_to_result;
 use crate::libs::postgres::{create_table, insert_value};
 use crate::libs::serde::{get_object, get_str};
 use crate::plugin::slack::{SlackMsg, SlackMsgLevel};
@@ -48,11 +49,8 @@ impl Plugin for PostgresPlugin {
     fn init(&mut self) {
         let schema_map = Self::load_schema().expect("failed to load schema!");
         let pool = Self::create_pool().expect("failed to create pool!");
-        if let Err(err) = create_table(pool.clone(), &schema_map) {
-            log::warn!("{}", err.to_string());
-        };
+        create_table(pool.clone(), &schema_map);
         let channels = MultiChannel::new(vec!("slack"));
-
         self.channels = Some(channels.to_owned());
         self.monitor = Some(APP.channels.subscribe("postgres"));
         self.pool = Some(pool);
@@ -91,13 +89,15 @@ impl PostgresPlugin {
     }
 
     fn load_schema() -> Result<HashMap<String, PostgresSchema>, ExpectedError> {
-        let json_str = fs::read_to_string("schema/ethereum.json").unwrap();
-        let json_schema: Value = serde_json::from_str(json_str.as_str()).unwrap();
-        let raw_schema_map = json_schema.as_object().unwrap();
-
+        let schema_files = vec![String::from("schema/ethereum.json"), String::from("schema/optimism.json")];
         let mut schema_map = HashMap::new();
-        for (schema_name, values) in raw_schema_map {
-            schema_map.insert(schema_name.clone(), PostgresSchema::from(schema_name.clone(), values).unwrap());
+        for schema_file in schema_files.iter() {
+            let json_str = fs::read_to_string(schema_file)?;
+            let json_schema: Value = serde_json::from_str(json_str.as_str())?;
+            let raw_schema_map = opt_to_result(json_schema.as_object())?;
+            for (schema_name, values) in raw_schema_map {
+                schema_map.insert(schema_name.clone(), PostgresSchema::from(schema_name.clone(), values)?);
+            }
         }
         Ok(schema_map)
     }

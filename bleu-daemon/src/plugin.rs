@@ -6,3 +6,4 @@ pub mod telegram;
 pub mod ethereum;
 pub mod postgres;
 pub mod elasticsearch;
+pub mod optimism;

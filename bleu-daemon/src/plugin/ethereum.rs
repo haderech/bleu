@@ -12,7 +12,7 @@ use crate::error::error::ExpectedError;
 use crate::libs::opts::{opt_ref_to_result, opt_to_result};
 use crate::libs::request;
 use crate::libs::rocks::{get_by_prefix_static, get_static};
-use crate::libs::serde::{get_array, get_object, get_str, get_string, select_value};
+use crate::libs::serde::{get_array, get_object, get_str, get_string};
 // use crate::plugin::elasticsearch::{ElasticsearchMsg, ElasticsearchPlugin};
 use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};

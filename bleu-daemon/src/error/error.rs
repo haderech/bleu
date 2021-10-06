@@ -17,6 +17,7 @@ pub enum ExpectedError {
     FilterError(String),
     BlockHeightError(String),
     PostgresError(String),
+    IoError(String),
 }
 
 impl From<smtp::Error> for ExpectedError {
@@ -70,6 +71,12 @@ impl From<r2d2_postgres::postgres::Error> for ExpectedError {
     }
 }
 
+impl From<std::io::Error> for ExpectedError {
+    fn from(err: std::io::Error) -> Self {
+        ExpectedError::IoError(err.to_string())
+    }
+}
+
 impl Display for ExpectedError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -83,6 +90,7 @@ impl Display for ExpectedError {
             ExpectedError::FilterError(err) => write!(f, "{}", err),
             ExpectedError::BlockHeightError(err) => write!(f, "{}", err),
             ExpectedError::PostgresError(err) => write!(f, "{}", err),
+            ExpectedError::IoError(err) => write!(f, "{}", err),
         }
     }
 }
