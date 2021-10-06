@@ -13,7 +13,7 @@ use crate::libs::opts::{opt_ref_to_result, opt_to_result};
 use crate::libs::request;
 use crate::libs::rocks::{get_by_prefix_static, get_static};
 use crate::libs::serde::{get_array, get_object, get_str, get_string, select_value};
-use crate::plugin::elasticsearch::{ElasticsearchMsg, ElasticsearchPlugin};
+// use crate::plugin::elasticsearch::{ElasticsearchMsg, ElasticsearchPlugin};
 use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::{RocksMethod, RocksMsg, RocksPlugin};
@@ -22,7 +22,8 @@ use crate::types::enumeration::Enumeration;
 use crate::types::subscribe::{SubscribeEvent, SubscribeStatus, SubscribeTask};
 use crate::validation::{get_task, resubscribe, stop_subscribe, subscribe, unsubscribe};
 
-#[appbase_plugin(JsonRpcPlugin, RocksPlugin, PostgresPlugin, ElasticsearchPlugin)]
+// #[appbase_plugin(JsonRpcPlugin, RocksPlugin, PostgresPlugin, ElasticsearchPlugin)]
+#[appbase_plugin(JsonRpcPlugin, RocksPlugin, PostgresPlugin)]
 pub struct EthereumPlugin {
     sub_events: Option<SubscribeEvents>,
     channels: Option<MultiChannel>,
@@ -57,7 +58,7 @@ impl Plugin for EthereumPlugin {
 
         let mut rocks_channel = self.channels.as_ref().unwrap().get("rocks");
         let postgres_channel = self.channels.as_ref().unwrap().get("postgres");
-        let elasticsearch_channel = self.channels.as_ref().unwrap().get("elasticsearch");
+        // let elasticsearch_channel = self.channels.as_ref().unwrap().get("elasticsearch");
         let app = APP.quit_handle().unwrap();
 
         APP.spawn_blocking(move || {
@@ -84,9 +85,9 @@ impl Plugin for EthereumPlugin {
                                 if let Err(error) = Self::save_postgres(block_value.clone(), &postgres_channel) {
                                     log::error!("{}", error.to_string());
                                 };
-                                if let Err(error) = Self::save_elasticsearch(block_value.clone(), &elasticsearch_channel) {
-                                    log::error!("{}", error.to_string());
-                                }
+                                // if let Err(error) = Self::save_elasticsearch(block_value.clone(), &elasticsearch_channel) {
+                                //     log::error!("{}", error.to_string());
+                                // }
 
                                 Self::sync_event(&rocks_channel, sub_event);
                                 sub_event.curr_height += 1;
@@ -105,7 +106,7 @@ impl Plugin for EthereumPlugin {
 impl EthereumPlugin {
     fn pre_init(&mut self) {
         self.sub_events = Some(Arc::new(FutureMutex::new(HashMap::new())));
-        let channels = MultiChannel::new(vec!("ethereum", "rocks", "postgres", "elasticsearch"));
+        let channels = MultiChannel::new(vec!("ethereum", "rocks", "postgres", /*"elasticsearch"*/));
         self.channels = Some(channels.to_owned());
         self.monitor = Some(APP.channels.subscribe("ethereum"));
     }
@@ -366,23 +367,23 @@ impl EthereumPlugin {
         Ok(())
     }
 
-    fn save_elasticsearch(block: Value, elasticsearch: &Sender) -> Result<(), ExpectedError> {
-        let block_object = opt_to_result(block.as_object())?.to_owned();
-        let txs = get_array(&block_object, "transactions")?.to_owned();
-        let txs_size = txs.len();
-
-        let mut block_index = select_value(&block_object, vec!["hash", "number", "parentHash", "timestamp"])?;
-        block_index.insert(String::from("txSize"), json!(txs_size));
-        let block_index_id = get_str(&block_index, "hash")?;
-        let _ = elasticsearch.send(ElasticsearchMsg::new(String::from("eth_blocks"), String::from(block_index_id), Value::Object(block_index)))?;
-
-        for tx in txs.into_iter() {
-            let tx_object = opt_to_result(tx.as_object())?.to_owned();
-            let tx_index = select_value(&tx_object, vec!["blockHash", "blockNumber", "from", "to", "hash"])?;
-            let tx_index_id = get_str(&tx_index, "hash")?;
-            let _ = elasticsearch.send(ElasticsearchMsg::new(String::from("eth_txs"), String::from(tx_index_id), Value::Object(tx_index)))?;
-        }
-        Ok(())
-    }
+    // fn save_elasticsearch(block: Value, elasticsearch: &Sender) -> Result<(), ExpectedError> {
+    //     let block_object = opt_to_result(block.as_object())?.to_owned();
+    //     let txs = get_array(&block_object, "transactions")?.to_owned();
+    //     let txs_size = txs.len();
+    //
+    //     let mut block_index = select_value(&block_object, vec!["hash", "number", "parentHash", "timestamp"])?;
+    //     block_index.insert(String::from("txSize"), json!(txs_size));
+    //     let block_index_id = get_str(&block_index, "hash")?;
+    //     let _ = elasticsearch.send(ElasticsearchMsg::new(String::from("eth_blocks"), String::from(block_index_id), Value::Object(block_index)))?;
+    //
+    //     for tx in txs.into_iter() {
+    //         let tx_object = opt_to_result(tx.as_object())?.to_owned();
+    //         let tx_index = select_value(&tx_object, vec!["blockHash", "blockNumber", "from", "to", "hash"])?;
+    //         let tx_index_id = get_str(&tx_index, "hash")?;
+    //         let _ = elasticsearch.send(ElasticsearchMsg::new(String::from("eth_txs"), String::from(tx_index_id), Value::Object(tx_index)))?;
+    //     }
+    //     Ok(())
+    // }
 }
 
