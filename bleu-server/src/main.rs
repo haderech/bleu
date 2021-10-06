@@ -7,7 +7,8 @@ use actix_web::{App, HttpServer, web};
 use diesel::{PgConnection, r2d2};
 use diesel::r2d2::ConnectionManager;
 
-use service::ethereum::get_eth_block_by_id;
+use crate::service::ethereum;
+use crate::service::optimism;
 
 mod service;
 mod repository;
@@ -33,7 +34,8 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .data(pool.clone())
             .service(web::scope("/api/v1")
-                .service(get_eth_block_by_id)
+                .service(ethereum::get_eth_block_by_id)
+                .service(optimism::get_latest_batches)
             )
     })
         .bind(endpoint)?
