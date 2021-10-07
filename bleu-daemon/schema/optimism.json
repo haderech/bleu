@@ -32,6 +32,9 @@
       "extra_data": {
         "type": [ "string", "null" ],
         "description": "extraData"
+      },
+      "tx_size": {
+        "type": "integer"
       }
     },
     "indexes": [ [ "batch_index" ] , [ "l1_tx_hash" ], [ "l1_block_number" ] ],

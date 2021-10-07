@@ -7,17 +7,13 @@ use crate::libs::serde::find_value;
 use crate::plugin::postgres::Pool;
 use crate::types::postgres::PostgresSchema;
 
-pub fn convert_type(_type: String, max_length: Option<u32>) -> Result<String, ExpectedError> {
+pub fn convert_type(_type: String) -> Result<String, ExpectedError> {
     let converted = if _type == "string" {
         "varchar"
     } else if _type == "integer" {
-        if max_length.is_some() && max_length.unwrap() <= 11 {
-            "int4"
-        } else {
-            "int8"
-        }
+        "integer"
     } else if _type == "number" {
-        "float8"
+        "double precision"
     } else if _type == "boolean" {
         "boolean"
     } else if _type == "object" {

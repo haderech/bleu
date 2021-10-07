@@ -91,7 +91,7 @@ impl PostgresSchema {
         let mut query_line: Vec<String> = Vec::new();
         query_line.push(format!("{}_id serial4", schema_name));
         for attribute in attributes.iter() {
-            let converted_type = convert_type(attribute._type.clone(), attribute.max_length).unwrap();
+            let converted_type = convert_type(attribute._type.clone()).unwrap();
             if attribute.max_length.is_none() {
                 query_line.push(format!("{} {} {}", attribute.name, converted_type, Self::null_or_not(attribute.nullable)));
             } else {
