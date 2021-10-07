@@ -35,7 +35,8 @@ async fn main() -> std::io::Result<()> {
             .data(pool.clone())
             .service(web::scope("/api/v1")
                 .service(ethereum::get_eth_block_by_id)
-                .service(optimism::get_latest_batches)
+                .service(optimism::get_latest_batch_summary)
+                .service(optimism::get_batch_by_index)
             )
     })
         .bind(endpoint)?

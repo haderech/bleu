@@ -9,6 +9,7 @@ table! {
         batch_root -> Nullable<Text>,
         previous_total_elements -> Nullable<Text>,
         extra_data -> Nullable<Text>,
+        tx_size -> Nullable<Integer>,
     }
 }
 
