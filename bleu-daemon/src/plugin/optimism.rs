@@ -3,10 +3,13 @@ use std::sync::Arc;
 
 use appbase::prelude::*;
 use futures::lock::Mutex as FutureMutex;
+use jsonrpc_core::serde_json::Map;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::enumeration;
+use crate::error::error::ExpectedError;
+use crate::libs::request;
 use crate::message;
 use crate::plugin::postgres::PostgresPlugin;
 use crate::types::channel::MultiChannel;
@@ -58,9 +61,59 @@ impl Plugin for OptimismPlugin {
 impl OptimismPlugin {
     fn recv(monitor: Receiver, sub_events: SubscribeEvents, channels: MultiChannel, app: QuitHandle) {
         APP.spawn_blocking(move || {
+            if let Some(locked_events) = sub_events.try_lock() {
+                for (_, mut sub_event) in locked_events.iter() {
+                    let req_url = get_req_url(sub_event.active_node(), sub_event.curr_idx);
+                    let res_result = request::get(req_url.as_str());
+                    match res_result {
+                        Ok(res_body) => {
+                            print!("{:?}", res_body);
+                            sub_event.next_idx();
+                        },
+                        Err(err) => eprintln!("{:?}", err)
+                    }
+                }
+            }
             if !app.is_quitting() {
                 Self::recv(monitor, sub_events, channels, app);
             }
         });
+    }
+}
+
+fn get_req_url(node_url: String, curr_idx: u64) -> String {
+    let adjusted_url = adjust_url(node_url);
+    format!("{adjusted_url}{curr_idx}", adjusted_url = adjusted_url, curr_idx = curr_idx)
+}
+
+fn adjust_url(url: String) -> String {
+    let mut tmp_url = url.clone();
+    if !tmp_url.ends_with("/") {
+        tmp_url += "/";
+    }
+    tmp_url.to_owned()
+}
+
+#[cfg(test)]
+mod optimism {
+    use crate::plugin::optimism;
+
+    #[test]
+    fn adjust_url_test() {
+        let example_url = optimism::adjust_url(String::from("https://example.com"));
+        assert_eq!("https://example.com/", example_url);
+
+        let example_url2 = optimism::adjust_url(String::from("https://example2.com/"));
+        assert_eq!("https://example2.com/", example_url2);
+    }
+
+    #[test]
+    fn get_req_url_test() {
+        let example_url = optimism::adjust_url(String::from("https://example.com"));
+        let curr_idx = 1u64;
+        let req_url = optimism::get_req_url(example_url, curr_idx);
+        println!("{}", req_url);
+
+        assert_eq!("https://example.com/1", req_url);
     }
 }

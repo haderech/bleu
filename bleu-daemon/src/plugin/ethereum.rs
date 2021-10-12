@@ -90,7 +90,7 @@ impl Plugin for EthereumPlugin {
                                 // }
 
                                 Self::sync_event(&rocks_channel, sub_event);
-                                sub_event.curr_height += 1;
+                                sub_event.next_idx();
                             }
                             Err(err) => Self::error_handler(&rocks_channel, sub_event, err)
                         }
@@ -280,7 +280,7 @@ impl EthereumPlugin {
             ExpectedError::FilterError(err_msg) => {
                 log::info!("{}", err_msg);
                 Self::sync_event(&rocks_channel, sub_event);
-                sub_event.curr_height += 1;
+                sub_event.curr_idx += 1;
             }
             _ => sub_event.handle_error(&rocks_channel, error.to_string())
         };
@@ -333,11 +333,11 @@ impl EthereumPlugin {
     fn poll_block(sub_event: &mut SubscribeEvent) -> Result<Value, ExpectedError> {
         let node_index = usize::from(sub_event.node_idx);
         let req_url = sub_event.nodes[node_index].clone();
-        let hex_height = format!("0x{:X}", sub_event.curr_height);
+        let hex_idx = format!("0x{:X}", sub_event.curr_idx);
         let req_body = json!({
             "jsonrpc": "2.0",
             "method": "eth_getBlockByNumber",
-            "params": [ hex_height, true ],
+            "params": [ hex_idx, true ],
             "id": 1
         });
         let body = request::post(req_url.as_str(), req_body.to_string().as_str())?;

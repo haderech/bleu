@@ -113,5 +113,23 @@
     },
     "indexes": [ [ "tx_hash" ], [ "from_address" ], [ "to_address" ], [ "l1_txn_batch_index" ], [ "l1_submission_tx_hash" ], [ "l1_state_batch_index" ], [ "l1_state_root_submission_tx_hash" ] ],
     "uniques": [ [ "tx_hash" ] ]
+  },
+  "optimism_l1_to_l2_txs": {
+    "attributes": {
+      "l1_block_number": {
+        "type": [ "string", "null" ],
+        "description": "l1BlockNumber"
+      },
+      "l1_tx_hash": {
+        "type": [ "string", "null" ],
+        "description": "l1TxHash"
+      },
+      "l2_tx_hash": {
+        "type": [ "string", "null" ],
+        "description": "l2TxHash"
+      }
+    },
+    "indexes": [ ],
+    "uniques": [ ]
   }
 }

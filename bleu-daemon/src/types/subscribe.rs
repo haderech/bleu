@@ -13,8 +13,8 @@ pub struct SubscribeEvent {
     pub task_id: String,
     pub chain: String,
     pub sub_id: String,
-    pub start_height: u64,
-    pub curr_height: u64,
+    pub start_idx: u64,
+    pub curr_idx: u64,
     pub nodes: Vec<String>,
     pub node_idx: u16,
     pub filter: String,
@@ -24,7 +24,7 @@ pub struct SubscribeEvent {
 impl SubscribeEvent {
     pub fn new(chain: &str, params: &Map<String, Value>) -> Self {
         let sub_id = get_string(params, "sub_id").unwrap();
-        let start_height = get_u64(params, "start_height").unwrap();
+        let start_idx = get_u64(params, "start_idx").unwrap();
         let filter_result = get_string(params, "filter");
         let filter = match filter_result {
             Ok(filter) => filter,
@@ -34,8 +34,8 @@ impl SubscribeEvent {
             task_id: format!("task:{}:{}", chain, sub_id),
             chain: String::from(chain),
             sub_id,
-            start_height,
-            curr_height: start_height,
+            start_idx,
+            curr_idx: start_idx,
             nodes: get_string_vec(params, "nodes"),
             node_idx: 0,
             filter,
@@ -48,8 +48,8 @@ impl SubscribeEvent {
             task_id: get_string(params, "task_id").unwrap(),
             chain: get_string(params, "chain").unwrap(),
             sub_id: get_string(params, "sub_id").unwrap(),
-            start_height: get_u64(params, "start_height").unwrap(),
-            curr_height: get_u64(params, "curr_height").unwrap(),
+            start_idx: get_u64(params, "start_idx").unwrap(),
+            curr_idx: get_u64(params, "curr_idx").unwrap(),
             nodes: get_string_vec(params, "nodes"),
             node_idx: get_u64(params, "node_idx").unwrap() as u16,
             filter: get_string(params, "filter").unwrap(),
@@ -62,7 +62,7 @@ impl SubscribeEvent {
     }
 
     pub fn event_id(&self) -> String {
-        format!("{}:{}:{}", self.chain, self.sub_id, self.curr_height)
+        format!("{}:{}:{}", self.chain, self.sub_id, self.curr_idx)
     }
 
     pub fn handle_error(&mut self, rocks_channel: &channel::Sender, err_msg: String) {
@@ -77,6 +77,15 @@ impl SubscribeEvent {
         let msg = RocksMsg::new(RocksMethod::Put, self.task_id.clone(), Value::String(json!(task).to_string()));
         let _ = rocks_channel.send(msg);
     }
+
+    pub fn active_node(&self) -> String {
+        let usize_idx = usize::from(self.node_idx);
+        self.nodes[usize_idx].clone()
+    }
+
+    pub fn next_idx(&mut self) {
+        self.curr_idx += 1;
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -84,8 +93,8 @@ pub struct SubscribeTask {
     pub task_id: String,
     pub chain: String,
     pub sub_id: String,
-    pub start_height: u64,
-    pub curr_height: u64,
+    pub start_idx: u64,
+    pub curr_idx: u64,
     pub nodes: Vec<String>,
     pub node_idx: u16,
     pub filter: String,
@@ -99,8 +108,8 @@ impl SubscribeTask {
             task_id: sub_event.task_id.clone(),
             chain: sub_event.chain.clone(),
             sub_id: sub_event.sub_id.clone(),
-            start_height: sub_event.start_height,
-            curr_height: sub_event.curr_height,
+            start_idx: sub_event.start_idx,
+            curr_idx: sub_event.curr_idx,
             nodes: sub_event.nodes.clone(),
             node_idx: sub_event.node_idx,
             filter: sub_event.filter.clone(),
@@ -120,13 +129,13 @@ enumeration!(SubscribeStatus; {Working: "working"}, {Stopped: "stopped"}, {Error
 mod subscribe_test {
     use serde_json::{json, Map, Value};
 
-    use crate::types::subscribe::{SubscribeEvent};
+    use crate::types::subscribe::SubscribeEvent;
 
     #[test]
     fn subscribe_event_task_id_test() {
         let mut params = Map::new();
         params.insert(String::from("sub_id"), json!("cosmoshub-4"));
-        params.insert(String::from("start_height"), json!(1u64));
+        params.insert(String::from("start_idx"), json!(1u64));
         params.insert(String::from("nodes"), json!(["https://api.cosmos.network"]));
         params.insert(String::from("filter"), Value::String(String::from("")));
 
@@ -138,7 +147,7 @@ mod subscribe_test {
     fn subscribe_event_is_workable_test() {
         let mut params = Map::new();
         params.insert(String::from("sub_id"), json!("cosmoshub-4"));
-        params.insert(String::from("start_height"), json!(1u64));
+        params.insert(String::from("start_idx"), json!(1u64));
         params.insert(String::from("nodes"), json!(["https://api.cosmos.network"]));
         params.insert(String::from("filter"), Value::String(String::from("")));
 
@@ -150,7 +159,7 @@ mod subscribe_test {
     fn subscribe_event_event_id_test() {
         let mut params = Map::new();
         params.insert(String::from("sub_id"), json!("cosmoshub-4"));
-        params.insert(String::from("start_height"), json!(1u64));
+        params.insert(String::from("start_idx"), json!(1u64));
         params.insert(String::from("nodes"), json!(["https://api.cosmos.network"]));
         params.insert(String::from("filter"), Value::String(String::from("")));
 
