@@ -37,6 +37,9 @@ async fn main() -> std::io::Result<()> {
                 .service(ethereum::get_eth_block_by_id)
                 .service(optimism::get_latest_batch_summary)
                 .service(optimism::get_batch_by_index)
+                .service(optimism::get_latest_tx_summary)
+                .service(optimism::get_tx_by_hash)
+                .service(optimism::get_latest_l1_to_l2_tx)
             )
     })
         .bind(endpoint)?
