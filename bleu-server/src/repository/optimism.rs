@@ -10,17 +10,16 @@ pub mod batch {
 
     pub fn find_latest_batch_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismBatchSummary>, ExpectedError> {
         let conn = pool.get()?;
-        let batch_summary = optimism_batches.select((batch_index, l1_tx_hash, tx_size, timestamp))
+        let batch_summary = optimism_batches.select((batch_index, l1_tx_hash, batch_size, timestamp))
             .order(optimism_batches_id.desc())
             .limit(10)
             .load::<OptimismBatchSummary>(&conn)?;
         Ok(batch_summary)
     }
 
-    pub fn find_batch_by_index(pool: web::Data<Pool>, index: u32) -> Result<OptimismBatch, ExpectedError> {
+    pub fn find_batch_by_index(pool: web::Data<Pool>, index: i32) -> Result<OptimismBatch, ExpectedError> {
         let conn = pool.get()?;
-        let index_str = format!("0x{:x}", index);
-        let result = optimism_batches.filter(batch_index.eq(index_str)).first::<OptimismBatch>(&conn);
+        let result = optimism_batches.filter(batch_index.eq(index)).first::<OptimismBatch>(&conn);
         match result {
             Ok(optimism_batch) => Ok(optimism_batch),
             Err(_) => Err(ExpectedError::NotFoundError(format!("optimism batch does not exist! batch_index={}", index)))

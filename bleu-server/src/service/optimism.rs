@@ -11,7 +11,7 @@ pub async fn get_latest_batch_summary(pool: web::Data<Pool>) -> Result<HttpRespo
 }
 
 #[get("/optimism/batch/index/{batch_index}")]
-pub async fn get_batch_by_index(pool: web::Data<Pool>, batch_index: web::Path<(u32)>) -> Result<HttpResponse, ExpectedError> {
+pub async fn get_batch_by_index(pool: web::Data<Pool>, batch_index: web::Path<(i32)>) -> Result<HttpResponse, ExpectedError> {
     let index = batch_index.into_inner();
     let batch = optimism::batch::find_batch_by_index(pool, index)?;
     Ok(HttpResponse::Ok().json(batch))
