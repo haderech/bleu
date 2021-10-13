@@ -10,9 +10,9 @@ use serde_json::{json, Value};
 use crate::enumeration;
 use crate::error::error::ExpectedError;
 use crate::libs::request;
-use crate::libs::serde::get_object;
+use crate::libs::serde::{get_array};
 use crate::message;
-use crate::plugin::postgres::PostgresPlugin;
+use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::types::channel::MultiChannel;
 use crate::types::enumeration::Enumeration;
 use crate::types::subscribe::{SubscribeEvent, SubscribeStatus};
@@ -70,8 +70,9 @@ impl OptimismPlugin {
                     match res_result {
                         Ok(res_body) => {
                             if let true = Self::is_batch_created(&res_body) {
-                                println!("{:?}", res_body);
                                 sub_event.next_idx();
+                                let pg_sender = channels.get("postgres");
+                                let _ = Self::save_postgres(pg_sender, res_body);
                             } else {
                                 println!("waiting for batch created...");
                             }
@@ -108,6 +109,15 @@ impl OptimismPlugin {
     fn is_batch_created(res_body: &Map<String, Value>) -> bool {
         let batch = res_body.get("batch");
         batch.is_some() && !batch.unwrap().is_null()
+    }
+
+    fn save_postgres(pg_sender: Sender, data: Map<String, Value>) -> Result<(), ExpectedError> {
+        let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_batches"), Value::Object(data.clone())))?;
+        let txs = get_array(&data, "transactions")?;
+        for tx in txs.iter() {
+            let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_txs"), tx.clone()))?;
+        }
+        Ok(())
     }
 }
 

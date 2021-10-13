@@ -2,39 +2,40 @@
   "optimism_batches": {
     "attributes": {
       "batch_index": {
-        "type":  [ "string", "null" ],
-        "description": "batchIndex"
+        "type":  [ "integer", "null" ],
+        "description": "index"
       },
       "timestamp": {
-        "type":  [ "string", "null" ],
+        "type":  [ "integer", "null" ],
         "description": "timestamp"
       },
       "batch_size": {
-        "type": [ "string", "null" ],
-        "description": "batchSize"
+        "type": [ "integer", "null" ],
+        "description": "size"
       },
       "l1_tx_hash": {
         "type": [ "string", "null" ],
-        "description": "l1TxHash"
+        "description": "l1TransactionHash"
       },
       "l1_block_number": {
-        "type":  [ "string", "null" ],
-        "description": "l1BlockNumber"
+        "type":  [ "integer", "null" ],
+        "description": "blockNumber"
       },
       "batch_root": {
         "type":  [ "string", "null" ],
-        "description": "batchRoot"
+        "description": "root"
       },
       "previous_total_elements": {
-        "type":  [ "string", "null" ],
-        "description": "previousTotalElements"
+        "type":  [ "integer", "null" ],
+        "description": "prevTotalElements"
       },
       "extra_data": {
         "type": [ "string", "null" ],
         "description": "extraData"
       },
-      "tx_size": {
-        "type": "integer"
+      "submitter": {
+        "type": [ "string", "null" ],
+        "description": "submitter"
       }
     },
     "indexes": [ [ "batch_index" ] , [ "l1_tx_hash" ], [ "l1_block_number" ] ],
@@ -51,20 +52,20 @@
         "description": "status"
       },
       "tx_index": {
-        "type": [ "string", "null" ],
-        "description": "transactionIndex"
+        "type": [ "integer", "null" ],
+        "description": "index"
       },
       "timestamp": {
-        "type": [ "string", "null" ],
+        "type": [ "integer", "null" ],
         "description": "timestamp"
       },
       "from_address": {
         "type": [ "string", "null" ],
-        "description": "from"
+        "description": "origin"
       },
       "to_address": {
         "type": [ "string", "null" ],
-        "description": "to"
+        "description": "target"
       },
       "token_transferred": {
         "type": [ "string", "null" ],
@@ -84,7 +85,7 @@
       },
       "gas_used_by_tx": {
         "type": [ "string", "null" ],
-        "description": "etherPrice"
+        "description": "getUsedByTx"
       },
       "nonce": {
         "type": [ "string", "null" ],
@@ -92,11 +93,15 @@
       },
       "input_data": {
         "type": [ "string", "null" ],
-        "description": "inputData"
+        "description": "data"
+      },
+      "confirmed": {
+        "type": [ "boolean", "null" ],
+        "description": "confirmed"
       },
       "l1_txn_batch_index": {
         "type": [ "string", "null" ],
-        "description": "l1TxnBatchIndex"
+        "description": "batchIndex"
       },
       "l1_submission_tx_hash": {
         "type": [ "string", "null" ],
