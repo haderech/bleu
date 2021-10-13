@@ -10,11 +10,12 @@ use serde_json::{json, Value};
 use crate::enumeration;
 use crate::error::error::ExpectedError;
 use crate::libs::request;
+use crate::libs::serde::get_object;
 use crate::message;
 use crate::plugin::postgres::PostgresPlugin;
 use crate::types::channel::MultiChannel;
 use crate::types::enumeration::Enumeration;
-use crate::types::subscribe::SubscribeEvent;
+use crate::types::subscribe::{SubscribeEvent, SubscribeStatus};
 
 #[appbase_plugin(PostgresPlugin)]
 pub struct OptimismPlugin {
@@ -52,6 +53,7 @@ impl Plugin for OptimismPlugin {
         let channels = self.channels.take().unwrap();
         let app = APP.quit_handle().unwrap();
 
+        Self::load_task(&sub_events);
         Self::recv(monitor, sub_events, channels, app);
     }
 
@@ -61,15 +63,19 @@ impl Plugin for OptimismPlugin {
 impl OptimismPlugin {
     fn recv(monitor: Receiver, sub_events: SubscribeEvents, channels: MultiChannel, app: QuitHandle) {
         APP.spawn_blocking(move || {
-            if let Some(locked_events) = sub_events.try_lock() {
-                for (_, mut sub_event) in locked_events.iter() {
+            if let Some(mut locked_events) = sub_events.try_lock() {
+                for (_, sub_event) in locked_events.iter_mut() {
                     let req_url = get_req_url(sub_event.active_node(), sub_event.curr_idx);
                     let res_result = request::get(req_url.as_str());
                     match res_result {
                         Ok(res_body) => {
-                            print!("{:?}", res_body);
-                            sub_event.next_idx();
-                        },
+                            if let true = Self::is_batch_created(&res_body) {
+                                println!("{:?}", res_body);
+                                sub_event.next_idx();
+                            } else {
+                                println!("waiting for batch created...");
+                            }
+                        }
                         Err(err) => eprintln!("{:?}", err)
                     }
                 }
@@ -78,6 +84,30 @@ impl OptimismPlugin {
                 Self::recv(monitor, sub_events, channels, app);
             }
         });
+    }
+
+    fn load_task(sub_events: &SubscribeEvents) {
+        let sub_id = "default";
+        let task_id = format!("{}:{}", TASK_PREFIX, sub_id);
+        let sub_event = SubscribeEvent {
+            task_id: task_id.clone(),
+            chain: String::from(CHAIN),
+            sub_id: String::from(CHAIN),
+            start_idx: 0,
+            curr_idx: 0,
+            nodes: vec![String::from("http://localhost:7878/batch/transaction/index/")],
+            node_idx: 0,
+            filter: String::from(""),
+            status: SubscribeStatus::Working,
+        };
+        if let Some(mut locked_events) = sub_events.try_lock() {
+            locked_events.insert(String::from(task_id), sub_event);
+        }
+    }
+
+    fn is_batch_created(res_body: &Map<String, Value>) -> bool {
+        let batch = res_body.get("batch");
+        batch.is_some() && !batch.unwrap().is_null()
     }
 }
 
@@ -96,6 +126,8 @@ fn adjust_url(url: String) -> String {
 
 #[cfg(test)]
 mod optimism {
+    use serde_json::{Map, Value};
+
     use crate::plugin::optimism;
 
     #[test]
@@ -115,5 +147,20 @@ mod optimism {
         println!("{}", req_url);
 
         assert_eq!("https://example.com/1", req_url);
+    }
+
+    #[test]
+    fn is_batch_created_test() {
+        let mut object = Map::new();
+        object.insert(String::from("batch"), Value::Null);
+        let is_batch_created = optimism::OptimismPlugin::is_batch_created(&object);
+        assert!(!is_batch_created);
+
+        let mut object2 = Map::new();
+        let mut sub_object = Map::new();
+        sub_object.insert(String::from("test"), Value::String(String::from("test_value")));
+        object2.insert(String::from("batch"), Value::Object(sub_object));
+        let is_batch_created = optimism::OptimismPlugin::is_batch_created(&object2);
+        assert!(is_batch_created);
     }
 }

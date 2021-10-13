@@ -1,6 +1,7 @@
 use appbase::prelude::*;
 
 use crate::plugin::ethereum::EthereumPlugin;
+use crate::plugin::optimism::OptimismPlugin;
 
 mod plugin;
 mod types;
@@ -10,9 +11,9 @@ mod error;
 
 fn main() {
     env_logger::init();
-    APP.register::<EthereumPlugin>();
+    APP.register::<OptimismPlugin>();
     APP.init();
-    APP.plugin_init::<EthereumPlugin>();
+    APP.plugin_init::<OptimismPlugin>();
     APP.startup();
     APP.execute();
 }
