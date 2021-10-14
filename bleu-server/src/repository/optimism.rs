@@ -6,11 +6,13 @@ pub mod batch {
     use crate::error::error::ExpectedError;
     use crate::model::optimism::{OptimismBatch, OptimismBatchSummary};
     use crate::Pool;
-    use crate::schema::optimism::optimism_batches::dsl::*;
+    use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
+    use crate::schema::optimism::optimism_batches;
+    use crate::schema::optimism::optimism_batches::columns::*;
 
     pub fn find_latest_batch_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismBatchSummary>, ExpectedError> {
         let conn = pool.get()?;
-        let batch_summary = optimism_batches.select((batch_index, l1_tx_hash, batch_size, timestamp))
+        let batch_summary = optimism_batches::table.select((batch_index, l1_tx_hash, batch_size, timestamp))
             .order(optimism_batches_id.desc())
             .limit(10)
             .load::<OptimismBatchSummary>(&conn)?;
@@ -19,11 +21,15 @@ pub mod batch {
 
     pub fn find_batch_by_index(pool: web::Data<Pool>, index: i32) -> Result<OptimismBatch, ExpectedError> {
         let conn = pool.get()?;
-        let result = optimism_batches.filter(batch_index.eq(index)).first::<OptimismBatch>(&conn);
-        match result {
-            Ok(optimism_batch) => Ok(optimism_batch),
-            Err(_) => Err(ExpectedError::NotFoundError(format!("optimism batch does not exist! batch_index={}", index)))
-        }
+        Ok(optimism_batches::table.filter(batch_index.eq(index)).first::<OptimismBatch>(&conn)?)
+    }
+
+    pub fn find_batch_by_page_count(pool: web::Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<OptimismBatch>, ExpectedError> {
+        let conn = pool.get()?;
+        let query = optimism_batches::table.into_boxed();
+        let query = query.order(optimism_batches_id.desc());
+        let paginated_batch = query.load_with_pagination(&conn, page, count)?;
+        Ok(paginated_batch)
     }
 }
 
@@ -35,11 +41,13 @@ pub mod tx {
     use crate::error::error::ExpectedError;
     use crate::model::optimism::{OptimismTx, OptimismTxSummary};
     use crate::Pool;
-    use crate::schema::optimism::optimism_txs::dsl::*;
+    use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
+    use crate::schema::optimism::optimism_txs;
+    use crate::schema::optimism::optimism_txs::columns::*;
 
     pub fn find_latest_tx_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismTxSummary>, ExpectedError> {
         let conn = pool.get()?;
-        let tx_summary = optimism_txs.select((tx_hash, from_address, to_address, value, timestamp))
+        let tx_summary = optimism_txs::table.select((tx_hash, from_address, to_address, value, timestamp))
             .order(optimism_txs_id.desc())
             .limit(10)
             .load::<OptimismTxSummary>(&conn)?;
@@ -48,11 +56,15 @@ pub mod tx {
 
     pub fn find_tx_by_hash(pool: web::Data<Pool>, hash: String) -> Result<OptimismTx, ExpectedError> {
         let conn = pool.get()?;
-        let result = optimism_txs.filter(tx_hash.eq(hash.clone())).first::<OptimismTx>(&conn);
-        match result {
-            Ok(optimism_tx) => Ok(optimism_tx),
-            Err(_) => Err(ExpectedError::NotFoundError(format!("optimism tx does not exist! tx_hash={}", hash)))
-        }
+        Ok(optimism_txs::table.filter(tx_hash.eq(hash.clone())).first::<OptimismTx>(&conn)?)
+    }
+
+    pub fn find_tx_by_index_page_count(pool: web::Data<Pool>, index: String, page: i64, count: i64) -> Result<PaginatedRecord<OptimismTx>, ExpectedError> {
+        let conn = pool.get()?;
+        let query = optimism_txs::table.into_boxed();
+        let query = query.filter(l1_txn_batch_index.eq(index)).order(optimism_txs_id.desc());
+        let paginated_tx = query.load_with_pagination(&conn, page, count)?;
+        Ok(paginated_tx)
     }
 }
 

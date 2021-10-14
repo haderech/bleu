@@ -6,21 +6,18 @@ use serde::Serialize;
 
 #[derive(Debug)]
 pub enum ExpectedError {
-    NotFoundError(String),
     DieselError(String),
 }
 
 impl ExpectedError {
     pub fn code(&self) -> String {
         match self {
-            ExpectedError::NotFoundError(_) => String::from("NOT_FOUND_ERROR"),
             ExpectedError::DieselError(_) => String::from("DIESEL_ERROR"),
         }
     }
 
     pub fn name(&self) -> String {
         match self {
-            ExpectedError::NotFoundError(_) => String::from("NotFoundError"),
             ExpectedError::DieselError(_) => String::from("DieselError"),
         }
     }
@@ -34,14 +31,13 @@ impl From<r2d2::Error> for ExpectedError {
 
 impl From<diesel::result::Error> for ExpectedError {
     fn from(err: diesel::result::Error) -> Self {
-        ExpectedError::NotFoundError(err.to_string())
+        ExpectedError::DieselError(err.to_string())
     }
 }
 
 impl Display for ExpectedError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ExpectedError::NotFoundError(err) => write!(f, "{}", err),
             ExpectedError::DieselError(err) => write!(f, "{}", err),
         }
     }
