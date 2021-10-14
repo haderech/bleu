@@ -136,5 +136,69 @@
     },
     "indexes": [ ],
     "uniques": [ ]
+  },
+  "optimism_state_batches": {
+    "attributes": {
+      "batch_index": {
+        "type": [ "integer", "null" ],
+        "description": "index"
+      },
+      "l1_timestamp": {
+        "type": [ "integer", "null" ],
+        "description": "timestamp"
+      },
+      "batch_size": {
+        "type": [ "integer", "null" ],
+        "description": "size"
+      },
+      "l1_tx_hash": {
+        "type": [ "string", "null" ],
+        "description": "l1TransactionHash"
+      },
+      "l1_block_number": {
+        "type": [ "integer", "null" ],
+        "description": "blockNumber"
+      },
+      "batch_root": {
+        "type": [ "string", "null" ],
+        "description": "root"
+      },
+      "previous_total_elements": {
+        "type": [ "integer", "null" ],
+        "description": "prevTotalElements"
+      },
+      "extra_data": {
+        "type": [ "string", "null" ],
+        "description": "extraData"
+      },
+      "submitter": {
+        "type": [ "string", "null" ],
+        "description": "submitter"
+      }
+    },
+    "indexes": [ [ "batch_index" ], [ "l1_tx_hash" ], [ "l1_block_number" ], [ "batch_root" ] ],
+    "uniques": [ ]
+  },
+  "optimism_state_roots": {
+    "attributes": {
+      "index": {
+        "type": [ "integer", "null" ],
+        "description": "index"
+      },
+      "batch_index": {
+        "type": [ "integer", "null" ],
+        "description": "batchIndex"
+      },
+      "value": {
+        "type": [ "string", "null" ],
+        "description": "value"
+      },
+      "confirmed": {
+        "type": [ "boolean", "null" ],
+        "description": "confirmed"
+      }
+    },
+    "indexes": [ [ "index" ], [ "batch_index" ], [ "value" ] ],
+    "uniques": [ ]
   }
 }
