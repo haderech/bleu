@@ -1,33 +1,33 @@
-pub mod batch {
+pub mod tx_batch {
     use actix_web::web;
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
     use crate::error::error::ExpectedError;
-    use crate::model::optimism::{OptimismBatch, OptimismBatchSummary};
+    use crate::model::optimism::{OptimismTxBatch, OptimismTxBatchSummary};
     use crate::Pool;
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
-    use crate::schema::optimism::optimism_batches;
-    use crate::schema::optimism::optimism_batches::columns::*;
+    use crate::schema::optimism::optimism_tx_batches;
+    use crate::schema::optimism::optimism_tx_batches::columns::*;
 
-    pub fn find_latest_batch_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismBatchSummary>, ExpectedError> {
+    pub fn find_latest_batch_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismTxBatchSummary>, ExpectedError> {
         let conn = pool.get()?;
-        let batch_summary = optimism_batches::table.select((batch_index, l1_tx_hash, batch_size, timestamp))
-            .order(optimism_batches_id.desc())
+        let batch_summary = optimism_tx_batches::table.select((batch_index, l1_tx_hash, batch_size, timestamp))
+            .order(optimism_tx_batches_id.desc())
             .limit(10)
-            .load::<OptimismBatchSummary>(&conn)?;
+            .load::<OptimismTxBatchSummary>(&conn)?;
         Ok(batch_summary)
     }
 
-    pub fn find_batch_by_index(pool: web::Data<Pool>, index: i32) -> Result<OptimismBatch, ExpectedError> {
+    pub fn find_batch_by_index(pool: web::Data<Pool>, index: i64) -> Result<OptimismTxBatch, ExpectedError> {
         let conn = pool.get()?;
-        Ok(optimism_batches::table.filter(batch_index.eq(index)).first::<OptimismBatch>(&conn)?)
+        Ok(optimism_tx_batches::table.filter(batch_index.eq(index)).first::<OptimismTxBatch>(&conn)?)
     }
 
-    pub fn find_batch_by_page_count(pool: web::Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<OptimismBatch>, ExpectedError> {
+    pub fn find_batch_by_page_count(pool: web::Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<OptimismTxBatch>, ExpectedError> {
         let conn = pool.get()?;
-        let query = optimism_batches::table.into_boxed();
-        let query = query.order(optimism_batches_id.desc());
+        let query = optimism_tx_batches::table.into_boxed();
+        let query = query.order(optimism_tx_batches_id.desc());
         let paginated_batch = query.load_with_pagination(&conn, page, count)?;
         Ok(paginated_batch)
     }
@@ -59,12 +59,38 @@ pub mod tx {
         Ok(optimism_txs::table.filter(tx_hash.eq(hash.clone())).first::<OptimismTx>(&conn)?)
     }
 
-    pub fn find_tx_by_index_page_count(pool: web::Data<Pool>, index: String, page: i64, count: i64) -> Result<PaginatedRecord<OptimismTx>, ExpectedError> {
+    pub fn find_tx_by_index_page_count(pool: web::Data<Pool>, index: i64, page: i64, count: i64) -> Result<PaginatedRecord<OptimismTx>, ExpectedError> {
         let conn = pool.get()?;
         let query = optimism_txs::table.into_boxed();
         let query = query.filter(l1_txn_batch_index.eq(index)).order(optimism_txs_id.desc());
         let paginated_tx = query.load_with_pagination(&conn, page, count)?;
         Ok(paginated_tx)
+    }
+}
+
+pub mod state_batch {
+    use actix_web::web;
+    use diesel::prelude::*;
+    use diesel::RunQueryDsl;
+
+    use crate::error::error::ExpectedError;
+    use crate::model::optimism::{OptimismStateBatch};
+    use crate::Pool;
+    use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
+    use crate::schema::optimism::optimism_state_batches;
+    use crate::schema::optimism::optimism_state_batches::columns::*;
+
+    pub fn find_batch_by_page_count(pool: web::Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<OptimismStateBatch>, ExpectedError> {
+        let conn = pool.get()?;
+        let query = optimism_state_batches::table.into_boxed();
+        let query = query.order(optimism_state_batches_id.desc());
+        let paginated_batch = query.load_with_pagination(&conn, page, count)?;
+        Ok(paginated_batch)
+    }
+
+    pub fn find_batch_by_index(pool: web::Data<Pool>, index: i64) -> Result<OptimismStateBatch, ExpectedError> {
+        let conn = pool.get()?;
+        Ok(optimism_state_batches::table.filter(batch_index.eq(index)).first::<OptimismStateBatch>(&conn)?)
     }
 }
 
