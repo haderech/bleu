@@ -89,7 +89,7 @@ impl PostgresSchema {
 
     fn create_table(schema_name: String, attributes: &Vec<Attribute>, uniques: &Vec<Value>) -> String {
         let mut query_line: Vec<String> = Vec::new();
-        query_line.push(format!("{}_id serial4", schema_name));
+        query_line.push(format!("{}_id serial8", schema_name));
         for attribute in attributes.iter() {
             let converted_type = convert_type(attribute._type.clone()).unwrap();
             if attribute.max_length.is_none() {

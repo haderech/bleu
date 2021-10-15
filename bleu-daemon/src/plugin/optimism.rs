@@ -10,7 +10,7 @@ use serde_json::{json, Value};
 use crate::enumeration;
 use crate::error::error::ExpectedError;
 use crate::libs::request;
-use crate::libs::serde::{get_array};
+use crate::libs::serde::get_array;
 use crate::message;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::types::channel::MultiChannel;
@@ -65,19 +65,8 @@ impl OptimismPlugin {
         APP.spawn_blocking(move || {
             if let Some(mut locked_events) = sub_events.try_lock() {
                 for (_, sub_event) in locked_events.iter_mut() {
-                    let req_url = get_req_url(sub_event.active_node(), sub_event.curr_idx);
-                    let res_result = request::get(req_url.as_str());
-                    match res_result {
-                        Ok(res_body) => {
-                            if let true = Self::is_batch_created(&res_body) {
-                                sub_event.next_idx();
-                                let pg_sender = channels.get("postgres");
-                                let _ = Self::save_postgres(pg_sender, res_body);
-                            } else {
-                                println!("waiting for batch created...");
-                            }
-                        }
-                        Err(err) => eprintln!("{:?}", err)
+                    if let Err(err) = Self::event_handler(sub_event, &channels) {
+                        Self::error_handler(err, sub_event, &channels);
                     }
                 }
             }
@@ -118,6 +107,24 @@ impl OptimismPlugin {
             let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_txs"), tx.clone()))?;
         }
         Ok(())
+    }
+
+    fn event_handler(sub_event: &mut SubscribeEvent, channels: &MultiChannel) -> Result<(), ExpectedError> {
+        let req_url = get_req_url(sub_event.active_node(), sub_event.curr_idx);
+        let response = request::get(req_url.as_str())?;
+        if let true = Self::is_batch_created(&response) {
+            sub_event.next_idx();
+            let pg_sender = channels.get("postgres");
+            let _ = Self::save_postgres(pg_sender, response)?;
+        } else {
+            println!("waiting for batch created...");
+        }
+        Ok(())
+    }
+
+    fn error_handler(err: ExpectedError, sub_event: &mut SubscribeEvent, channels: &MultiChannel) {
+        let rocks_sender = channels.get("rocks");
+        sub_event.handle_error(&rocks_sender, err.to_string());
     }
 }
 

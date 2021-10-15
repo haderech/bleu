@@ -11,7 +11,7 @@ pub fn convert_type(_type: String) -> Result<String, ExpectedError> {
     let converted = if _type == "string" {
         "varchar"
     } else if _type == "integer" {
-        "integer"
+        "bigint"
     } else if _type == "number" {
         "double precision"
     } else if _type == "boolean" {

@@ -1,5 +1,5 @@
 {
-  "optimism_batches": {
+  "optimism_tx_batches": {
     "attributes": {
       "batch_index": {
         "type":  [ "integer", "null" ],
@@ -100,7 +100,7 @@
         "description": "confirmed"
       },
       "l1_txn_batch_index": {
-        "type": [ "string", "null" ],
+        "type": [ "integer", "null" ],
         "description": "batchIndex"
       },
       "l1_submission_tx_hash": {
@@ -108,7 +108,7 @@
         "description": "l1SubmissionTxHash"
       },
       "l1_state_batch_index": {
-        "type": [ "string", "null" ],
+        "type": [ "integer", "null" ],
         "description": "l1StateBatchIndex"
       },
       "l1_state_root_submission_tx_hash": {
@@ -122,7 +122,7 @@
   "optimism_l1_to_l2_txs": {
     "attributes": {
       "l1_block_number": {
-        "type": [ "string", "null" ],
+        "type": [ "integer", "null" ],
         "description": "l1BlockNumber"
       },
       "l1_tx_hash": {
