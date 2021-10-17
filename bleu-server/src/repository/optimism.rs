@@ -1,5 +1,6 @@
 pub mod tx_batch {
     use actix_web::web;
+    use cached::proc_macro::cached;
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
@@ -10,6 +11,7 @@ pub mod tx_batch {
     use crate::schema::optimism::optimism_tx_batches;
     use crate::schema::optimism::optimism_tx_batches::columns::*;
 
+    #[cached(time = 60, key = "bool", convert = r#"{ true }"#, result = true)]
     pub fn find_latest_batch_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismTxBatchSummary>, ExpectedError> {
         let conn = pool.get()?;
         let batch_summary = optimism_tx_batches::table.select((batch_index, l1_tx_hash, batch_size, timestamp))
@@ -74,7 +76,7 @@ pub mod state_batch {
     use diesel::RunQueryDsl;
 
     use crate::error::error::ExpectedError;
-    use crate::model::optimism::{OptimismStateBatch};
+    use crate::model::optimism::OptimismStateBatch;
     use crate::Pool;
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
     use crate::schema::optimism::optimism_state_batches;
