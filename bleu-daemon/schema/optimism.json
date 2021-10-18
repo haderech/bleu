@@ -43,81 +43,61 @@
   },
   "optimism_txs": {
     "attributes": {
-      "tx_hash": {
-        "type": [ "string", "null" ],
-        "description": "transactionHash"
-      },
-      "status": {
-        "type": [ "string", "null" ],
-        "description": "status"
-      },
-      "tx_index": {
+      "index": {
         "type": [ "integer", "null" ],
         "description": "index"
+      },
+      "batch_index": {
+        "type": [ "integer", "null" ],
+        "description": "batchIndex"
+      },
+      "batch_number": {
+        "type": [ "integer", "null" ],
+        "description": "blockNumber"
       },
       "timestamp": {
         "type": [ "integer", "null" ],
         "description": "timestamp"
       },
-      "from_address": {
+      "gas_limit": {
         "type": [ "string", "null" ],
-        "description": "origin"
+        "description": "gasLimit"
       },
-      "to_address": {
+      "target": {
         "type": [ "string", "null" ],
         "description": "target"
       },
-      "token_transferred": {
+      "origin": {
         "type": [ "string", "null" ],
-        "description": "tokenTransferred"
+        "description": "origin"
+      },
+      "data": {
+        "type": [ "string", "null" ],
+        "description": "data"
+      },
+      "queue_origin": {
+        "type": [ "string", "null" ],
+        "description": "queueOrigin"
       },
       "value": {
         "type": [ "string", "null" ],
         "description": "value"
       },
-      "tx_fee": {
-        "type": [ "string", "null" ],
-        "description": "transactionFee"
+      "queue_index": {
+        "type": [ "integer", "null" ],
+        "description": "queueIndex"
       },
-      "ether_price": {
-        "type": [ "string", "null" ],
-        "description": "etherPrice"
-      },
-      "gas_used_by_tx": {
-        "type": [ "string", "null" ],
-        "description": "getUsedByTx"
-      },
-      "nonce": {
-        "type": [ "string", "null" ],
-        "description": "nonce"
-      },
-      "input_data": {
-        "type": [ "string", "null" ],
-        "description": "data"
+      "decoded": {
+        "type": [ "integer", "null" ],
+        "description": "decoded"
       },
       "confirmed": {
-        "type": [ "boolean", "null" ],
+        "type": [ "bool", "null" ],
         "description": "confirmed"
-      },
-      "l1_txn_batch_index": {
-        "type": [ "integer", "null" ],
-        "description": "batchIndex"
-      },
-      "l1_submission_tx_hash": {
-        "type": [ "string", "null" ],
-        "description": "l1SubmissionTxHash"
-      },
-      "l1_state_batch_index": {
-        "type": [ "integer", "null" ],
-        "description": "l1StateBatchIndex"
-      },
-      "l1_state_root_submission_tx_hash": {
-        "type": [ "string", "null" ],
-        "description": "l1StateRootSubmissionTxHash"
       }
     },
-    "indexes": [ [ "tx_hash" ], [ "from_address" ], [ "to_address" ], [ "l1_txn_batch_index" ], [ "l1_submission_tx_hash" ], [ "l1_state_batch_index" ], [ "l1_state_root_submission_tx_hash" ] ],
-    "uniques": [ [ "tx_hash" ] ]
+    "indexes": [ [ "index" ], [ "batch_number" ], [ "target" ], [ "origin" ] ],
+    "uniques": [ [ "index" ] ]
   },
   "optimism_l1_to_l2_txs": {
     "attributes": {
@@ -200,5 +180,161 @@
     },
     "indexes": [ [ "index" ], [ "batch_index" ], [ "value" ] ],
     "uniques": [ ]
+  },
+  "optimism_blocks": {
+    "attributes": {
+      "difficulty": {
+        "type": [ "string", "null" ],
+        "description": "difficulty"
+      },
+      "extra_data": {
+        "type": [ "string", "null" ],
+        "description": "extraData"
+      },
+      "gas_limit": {
+        "type": [ "string", "null" ],
+        "description": "gasLimit"
+      },
+      "gas_used": {
+        "type": [ "string", "null" ],
+        "description": "gasUsed"
+      },
+      "hash": {
+        "type": [ "string", "null" ],
+        "description": "hash"
+      },
+      "logs_bloom": {
+        "type": [ "string", "null" ],
+        "description": "logsBloom"
+      },
+      "miner": {
+        "type": [ "string", "null" ],
+        "description": "miner"
+      },
+      "mix_hash": {
+        "type": [ "string", "null" ],
+        "description": "mixHash"
+      },
+      "nonce": {
+        "type": [ "string", "null" ],
+        "description": "nonce"
+      },
+      "block_number": {
+        "type": [ "string", "null" ],
+        "description": "number"
+      },
+      "parent_hash": {
+        "type": [ "string", "null" ],
+        "description": "parentHash"
+      },
+      "receipts_root": {
+        "type": [ "string", "null" ],
+        "description": "receiptsRoot"
+      },
+      "sha3_uncles": {
+        "type": [ "string", "null" ],
+        "description": "sha3Uncles"
+      },
+      "block_size": {
+        "type": [ "string", "null" ],
+        "description": "size"
+      },
+      "state_root": {
+        "type": [ "string", "null" ],
+        "description": "stateRoot"
+      },
+      "block_timestamp": {
+        "type": [ "string", "null" ],
+        "description": "timestamp"
+      },
+      "total_difficulty": {
+        "type": [ "string", "null" ],
+        "description": "totalDifficulty"
+      }
+    },
+    "indexes": [ [ "block_number" ], [ "hash" ] ],
+    "uniques": [ [ "hash" ] ]
+  },
+  "optimism_block_txs": {
+    "attributes": {
+      "block_hash": {
+        "type": [ "string", "null" ],
+        "description": "blockHash"
+      },
+      "block_number": {
+        "type": [ "string", "null" ],
+        "description": "blockNumber"
+      },
+      "from_address": {
+        "type": [ "string", "null" ],
+        "description": "from"
+      },
+      "gas": {
+        "type": [ "string", "null" ],
+        "description": "gas"
+      },
+      "gas_price": {
+        "type": [ "string", "null" ],
+        "description": "gasPrice"
+      },
+      "hash": {
+        "type": [ "string", "null" ],
+        "description": "hash"
+      },
+      "index": {
+        "type": [ "string", "null" ],
+        "description": "index"
+      },
+      "input": {
+        "type": [ "string", "null" ],
+        "description": "input"
+      },
+      "l1_block_number": {
+        "type": [ "string", "null" ],
+        "description": "l1BlockNumber"
+      },
+      "l1_timestamp": {
+        "type": [ "string", "null" ],
+        "description": "l1Timestamp"
+      },
+      "l1_tx_origin": {
+        "type": [ "string", "null" ],
+        "description": "l1TxOrigin"
+      },
+      "nonce": {
+        "type": [ "string", "null" ],
+        "description": "nonce"
+      },
+      "queue_index": {
+        "type": [ "string", "null" ],
+        "description": "queueIndex"
+      },
+      "queue_origin": {
+        "type": [ "string", "null" ],
+        "description": "queueOrigin"
+      },
+      "raw_tx": {
+        "type": [ "string", "null" ],
+        "description": "rawTransaction"
+      },
+      "to_address": {
+        "type": [ "string", "null" ],
+        "description": "to"
+      },
+      "tx_index": {
+        "type": [ "string", "null" ],
+        "description": "transactionIndex"
+      },
+      "tx_type": {
+        "type": [ "string", "null" ],
+        "description": "txType"
+      },
+      "value": {
+        "type": [ "string", "null" ],
+        "description": "value"
+      }
+    },
+    "indexes": [ [ "block_hash" ], [ "block_number" ], [ "from_address" ], [ "to_address" ], [ "hash" ], [ "l1_block_number" ], [ "index" ] ],
+    "uniques": [ [ "hash" ] ]
   }
 }
