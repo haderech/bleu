@@ -43,7 +43,7 @@
   },
   "optimism_txs": {
     "attributes": {
-      "index": {
+      "tx_index": {
         "type": [ "integer", "null" ],
         "description": "index"
       },
@@ -55,7 +55,7 @@
         "type": [ "integer", "null" ],
         "description": "blockNumber"
       },
-      "timestamp": {
+      "tx_timestamp": {
         "type": [ "integer", "null" ],
         "description": "timestamp"
       },
@@ -88,11 +88,11 @@
         "description": "queueIndex"
       },
       "decoded": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "decoded"
       },
       "confirmed": {
-        "type": [ "bool", "null" ],
+        "type": [ "boolean", "null" ],
         "description": "confirmed"
       }
     },
@@ -285,7 +285,7 @@
         "type": [ "string", "null" ],
         "description": "index"
       },
-      "input": {
+      "tx_input": {
         "type": [ "string", "null" ],
         "description": "input"
       },
