@@ -37,6 +37,7 @@ pub mod tx_batch {
 
 pub mod tx {
     use actix_web::web;
+    use cached::proc_macro::cached;
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
@@ -47,6 +48,7 @@ pub mod tx {
     use crate::schema::optimism::optimism_txs;
     use crate::schema::optimism::optimism_txs::columns::*;
 
+    #[cached(time = 60, key = "bool", convert = r#"{ true }"#, result = true)]
     pub fn find_latest_tx_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismTxSummary>, ExpectedError> {
         let conn = pool.get()?;
         let tx_summary = optimism_txs::table.select((tx_hash, from_address, to_address, value, timestamp))
@@ -98,6 +100,7 @@ pub mod state_batch {
 
 pub mod l1_to_l2_tx {
     use actix_web::web;
+    use cached::proc_macro::cached;
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
@@ -106,6 +109,7 @@ pub mod l1_to_l2_tx {
     use crate::Pool;
     use crate::schema::optimism::optimism_l1_to_l2_txs::dsl::*;
 
+    #[cached(time = 60, key = "bool", convert = r#"{ true }"#, result = true)]
     pub fn find_latest_l1_to_l2_tx(pool: web::Data<Pool>) -> Result<Vec<OptimismL1ToL2Tx>, ExpectedError> {
         let conn = pool.get()?;
         let tx_summary = optimism_l1_to_l2_txs.order(optimism_l1_to_l2_txs_id.desc())
