@@ -3,10 +3,12 @@ extern crate diesel;
 
 use std::env;
 
+use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use diesel::{PgConnection, r2d2};
 use diesel::r2d2::ConnectionManager;
 use paperclip::actix::{OpenApiExt, web};
+use paperclip::v2::models::{DefaultApiRaw, Info};
 
 use crate::service::optimism;
 
@@ -31,8 +33,16 @@ async fn main() -> std::io::Result<()> {
     let endpoint = format!("{host}:{port}", host = host, port = port);
 
     HttpServer::new(move || {
+        let mut spec = DefaultApiRaw::default();
+        spec.info = Info {
+            version: "0.1".into(),
+            title: "Bleu Server".into(),
+            ..Default::default()
+        };
+
         App::new()
-            .wrap_api()
+            .wrap(Cors::default().allowed_origin("http://localhost:3000"))
+            .wrap_api_with_spec(spec)
             .data(pool.clone())
             .service(
                 web::scope("/api/v1")
