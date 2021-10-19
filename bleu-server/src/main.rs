@@ -3,11 +3,11 @@ extern crate diesel;
 
 use std::env;
 
-use actix_web::{App, HttpServer, web};
+use actix_web::{App, HttpServer};
 use diesel::{PgConnection, r2d2};
 use diesel::r2d2::ConnectionManager;
+use paperclip::actix::{OpenApiExt, web};
 
-use crate::service::ethereum;
 use crate::service::optimism;
 
 mod service;
@@ -32,19 +32,22 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap_api()
             .data(pool.clone())
-            .service(web::scope("/api/v1")
-                .service(ethereum::get_eth_block_by_id)
-                .service(optimism::get_latest_tx_batch_summary)
-                .service(optimism::get_tx_batch_by_index)
-                .service(optimism::get_paginated_tx_batch)
-                .service(optimism::get_latest_tx_summary)
-                .service(optimism::get_tx_by_hash)
-                .service(optimism::get_paginated_tx)
-                .service(optimism::get_paginated_state_batch)
-                .service(optimism::get_state_batch_by_index)
-                .service(optimism::get_latest_l1_to_l2_tx)
+            .service(
+                web::scope("/api/v1")
+                    .service(web::resource("/optimism/batch/tx/latest").route(web::get().to(optimism::get_latest_tx_batch_summary)))
+                    .service(web::resource("/optimism/batch/tx/index/{index}").route(web::get().to(optimism::get_tx_batch_by_index)))
+                    .service(web::resource("/optimism/batch/tx/page/{page}/count/{count}").route(web::get().to(optimism::get_paginated_tx_batch)))
+                    .service(web::resource("/optimism/tx/latest").route(web::get().to(optimism::get_latest_tx_summary)))
+                    .service(web::resource("/optimism/tx/hash/{hash}").route(web::get().to(optimism::get_tx_by_hash)))
+                    .service(web::resource("/optimism/tx/batch/{index}/page/{page}/count/{count}").route(web::get().to(optimism::get_paginated_tx)))
+                    .service(web::resource("/optimism/batch/stateroot/page/{page}/count/{count}").route(web::get().to(optimism::get_paginated_state_batch)))
+                    .service(web::resource("/optimism/batch/stateroot/index/{index}").route(web::get().to(optimism::get_state_batch_by_index)))
+                    .service(web::resource("/optimism/tx/l1tol2/latest").route(web::get().to(optimism::get_latest_l1_to_l2_tx)))
             )
+            .with_json_spec_at("/api/spec")
+            .build()
     })
         .bind(endpoint)?
         .run()

@@ -55,7 +55,7 @@ impl<T> Paginated<T> {
         Paginated { page_size, ..self }
     }
 
-    pub fn load_and_count_pages<U:Serialize>(self, conn: &PgConnection) -> QueryResult<PaginatedRecord<U>>
+    pub fn load_and_count_pages<U: Serialize>(self, conn: &PgConnection) -> QueryResult<PaginatedRecord<U>>
         where
             Self: LoadQuery<PgConnection, (U, i64)>,
     {
@@ -86,11 +86,11 @@ impl<T, U> LoadPaginated<U> for T
 
 #[derive(Serialize)]
 pub struct PaginatedRecord<U: Serialize> {
-    page: i64,
-    count: i64,
-    total_page: i64,
-    total_count: i64,
-    records: Vec<U>,
+    pub page: i64,
+    pub count: i64,
+    pub total_page: i64,
+    pub total_count: i64,
+    pub records: Vec<U>,
 }
 
 impl<U: Serialize> PaginatedRecord<U> {

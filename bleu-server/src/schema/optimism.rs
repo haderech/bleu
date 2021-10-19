@@ -16,24 +16,19 @@ table! {
 table! {
     optimism_txs (optimism_txs_id) {
         optimism_txs_id -> BigInt,
-        tx_hash -> Nullable<Text>,
-        status -> Nullable<Text>,
         tx_index -> Nullable<BigInt>,
-        timestamp -> Nullable<BigInt>,
-        from_address -> Nullable<Text>,
-        to_address -> Nullable<Text>,
-        token_transferred -> Nullable<Text>,
+        batch_index -> Nullable<BigInt>,
+        batch_number -> Nullable<BigInt>,
+        tx_timestamp -> Nullable<BigInt>,
+        gas_limit -> Nullable<Text>,
+        target -> Nullable<Text>,
+        origin -> Nullable<Text>,
+        data -> Nullable<Text>,
+        queue_origin -> Nullable<Text>,
         value -> Nullable<Text>,
-        tx_fee -> Nullable<Text>,
-        ether_price -> Nullable<Text>,
-        gas_used_by_tx -> Nullable<Text>,
-        nonce -> Nullable<Text>,
-        input_data -> Nullable<Text>,
+        queue_index -> Nullable<BigInt>,
+        decoded -> Nullable<Text>,
         confirmed -> Nullable<Bool>,
-        l1_txn_batch_index -> Nullable<BigInt>,
-        l1_submission_tx_hash -> Nullable<Text>,
-        l1_state_batch_index -> Nullable<BigInt>,
-        l1_state_root_submission_tx_hash -> Nullable<Text>,
     }
 }
 
@@ -68,5 +63,53 @@ table! {
         l1_block_number -> Nullable<BigInt>,
         l1_tx_hash -> Nullable<Text>,
         l2_tx_hash -> Nullable<Text>,
+    }
+}
+
+table! {
+    optimism_blocks (optimism_blocks_id) {
+        optimism_blocks_id -> BigInt,
+        difficulty -> Nullable<Text>,
+        extra_data -> Nullable<Text>,
+        gas_limit -> Nullable<Text>,
+        gas_used -> Nullable<Text>,
+        hash -> Nullable<Text>,
+        logs_bloom -> Nullable<Text>,
+        miner -> Nullable<Text>,
+        mix_hash -> Nullable<Text>,
+        nonce -> Nullable<Text>,
+        block_number -> Nullable<Text>,
+        parent_hash -> Nullable<Text>,
+        receipts_root -> Nullable<Text>,
+        sha3_uncles -> Nullable<Text>,
+        block_size -> Nullable<Text>,
+        state_root -> Nullable<Text>,
+        block_timestamp -> Nullable<Text>,
+        total_difficulty -> Nullable<Text>,
+    }
+}
+
+table! {
+    optimism_block_txs (optimism_block_txs_id) {
+        optimism_block_txs_id -> BigInt,
+        block_hash -> Nullable<Text>,
+        block_number -> Nullable<Text>,
+        from_address -> Nullable<Text>,
+        gas -> Nullable<Text>,
+        gas_price -> Nullable<Text>,
+        hash -> Nullable<Text>,
+        index -> Nullable<Text>,
+        tx_input -> Nullable<Text>,
+        l1_block_number -> Nullable<Text>,
+        l1_timestamp -> Nullable<Text>,
+        l1_tx_origin -> Nullable<Text>,
+        nonce -> Nullable<Text>,
+        queue_index -> Nullable<Text>,
+        queue_origin -> Nullable<Text>,
+        raw_tx -> Nullable<Text>,
+        to_address -> Nullable<Text>,
+        tx_index -> Nullable<Text>,
+        tx_type -> Nullable<Text>,
+        value -> Nullable<Text>,
     }
 }
