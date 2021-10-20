@@ -1,6 +1,5 @@
 use appbase::prelude::*;
 
-use crate::plugin::ethereum::EthereumPlugin;
 use crate::plugin::optimism::OptimismPlugin;
 
 mod plugin;
