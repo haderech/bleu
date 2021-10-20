@@ -309,7 +309,7 @@ impl EthereumPlugin {
             EthereumMethod::Resubscribe => {
                 let task_id = get_str(&params, "task_id").unwrap();
                 let mut sub_event = sub_events.get(task_id).unwrap().clone();
-                sub_event.node_idx = 0;
+                sub_event.end_point_idx = 0;
                 sub_event.status = SubscribeStatus::Working;
                 sub_events.insert(sub_event.task_id.clone(), sub_event.clone());
 
@@ -331,8 +331,8 @@ impl EthereumPlugin {
     }
 
     fn poll_block(sub_event: &mut SubscribeEvent) -> Result<Value, ExpectedError> {
-        let node_index = usize::from(sub_event.node_idx);
-        let req_url = sub_event.nodes[node_index].clone();
+        let node_index = usize::from(sub_event.end_point_idx);
+        let req_url = sub_event.end_points[node_index].clone();
         let hex_idx = format!("0x{:X}", sub_event.curr_idx);
         let req_body = json!({
             "jsonrpc": "2.0",

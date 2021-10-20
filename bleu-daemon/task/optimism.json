@@ -1,0 +1,30 @@
+{
+  "tx_batch_dtl": {
+    "start_idx": 0,
+    "end_points": [
+      "http://localhost:7878/batch/transaction/index/"
+    ],
+    "filter": ""
+  },
+  "tx_json_rpc": {
+    "start_idx": 0,
+    "end_points": [
+      "http://localhost:8545"
+    ],
+    "filter": ""
+  },
+  "enqueue_dtl": {
+    "start_idx": 0,
+    "end_points": [
+      "http://localhost:7878/enqueue/index/"
+    ],
+    "filter": ""
+  },
+  "state_batch_dtl": {
+    "start_idx": 0,
+    "end_points": [
+      "http://localhost:7878/batch/stateroot/index/"
+    ],
+    "filter": ""
+  }
+}

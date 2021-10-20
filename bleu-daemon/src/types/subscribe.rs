@@ -15,8 +15,8 @@ pub struct SubscribeEvent {
     pub sub_id: String,
     pub start_idx: u64,
     pub curr_idx: u64,
-    pub nodes: Vec<String>,
-    pub node_idx: u16,
+    pub end_points: Vec<String>,
+    pub end_point_idx: u16,
     pub filter: String,
     pub status: SubscribeStatus,
 }
@@ -36,8 +36,8 @@ impl SubscribeEvent {
             sub_id,
             start_idx,
             curr_idx: start_idx,
-            nodes: get_string_vec(params, "nodes"),
-            node_idx: 0,
+            end_points: get_string_vec(params, "end_points"),
+            end_point_idx: 0,
             filter,
             status: SubscribeStatus::Working,
         }
@@ -50,10 +50,27 @@ impl SubscribeEvent {
             sub_id: get_string(params, "sub_id").unwrap(),
             start_idx: get_u64(params, "start_idx").unwrap(),
             curr_idx: get_u64(params, "curr_idx").unwrap(),
-            nodes: get_string_vec(params, "nodes"),
-            node_idx: get_u64(params, "node_idx").unwrap() as u16,
+            end_points: get_string_vec(params, "end_points"),
+            end_point_idx: get_u64(params, "end_point_idx").unwrap() as u16,
             filter: get_string(params, "filter").unwrap(),
             status: SubscribeStatus::find(get_str(params, "status").unwrap()).unwrap(),
+        }
+    }
+
+    pub fn load(task_id: String, sub_id: String, chain: String, task_map: &Map<String, Value>) -> Self {
+        let start_idx = get_u64(task_map, "start_idx").unwrap();
+        let end_points = get_string_vec(task_map, "end_points");
+        let filter = get_string(task_map, "filter").unwrap();
+        SubscribeEvent {
+            task_id,
+            chain,
+            sub_id,
+            start_idx,
+            curr_idx: start_idx,
+            end_points,
+            end_point_idx: 0,
+            filter,
+            status: SubscribeStatus::Working,
         }
     }
 
@@ -68,8 +85,8 @@ impl SubscribeEvent {
     pub fn handle_error(&mut self, rocks_channel: &channel::Sender, err_msg: String) {
         log::error!("{}", err_msg.clone());
 
-        if usize::from(self.node_idx) + 1 < self.nodes.len() {
-            self.node_idx += 1;
+        if usize::from(self.end_point_idx) + 1 < self.end_points.len() {
+            self.end_point_idx += 1;
         } else {
             self.status = SubscribeStatus::Error;
         }
@@ -79,8 +96,8 @@ impl SubscribeEvent {
     }
 
     pub fn active_node(&self) -> String {
-        let usize_idx = usize::from(self.node_idx);
-        self.nodes[usize_idx].clone()
+        let usize_idx = usize::from(self.end_point_idx);
+        self.end_points[usize_idx].clone()
     }
 
     pub fn next_idx(&mut self) {
@@ -95,8 +112,8 @@ pub struct SubscribeTask {
     pub sub_id: String,
     pub start_idx: u64,
     pub curr_idx: u64,
-    pub nodes: Vec<String>,
-    pub node_idx: u16,
+    pub end_points: Vec<String>,
+    pub end_point_idx: u16,
     pub filter: String,
     pub status: String,
     pub err_msg: String,
@@ -110,8 +127,8 @@ impl SubscribeTask {
             sub_id: sub_event.sub_id.clone(),
             start_idx: sub_event.start_idx,
             curr_idx: sub_event.curr_idx,
-            nodes: sub_event.nodes.clone(),
-            node_idx: sub_event.node_idx,
+            end_points: sub_event.end_points.clone(),
+            end_point_idx: sub_event.end_point_idx,
             filter: sub_event.filter.clone(),
             status: sub_event.status.value(),
             err_msg,
@@ -136,7 +153,7 @@ mod subscribe_test {
         let mut params = Map::new();
         params.insert(String::from("sub_id"), json!("cosmoshub-4"));
         params.insert(String::from("start_idx"), json!(1u64));
-        params.insert(String::from("nodes"), json!(["https://api.cosmos.network"]));
+        params.insert(String::from("end_points"), json!(["https://api.cosmos.network"]));
         params.insert(String::from("filter"), Value::String(String::from("")));
 
         let subscribe_event = SubscribeEvent::new("tendermint", &params);
@@ -148,7 +165,7 @@ mod subscribe_test {
         let mut params = Map::new();
         params.insert(String::from("sub_id"), json!("cosmoshub-4"));
         params.insert(String::from("start_idx"), json!(1u64));
-        params.insert(String::from("nodes"), json!(["https://api.cosmos.network"]));
+        params.insert(String::from("end_points"), json!(["https://api.cosmos.network"]));
         params.insert(String::from("filter"), Value::String(String::from("")));
 
         let subscribe_event = SubscribeEvent::new("tendermint", &params);
@@ -160,7 +177,7 @@ mod subscribe_test {
         let mut params = Map::new();
         params.insert(String::from("sub_id"), json!("cosmoshub-4"));
         params.insert(String::from("start_idx"), json!(1u64));
-        params.insert(String::from("nodes"), json!(["https://api.cosmos.network"]));
+        params.insert(String::from("end_points"), json!(["https://api.cosmos.network"]));
         params.insert(String::from("filter"), Value::String(String::from("")));
 
         let subscribe_event = SubscribeEvent::new("tendermint", &params);
