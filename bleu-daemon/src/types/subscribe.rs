@@ -100,9 +100,13 @@ impl SubscribeEvent {
         self.end_points[usize_idx].clone()
     }
 
-    pub fn next_idx(&mut self) {
-        self.curr_idx += 1;
-    }
+    pub fn next_idx(&mut self) { self.curr_idx += 1; }
+
+    pub fn get_sub_id(&self) -> &str { self.sub_id.as_str() }
+
+    pub fn get_task_id(&self) -> String { self.task_id.clone() }
+
+    pub fn status(&mut self, status: SubscribeStatus) { self.status = status; }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -137,6 +141,10 @@ impl SubscribeTask {
 
     pub fn task_id(chain: &str, params: &Map<String, Value>) -> String {
         format!("task:{}:{}", chain, get_str(params, "sub_id").unwrap())
+    }
+
+    pub fn get_task_id(&self) -> String {
+        self.task_id.clone()
     }
 }
 

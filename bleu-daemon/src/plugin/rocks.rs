@@ -18,7 +18,7 @@ pub struct RocksPlugin {
     monitor: Option<Receiver>,
 }
 
-type RocksDB = Arc<DBWithThreadMode<SingleThreaded>>;
+pub type RocksDB = Arc<DBWithThreadMode<SingleThreaded>>;
 
 message!((RocksMsg; {key: String}, {value: Value}); (RocksMethod; {Put: "put"}, {Delete: "delete"}));
 

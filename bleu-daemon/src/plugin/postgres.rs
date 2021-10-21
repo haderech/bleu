@@ -14,14 +14,14 @@ use crate::libs::postgres::{create_table, insert_value};
 use crate::libs::serde::{get_object, get_str};
 use crate::plugin::slack::{SlackMsg, SlackMsgLevel};
 use crate::plugin::slack::SlackPlugin;
-use crate::types::channel::MultiChannel;
+use crate::types::channel::MultiSender;
 use crate::types::enumeration::Enumeration;
 use crate::types::postgres::PostgresSchema;
 
 #[appbase_plugin(SlackPlugin)]
 pub struct PostgresPlugin {
     monitor: Option<Receiver>,
-    channels: Option<MultiChannel>,
+    channels: Option<MultiSender>,
     pool: Option<Pool>,
     schema_map: Option<HashMap<String, PostgresSchema>>,
 }
@@ -50,7 +50,7 @@ impl Plugin for PostgresPlugin {
         let schema_map = Self::load_schema().expect("failed to load schema!");
         let pool = Self::create_pool().expect("failed to create pool!");
         create_table(pool.clone(), &schema_map);
-        let channels = MultiChannel::new(vec!("slack"));
+        let channels = MultiSender::new(vec!("slack"));
         self.channels = Some(channels.to_owned());
         self.monitor = Some(APP.channels.subscribe("postgres"));
         self.pool = Some(pool);
@@ -71,7 +71,7 @@ impl Plugin for PostgresPlugin {
 }
 
 impl PostgresPlugin {
-    fn recv(pool: Pool, schema_map: HashMap<String, PostgresSchema>, channels: MultiChannel, mut monitor: Receiver, app: QuitHandle) {
+    fn recv(pool: Pool, schema_map: HashMap<String, PostgresSchema>, channels: MultiSender, mut monitor: Receiver, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Ok(msg) = monitor.try_recv() {
                 let parsed_msg = msg.as_object().unwrap();
@@ -116,7 +116,7 @@ impl PostgresPlugin {
         Ok(pool)
     }
 
-    fn error_handler(error: ExpectedError, channels: &MultiChannel) {
+    fn error_handler(error: ExpectedError, channels: &MultiSender) {
         let slack_err_msg = SlackMsg::new(SlackMsgLevel::Warn.value(), error.to_string());
         let slack_channel = channels.get("slack");
         let _ = slack_channel.send(slack_err_msg);

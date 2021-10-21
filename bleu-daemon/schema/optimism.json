@@ -96,8 +96,8 @@
         "description": "confirmed"
       }
     },
-    "indexes": [ [ "index" ], [ "batch_number" ], [ "target" ], [ "origin" ] ],
-    "uniques": [ [ "index" ] ]
+    "indexes": [ [ "tx_index" ], [ "batch_number" ], [ "target" ], [ "origin" ] ],
+    "uniques": [ [ "tx_index" ] ]
   },
   "optimism_l1_to_l2_txs": {
     "attributes": {

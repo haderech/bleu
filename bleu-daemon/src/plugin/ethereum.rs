@@ -17,16 +17,16 @@ use crate::libs::serde::{get_array, get_object, get_str, get_string};
 use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::{RocksMethod, RocksMsg, RocksPlugin};
-use crate::types::channel::MultiChannel;
+use crate::types::channel::MultiSender;
 use crate::types::enumeration::Enumeration;
 use crate::types::subscribe::{SubscribeEvent, SubscribeStatus, SubscribeTask};
-use crate::validation::{get_task, resubscribe, stop_subscribe, subscribe, unsubscribe};
+use crate::validation::{get_task, start_subscribe, stop_subscribe, subscribe, unsubscribe};
 
 // #[appbase_plugin(JsonRpcPlugin, RocksPlugin, PostgresPlugin, ElasticsearchPlugin)]
 #[appbase_plugin(JsonRpcPlugin, RocksPlugin, PostgresPlugin)]
 pub struct EthereumPlugin {
     sub_events: Option<SubscribeEvents>,
-    channels: Option<MultiChannel>,
+    channels: Option<MultiSender>,
     monitor: Option<Receiver>,
 }
 
@@ -106,7 +106,7 @@ impl Plugin for EthereumPlugin {
 impl EthereumPlugin {
     fn pre_init(&mut self) {
         self.sub_events = Some(Arc::new(FutureMutex::new(HashMap::new())));
-        let channels = MultiChannel::new(vec!("ethereum", "rocks", "postgres", /*"elasticsearch"*/));
+        let channels = MultiSender::new(vec!("ethereum", "rocks", "postgres", /*"elasticsearch"*/));
         self.channels = Some(channels.to_owned());
         self.monitor = Some(APP.channels.subscribe("ethereum"));
     }
@@ -176,7 +176,7 @@ impl EthereumPlugin {
         APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
             jsonrpc.add_method(String::from("eth_resubscribe"), move |params: Params| {
                 let params: Map<String, Value> = params.parse().unwrap();
-                let verified = resubscribe::verify(&params);
+                let verified = start_subscribe::verify(&params);
                 if verified.is_err() {
                     let mut error = Map::new();
                     error.insert(String::from("error"), Value::String(verified.unwrap_err().to_string()));

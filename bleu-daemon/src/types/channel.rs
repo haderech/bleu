@@ -2,22 +2,22 @@ use std::collections::HashMap;
 use appbase::prelude::*;
 
 #[derive(Clone)]
-pub struct MultiChannel {
-    channel_map: HashMap<String, Sender>,
+pub struct MultiSender {
+    sender_map: HashMap<String, Sender>,
 }
 
-impl MultiChannel {
-    pub fn new(channels: Vec<&str>) -> Self {
-        let mut channel_map = HashMap::new();
-        for channel in channels.into_iter() {
-            channel_map.insert(String::from(channel), APP.channels.get(channel));
+impl MultiSender {
+    pub fn new(senders: Vec<&str>) -> Self {
+        let mut sender_map = HashMap::new();
+        for sender in senders.into_iter() {
+            sender_map.insert(String::from(sender), APP.channels.get(sender));
         }
-        MultiChannel {
-            channel_map: channel_map.to_owned(),
+        MultiSender {
+            sender_map: sender_map.to_owned(),
         }
     }
 
     pub fn get(&self, name: &str) -> Sender {
-        self.channel_map.get(name).unwrap().clone()
+        self.sender_map.get(name).unwrap().clone()
     }
 }
