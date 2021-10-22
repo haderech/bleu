@@ -10,7 +10,10 @@ use serde_json::{json, Value};
 
 use crate::enumeration;
 use crate::error::error::ExpectedError;
+use crate::libs::number::hex_to_decimal_converter;
+use crate::libs::opts::opt_to_result;
 use crate::libs::request;
+use crate::libs::request::adjust_url;
 use crate::libs::rocks::{get_by_prefix_static, get_static};
 use crate::libs::serde::{get_array, get_object, get_str};
 use crate::libs::subscribe::load_task;
@@ -79,7 +82,10 @@ impl OptimismPlugin {
                 for (_, sub_event) in locked_events.iter_mut() {
                     if sub_event.is_workable() {
                         match Self::event_handler(sub_event, &senders) {
-                            Ok(_) => Self::task_syncer(sub_event, &senders),
+                            Ok(_) => {
+                                Self::task_syncer(sub_event, &senders);
+                                sub_event.next_idx();
+                            }
                             Err(err) => Self::error_handler(err, sub_event, &senders)
                         }
                     }
@@ -114,7 +120,7 @@ impl OptimismPlugin {
     fn event_handler(sub_event: &mut SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let pg_sender = senders.get("postgres");
         let _ = match sub_event.get_sub_id() {
-            "tx_json_rpc" => Self::tx_json_rpc_handler(sub_event, pg_sender)?,
+            "tx_json_rpc" => Self::tx_jsonrpc_handler(sub_event, pg_sender)?,
             "tx_batch_dtl" => Self::tx_batch_dtl_handler(sub_event, pg_sender)?,
             "enqueue_dtl" => Self::enqueue_dtl_handler(sub_event, pg_sender)?,
             "state_batch_dtl" => Self::state_batch_dtl_handler(sub_event, pg_sender)?,
@@ -133,7 +139,7 @@ impl OptimismPlugin {
         format!("{adjusted_url}{curr_idx}", adjusted_url = adjusted_url, curr_idx = curr_idx)
     }
 
-    fn tx_json_rpc_handler(sub_event: &mut SubscribeEvent, pg_sender: Sender) -> Result<(), ExpectedError> {
+    fn tx_jsonrpc_handler(sub_event: &SubscribeEvent, pg_sender: Sender) -> Result<(), ExpectedError> {
         let req_url = sub_event.active_node();
         let hex_idx = format!("0x{:x}", sub_event.curr_idx);
         let req_body = json!({
@@ -146,19 +152,21 @@ impl OptimismPlugin {
         match Self::is_value_created(&response, "result") {
             true => {
                 let block = get_object(&response, "result")?;
-                let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_blocks"), Value::Object(block.clone())))?;
+                let converted_block = hex_to_decimal_converter(block, vec!["number", "size", "timestamp", "gasLimit", "gasUsed"])?;
+                let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_blocks"), Value::Object(converted_block.to_owned())))?;
                 let txs = get_array(&block, "transactions")?;
                 for tx in txs.iter() {
-                    let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_block_txs"), tx.clone()))?;
+                    let tx_map = opt_to_result(tx.as_object())?;
+                    let converted_tx = hex_to_decimal_converter(tx_map, vec!["blockNumber", "gas", "gasPrice", "nonce", "transactionIndex", "value", "l1BlockNumber", "l1TimeStamp", "index", "queueIndex"])?;
+                    let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_block_txs"), Value::Object(converted_tx.to_owned())))?;
                 }
-                sub_event.next_idx();
             }
             false => println!("{}", format!("waiting for tx created...sub_id={}", sub_event.sub_id))
         };
         Ok(())
     }
 
-    fn tx_batch_dtl_handler(sub_event: &mut SubscribeEvent, pg_sender: Sender) -> Result<(), ExpectedError> {
+    fn tx_batch_dtl_handler(sub_event: &SubscribeEvent, pg_sender: Sender) -> Result<(), ExpectedError> {
         let req_url = Self::create_req_url(sub_event.active_node(), sub_event.curr_idx);
         let response = request::get(req_url.as_str())?;
         match Self::is_value_created(&response, "batch") {
@@ -169,18 +177,17 @@ impl OptimismPlugin {
                 for tx in txs.iter() {
                     let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_txs"), tx.clone()))?;
                 }
-                sub_event.next_idx();
             }
             false => println!("{}", format!("waiting for tx batch created...sub_id={}", sub_event.sub_id))
         };
         Ok(())
     }
 
-    fn enqueue_dtl_handler(sub_event: &mut SubscribeEvent, pg_sender: Sender) -> Result<(), ExpectedError> {
+    fn enqueue_dtl_handler(sub_event: &SubscribeEvent, pg_sender: Sender) -> Result<(), ExpectedError> {
         Ok(())
     }
 
-    fn state_batch_dtl_handler(sub_event: &mut SubscribeEvent, pg_sender: Sender) -> Result<(), ExpectedError> {
+    fn state_batch_dtl_handler(sub_event: &SubscribeEvent, pg_sender: Sender) -> Result<(), ExpectedError> {
         let req_url = Self::create_req_url(sub_event.active_node(), sub_event.curr_idx);
         let response = request::get(req_url.as_str())?;
         match Self::is_value_created(&response, "batch") {
@@ -191,7 +198,6 @@ impl OptimismPlugin {
                 for tx in txs.iter() {
                     let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_state_roots"), tx.clone()))?;
                 }
-                sub_event.next_idx();
             }
             false => println!("{}", format!("waiting for state root batch created...sub_id={}", sub_event.sub_id))
         };
@@ -254,39 +260,22 @@ impl OptimismPlugin {
         });
     }
 
-    fn task_syncer(sub_event: &mut SubscribeEvent, senders: &MultiSender) {
+    fn task_syncer(sub_event: &SubscribeEvent, senders: &MultiSender) {
         let task = SubscribeTask::from(&sub_event, String::from(""));
         let rocks_sender = senders.get("rocks");
         let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Put, task.get_task_id(), Value::String(json!(task).to_string())));
     }
 }
 
-fn adjust_url(url: String) -> String {
-    let mut tmp_url = url.clone();
-    if !tmp_url.ends_with("/") {
-        tmp_url += "/";
-    }
-    tmp_url.to_owned()
-}
-
 #[cfg(test)]
 mod optimism {
     use serde_json::{Map, Value};
-
+    use crate::libs::request::adjust_url;
     use crate::plugin::optimism;
 
     #[test]
-    fn adjust_url_test() {
-        let example_url = optimism::adjust_url(String::from("https://example.com"));
-        assert_eq!("https://example.com/", example_url);
-
-        let example_url2 = optimism::adjust_url(String::from("https://example2.com/"));
-        assert_eq!("https://example2.com/", example_url2);
-    }
-
-    #[test]
     fn get_req_url_test() {
-        let example_url = optimism::adjust_url(String::from("https://example.com"));
+        let example_url = adjust_url(String::from("https://example.com"));
         let curr_idx = 1u64;
         let req_url = optimism::OptimismPlugin::create_req_url(example_url, curr_idx);
         println!("{}", req_url);

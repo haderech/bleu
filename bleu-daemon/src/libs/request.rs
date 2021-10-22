@@ -30,3 +30,25 @@ pub fn post(url: &str, req_body: &str) -> Result<Map<String, Value>, ExpectedErr
     }
     Ok(parsed_body)
 }
+
+pub fn adjust_url(url: String) -> String {
+    let mut tmp_url = url.clone();
+    if !tmp_url.ends_with("/") {
+        tmp_url += "/";
+    }
+    tmp_url.to_owned()
+}
+
+#[cfg(test)]
+mod request {
+    use crate::libs::request::adjust_url;
+
+    #[test]
+    fn adjust_url_test() {
+        let example_url = adjust_url(String::from("https://example.com"));
+        assert_eq!("https://example.com/", example_url);
+
+        let example_url2 = adjust_url(String::from("https://example2.com/"));
+        assert_eq!("https://example2.com/", example_url2);
+    }
+}

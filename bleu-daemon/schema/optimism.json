@@ -250,6 +250,10 @@
       "total_difficulty": {
         "type": [ "string", "null" ],
         "description": "totalDifficulty"
+      },
+      "tx_root": {
+        "type": [ "string", "null" ],
+        "description": "transactionsRoot"
       }
     },
     "indexes": [ [ "block_number" ], [ "hash" ] ],

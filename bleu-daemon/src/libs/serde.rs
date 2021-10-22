@@ -48,20 +48,12 @@ pub fn find_value(values: &Map<String, Value>, target_name: &str) -> Value {
 }
 
 pub fn unwrap<'a>(params: &'a Map<String, Value>, name: &'a str) -> Result<&'a Value, ExpectedError> {
-    let opt_val = params.get(name);
-    match opt_val {
-        None => Err(ExpectedError::NoneError(format!("{} does not exist!", name))),
-        Some(val) => Ok(val),
-    }
+    Ok(opt_to_result(params.get(name))?)
 }
 
 pub fn get_str<'a>(params: &'a Map<String, Value>, name: &'a str) -> Result<&'a str, ExpectedError> {
     let unwrapped = unwrap(params, name)?;
-    let opt_val = unwrapped.as_str();
-    match opt_val {
-        None => Err(ExpectedError::NoneError(format!("{} is not {}!", name, "str"))),
-        Some(val) => Ok(val),
-    }
+    Ok(opt_to_result(unwrapped.as_str())?)
 }
 
 pub fn get_string(params: &Map<String, Value>, name: &str) -> Result<String, ExpectedError> {
@@ -71,38 +63,22 @@ pub fn get_string(params: &Map<String, Value>, name: &str) -> Result<String, Exp
 
 pub fn get_u64(params: &Map<String, Value>, name: &str) -> Result<u64, ExpectedError> {
     let unwrapped = unwrap(params, name)?;
-    let opt_val = unwrapped.as_u64();
-    match opt_val {
-        None => Err(ExpectedError::TypeError(format!("{} is not {}!", name, "u64"))),
-        Some(val) => Ok(val),
-    }
+    Ok(opt_to_result(unwrapped.as_u64())?)
 }
 
 pub fn get_object<'a>(params: &'a Map<String, Value>, name: &'a str) -> Result<&'a Map<String, Value>, ExpectedError> {
     let unwrapped = unwrap(params, name)?;
-    let opt_val = unwrapped.as_object();
-    match opt_val {
-        None => Err(ExpectedError::TypeError(format!("{} is not {}!", name, "object"))),
-        Some(val) => Ok(val),
-    }
+    Ok(opt_to_result(unwrapped.as_object())?)
 }
 
 pub fn get_array<'a>(params: &'a Map<String, Value>, name: &'a str) -> Result<&'a Vec<Value>, ExpectedError> {
     let unwrapped = unwrap(params, name)?;
-    let opt_val = unwrapped.as_array();
-    match opt_val {
-        None => Err(ExpectedError::TypeError(format!("{} is not {}!", name, "array"))),
-        Some(val) => Ok(val),
-    }
+    Ok(opt_to_result(unwrapped.as_array())?)
 }
 
 // pub fn get_bool(params: &Map<String, Value>, name: &str) -> Result<bool, ExpectedError> {
 //     let unwrapped = unwrap(params, name)?;
-//     let opt_val = unwrapped.as_bool();
-//     match opt_val {
-//         None => Err(ExpectedError::TypeError(format!("{} is not {}!", name, "bool"))),
-//         Some(val) => Ok(val),
-//     }
+//     Ok(opt_to_result(unwrapped.as_bool())?)
 // }
 
 pub fn get_value_by_path<'a>(params: &'a Map<String, Value>, path: &'a str) -> Result<&'a Value, ExpectedError> {

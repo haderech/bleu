@@ -64,7 +64,7 @@ mod subscribe {
 
     #[test]
     fn load_task_test() {
-        let sub_events = load_task_from_json("task/optimism.json", "optimism", "task:optimism");
+        let sub_events = load_task_from_json("task/optimism.json", "optimism", "task:optimism").unwrap();
         for (task_id, sub_event) in sub_events.iter() {
             println!("task_id={}, sub_event={:?}", task_id, sub_event);
         }
