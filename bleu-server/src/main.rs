@@ -39,9 +39,11 @@ async fn main() -> std::io::Result<()> {
             title: "Bleu Server".into(),
             ..Default::default()
         };
+        let swagger_resource = env::var("SWAGGER_RESOURCE").expect("SWAGGER_RESOURCE does not exist!");
+        let swagger_port = env::var("SWAGGER_PORT").expect("SWAGGER_PORT does not exist!");
 
         App::new()
-            .wrap(Cors::default().allowed_origin("http://localhost:3000"))
+            .wrap(Cors::default().allowed_origin(format!("http://localhost:{}", swagger_port).as_str()))
             .wrap_api_with_spec(spec)
             .data(pool.clone())
             .service(
@@ -56,7 +58,7 @@ async fn main() -> std::io::Result<()> {
                     .service(web::resource("/optimism/batch/stateroot/index/{index}").route(web::get().to(optimism::get_state_batch_by_index)))
                     .service(web::resource("/optimism/tx/l1tol2/latest").route(web::get().to(optimism::get_latest_l1_to_l2_tx)))
             )
-            .with_json_spec_at("/api/spec")
+            .with_json_spec_at(&swagger_resource)
             .build()
     })
         .bind(endpoint)?
