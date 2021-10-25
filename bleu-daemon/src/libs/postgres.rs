@@ -63,6 +63,8 @@ pub fn get_query_value(values: &Map<String, Value>, target_name: &str) -> String
     match value {
         Value::Null => String::from("null"),
         Value::String(s) => format!("'{}'", s),
+        Value::Array(_) => format!("'{}'", value.to_string()),
+        Value::Object(_) => format!("'{}'", value.to_string()),
         _ => value.to_string(),
     }
 }
