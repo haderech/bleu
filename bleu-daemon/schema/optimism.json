@@ -43,10 +43,6 @@
   },
   "optimism_txs": {
     "attributes": {
-      "optimism_txs_id": {
-        "type": [ "string", "null" ],
-        "description": "index"
-      },
       "index": {
         "type": [ "string", "null" ],
         "description": "index"
