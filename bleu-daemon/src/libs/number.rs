@@ -39,10 +39,25 @@ fn is_hex_string(hex_str: &str) -> bool {
     regex.is_match(hex_str)
 }
 
+pub fn number_to_string_convert(origin_map: &Map<String, Value>, target_keys: Vec<&str>) -> Result<Map<String, Value>, ExpectedError> {
+    let mut cloned_map = origin_map.clone();
+    for key in target_keys.into_iter() {
+        if let true = cloned_map.contains_key(key) {
+            let value = opt_to_result(cloned_map.get(key))?;
+            if value.is_number() {
+                let converted_value = value.to_string();
+                cloned_map.insert(key.to_owned(), Value::String(converted_value));
+            }
+        }
+    }
+    Ok(cloned_map)
+}
+
 #[cfg(test)]
 mod number {
-    use serde_json::{Map, Value};
-    use crate::libs::number::{hex_to_decimal, hex_to_decimal_converter};
+    use serde_json::{json, Map, Value};
+
+    use crate::libs::number::{hex_to_decimal, hex_to_decimal_converter, number_to_string_convert};
 
     #[test]
     fn hex_to_decimal_test() {
@@ -74,6 +89,19 @@ mod number {
         assert_eq!(converted_map.get("key1").unwrap(), "17");
         assert_eq!(converted_map.get("key2").unwrap(), "0x22");
         assert_eq!(converted_map.get("key3").unwrap(), "bleu-daemon");
-        assert_eq!(converted_map.get("key4").unwrap().to_owned(), Value::Null);
+        assert_eq!(converted_map.get("key4").unwrap().clone(), Value::Null);
+    }
+
+    #[test]
+    fn number_to_string_convert_test() {
+        let mut test_map = Map::new();
+        test_map.insert(String::from("key1"), Value::from(1));
+        test_map.insert(String::from("key2"), Value::String("a".to_string()));
+        test_map.insert(String::from("key3"), Value::from(1));
+
+        let converted_map = number_to_string_convert(&test_map, vec!["key1", "key2"]).unwrap();
+        assert_eq!(converted_map.get("key1").unwrap(), "1");
+        assert_eq!(converted_map.get("key2").unwrap(), "a");
+        assert_eq!(converted_map.get("key3").unwrap().clone(), Value::from(1));
     }
 }

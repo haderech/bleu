@@ -2,15 +2,15 @@
   "optimism_tx_batches": {
     "attributes": {
       "batch_index": {
-        "type":  [ "integer", "null" ],
+        "type":  [ "string", "null" ],
         "description": "index"
       },
-      "timestamp": {
-        "type":  [ "integer", "null" ],
+      "batch_timestamp": {
+        "type":  [ "string", "null" ],
         "description": "timestamp"
       },
       "batch_size": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "size"
       },
       "l1_tx_hash": {
@@ -18,7 +18,7 @@
         "description": "l1TransactionHash"
       },
       "l1_block_number": {
-        "type":  [ "integer", "null" ],
+        "type":  [ "string", "null" ],
         "description": "blockNumber"
       },
       "batch_root": {
@@ -26,7 +26,7 @@
         "description": "root"
       },
       "previous_total_elements": {
-        "type":  [ "integer", "null" ],
+        "type":  [ "string", "null" ],
         "description": "prevTotalElements"
       },
       "extra_data": {
@@ -38,25 +38,29 @@
         "description": "submitter"
       }
     },
-    "indexes": [ [ "batch_index" ] , [ "l1_tx_hash" ], [ "l1_block_number" ] ],
-    "uniques": []
+    "indexes": [ [ "batch_index" ], [ "l1_tx_hash" ], [ "l1_block_number" ] ],
+    "uniques": [ [ "batch_index" ] ]
   },
   "optimism_txs": {
     "attributes": {
-      "tx_index": {
-        "type": [ "integer", "null" ],
+      "optimism_txs_id": {
+        "type": [ "string", "null" ],
+        "description": "index"
+      },
+      "index": {
+        "type": [ "string", "null" ],
         "description": "index"
       },
       "batch_index": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "batchIndex"
       },
-      "batch_number": {
-        "type": [ "integer", "null" ],
+      "block_number": {
+        "type": [ "string", "null" ],
         "description": "blockNumber"
       },
       "tx_timestamp": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "timestamp"
       },
       "gas_limit": {
@@ -84,7 +88,7 @@
         "description": "value"
       },
       "queue_index": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "queueIndex"
       },
       "decoded": {
@@ -96,39 +100,21 @@
         "description": "confirmed"
       }
     },
-    "indexes": [ [ "tx_index" ], [ "batch_number" ], [ "target" ], [ "origin" ] ],
-    "uniques": [ [ "tx_index" ] ]
-  },
-  "optimism_l1_to_l2_txs": {
-    "attributes": {
-      "l1_block_number": {
-        "type": [ "integer", "null" ],
-        "description": "l1BlockNumber"
-      },
-      "l1_tx_hash": {
-        "type": [ "string", "null" ],
-        "description": "l1TxHash"
-      },
-      "l2_tx_hash": {
-        "type": [ "string", "null" ],
-        "description": "l2TxHash"
-      }
-    },
-    "indexes": [ ],
-    "uniques": [ ]
+    "indexes": [ [ "index" ], [ "batch_number" ], [ "target" ], [ "origin" ] ],
+    "uniques": [ [ "index" ] ]
   },
   "optimism_state_batches": {
     "attributes": {
       "batch_index": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "index"
       },
-      "l1_timestamp": {
-        "type": [ "integer", "null" ],
+      "batch_timestamp": {
+        "type": [ "string", "null" ],
         "description": "timestamp"
       },
       "batch_size": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "size"
       },
       "l1_tx_hash": {
@@ -136,7 +122,7 @@
         "description": "l1TransactionHash"
       },
       "l1_block_number": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "blockNumber"
       },
       "batch_root": {
@@ -144,7 +130,7 @@
         "description": "root"
       },
       "previous_total_elements": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "prevTotalElements"
       },
       "extra_data": {
@@ -157,16 +143,16 @@
       }
     },
     "indexes": [ [ "batch_index" ], [ "l1_tx_hash" ], [ "l1_block_number" ], [ "batch_root" ] ],
-    "uniques": [ ]
+    "uniques": [ [ "batch_index" ] ]
   },
   "optimism_state_roots": {
     "attributes": {
       "index": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "index"
       },
       "batch_index": {
-        "type": [ "integer", "null" ],
+        "type": [ "string", "null" ],
         "description": "batchIndex"
       },
       "value": {
@@ -179,7 +165,7 @@
       }
     },
     "indexes": [ [ "index" ], [ "batch_index" ], [ "value" ] ],
-    "uniques": [ ]
+    "uniques": [ [ "index" ] ]
   },
   "optimism_blocks": {
     "attributes": {

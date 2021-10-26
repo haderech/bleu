@@ -10,7 +10,7 @@ use serde_json::{json, Value};
 
 use crate::enumeration;
 use crate::error::error::ExpectedError;
-use crate::libs::number::hex_to_decimal_converter;
+use crate::libs::number::{hex_to_decimal_converter, number_to_string_convert};
 use crate::libs::opts::opt_to_result;
 use crate::libs::request;
 use crate::libs::request::adjust_url;
@@ -172,10 +172,13 @@ impl OptimismPlugin {
         match Self::is_value_created(&response, "batch") {
             true => {
                 let batch = get_object(&response, "batch")?;
-                let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_tx_batches"), Value::Object(batch.clone())))?;
+                let converted_batch = number_to_string_convert(batch, vec!["index", "timestamp", "size", "blockNumber", "prevTotalElements"])?;
+                let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_tx_batches"), Value::Object(converted_batch.to_owned())))?;
                 let txs = get_array(&response, "transactions")?;
                 for tx in txs.iter() {
-                    let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_txs"), tx.clone()))?;
+                    let tx_map = opt_to_result(tx.as_object())?;
+                    let converted_tx = number_to_string_convert(tx_map, vec!["index", "batchIndex", "blockNumber", "timestamp", "queueIndex"])?;
+                    let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_txs"), Value::Object(converted_tx.to_owned())))?;
                 }
             }
             false => println!("{}", format!("waiting for tx batch created...sub_id={}", sub_event.sub_id))
