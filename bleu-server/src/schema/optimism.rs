@@ -1,13 +1,15 @@
+use diesel::{ExpressionMethods, NullableExpressionMethods};
+
 table! {
     optimism_tx_batches (optimism_tx_batches_id) {
         optimism_tx_batches_id -> BigInt,
-        batch_index -> Nullable<BigInt>,
-        timestamp -> Nullable<BigInt>,
-        batch_size -> Nullable<BigInt>,
+        batch_index -> Nullable<Text>,
+        batch_timestamp -> Nullable<Text>,
+        batch_size -> Nullable<Text>,
         l1_tx_hash -> Nullable<Text>,
-        l1_block_number -> Nullable<BigInt>,
+        l1_block_number -> Nullable<Text>,
         batch_root -> Nullable<Text>,
-        previous_total_elements -> Nullable<BigInt>,
+        previous_total_elements -> Nullable<Text>,
         extra_data -> Nullable<Text>,
         submitter -> Nullable<Text>,
     }
@@ -16,17 +18,17 @@ table! {
 table! {
     optimism_txs (optimism_txs_id) {
         optimism_txs_id -> BigInt,
-        tx_index -> Nullable<BigInt>,
-        batch_index -> Nullable<BigInt>,
-        batch_number -> Nullable<BigInt>,
-        tx_timestamp -> Nullable<BigInt>,
+        index -> Nullable<Text>,
+        batch_index -> Nullable<Text>,
+        batch_number -> Nullable<Text>,
+        tx_timestamp -> Nullable<Text>,
         gas_limit -> Nullable<Text>,
         target -> Nullable<Text>,
         origin -> Nullable<Text>,
         data -> Nullable<Text>,
         queue_origin -> Nullable<Text>,
         value -> Nullable<Text>,
-        queue_index -> Nullable<BigInt>,
+        queue_index -> Nullable<Text>,
         decoded -> Nullable<Text>,
         confirmed -> Nullable<Bool>,
     }
@@ -35,13 +37,13 @@ table! {
 table! {
     optimism_state_batches (optimism_state_batches_id) {
         optimism_state_batches_id -> BigInt,
-        batch_index -> Nullable<BigInt>,
-        l1_timestamp -> Nullable<BigInt>,
-        batch_size -> Nullable<BigInt>,
+        batch_index -> Nullable<Text>,
+        batch_timestamp -> Nullable<Text>,
+        batch_size -> Nullable<Text>,
         l1_tx_hash -> Nullable<Text>,
-        l1_block_number -> Nullable<BigInt>,
+        l1_block_number -> Nullable<Text>,
         batch_root -> Nullable<Text>,
-        previous_total_elements -> Nullable<BigInt>,
+        previous_total_elements -> Nullable<Text>,
         extra_data -> Nullable<Text>,
         submitter -> Nullable<Text>,
     }
@@ -50,19 +52,10 @@ table! {
 table! {
     optimism_state_roots (optimism_state_roots_id) {
         optimism_state_roots_id -> BigInt,
-        index -> Nullable<BigInt>,
-        batch_index -> Nullable<BigInt>,
+        index -> Nullable<Text>,
+        batch_index -> Nullable<Text>,
         value -> Nullable<Text>,
         confirmed -> Nullable<Bool>,
-    }
-}
-
-table! {
-    optimism_l1_to_l2_txs (optimism_l1_to_l2_txs_id) {
-        optimism_l1_to_l2_txs_id -> BigInt,
-        l1_block_number -> Nullable<BigInt>,
-        l1_tx_hash -> Nullable<Text>,
-        l2_tx_hash -> Nullable<Text>,
     }
 }
 
@@ -113,3 +106,35 @@ table! {
         value -> Nullable<Text>,
     }
 }
+
+impl diesel::JoinTo<optimism_block_txs::table> for optimism_txs::table {
+    type FromClause = optimism_block_txs::table;
+    type OnClause = diesel::dsl::Eq<
+        diesel::expression::nullable::Nullable<optimism_block_txs::dsl::index>,
+        diesel::expression::nullable::Nullable<optimism_txs::dsl::index>,
+    >;
+
+    fn join_target(rhs: optimism_block_txs::table) -> (Self::FromClause, Self::OnClause) {
+        (
+            rhs,
+            optimism_block_txs::dsl::index.nullable().eq(optimism_txs::dsl::index.nullable()),
+        )
+    }
+}
+allow_tables_to_appear_in_same_query!(optimism_block_txs, optimism_txs);
+
+impl diesel::JoinTo<optimism_block_txs::table> for optimism_state_roots::table {
+    type FromClause = optimism_block_txs::table;
+    type OnClause = diesel::dsl::Eq<
+        diesel::expression::nullable::Nullable<optimism_block_txs::dsl::index>,
+        diesel::expression::nullable::Nullable<optimism_state_roots::dsl::index>,
+    >;
+
+    fn join_target(rhs: optimism_block_txs::table) -> (Self::FromClause, Self::OnClause) {
+        (
+            rhs,
+            optimism_block_txs::dsl::index.nullable().eq(optimism_state_roots::dsl::index.nullable()),
+        )
+    }
+}
+allow_tables_to_appear_in_same_query!(optimism_block_txs, optimism_state_roots);

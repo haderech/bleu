@@ -6,22 +6,22 @@ use crate::repository::pagination::PaginatedRecord;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct OptimismTxBatchSummary {
-    batch_index: Option<i64>,
+    batch_index: Option<String>,
     l1_tx_hash: Option<String>,
-    batch_size: Option<i64>,
-    timestamp: Option<i64>,
+    batch_size: Option<String>,
+    batch_timestamp: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct OptimismTxBatch {
     optimism_tx_batches_id: i64,
-    batch_index: Option<i64>,
-    timestamp: Option<i64>,
-    batch_size: Option<i64>,
+    batch_index: Option<String>,
+    batch_timestamp: Option<String>,
+    batch_size: Option<String>,
     l1_tx_hash: Option<String>,
-    l1_block_number: Option<i64>,
+    l1_block_number: Option<String>,
     batch_root: Option<String>,
-    previous_total_elements: Option<i64>,
+    previous_total_elements: Option<String>,
     extra_data: Option<String>,
     submitter: Option<String>,
 }
@@ -53,24 +53,19 @@ pub struct OptimismTxSummary {
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct OptimismTx {
     optimism_txs_id: i64,
-    tx_hash: Option<String>,
-    status: Option<String>,
-    tx_index: Option<i64>,
-    timestamp: Option<i64>,
-    from_address: Option<String>,
-    to_address: Option<String>,
-    token_transferred: Option<String>,
+    index: Option<String>,
+    batch_index: Option<String>,
+    block_number: Option<String>,
+    tx_timestamp: Option<String>,
+    gas_limit: Option<String>,
+    target: Option<String>,
+    origin: Option<String>,
+    data: Option<String>,
+    queue_origin: Option<String>,
     value: Option<String>,
-    tx_fee: Option<String>,
-    ether_price: Option<String>,
-    gas_used_by_tx: Option<String>,
-    nonce: Option<String>,
-    input_data: Option<String>,
+    queue_index: Option<String>,
+    decoded: Option<String>,
     confirmed: Option<bool>,
-    l1_txn_batch_index: Option<i64>,
-    l1_submission_tx_hash: Option<String>,
-    l1_state_batch_index: Option<i64>,
-    l1_state_root_submission_tx_hash: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
@@ -115,13 +110,13 @@ impl PaginatedOptimismBlockTx {
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct OptimismStateBatch {
     optimism_state_batches_id: i64,
-    batch_index: Option<i64>,
-    l1_timestamp: Option<i64>,
-    batch_size: Option<i64>,
+    batch_index: Option<String>,
+    batch_timestamp: Option<String>,
+    batch_size: Option<String>,
     l1_tx_hash: Option<String>,
-    l1_block_number: Option<i64>,
+    l1_block_number: Option<String>,
     batch_root: Option<String>,
-    previous_total_elements: Option<i64>,
+    previous_total_elements: Option<String>,
     extra_data: Option<String>,
     submitter: Option<String>,
 }
@@ -145,16 +140,15 @@ impl PaginatedOptimismStateBatch {
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct OptimismStateRoot {
     optimism_state_roots_id: i64,
-    index: Option<i64>,
-    batch_index: Option<i64>,
+    index: Option<String>,
+    batch_index: Option<String>,
     value: Option<String>,
     confirmed: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct OptimismL1ToL2Tx {
-    optimism_l1_to_l2_txs_id: i64,
-    l1_block_number: Option<i64>,
+    l1_block_number: Option<String>,
     l1_tx_hash: Option<String>,
     l2_tx_hash: Option<String>,
 }
