@@ -31,3 +31,4 @@ url="http://localhost:9200"
 
 [app]
 plugin=[]
+channel-capacity=1024
