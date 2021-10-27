@@ -147,8 +147,19 @@ pub struct OptimismStateRoot {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
-pub struct OptimismL1ToL2Tx {
+pub struct OptimismL1ToL2TxSummary {
     l1_block_number: Option<String>,
     l1_tx_hash: Option<String>,
     l2_tx_hash: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
+pub struct OptimismL1ToL2Tx {
+    l1_block_number: Option<String>,
+    queue_index: Option<String>,
+    l2_tx_hash: Option<String>,
+    timestamp: Option<String>,
+    l1_tx_hash: Option<String>,
+    l1_tx_origin: Option<String>,
+    gas_limit: Option<String>,
 }

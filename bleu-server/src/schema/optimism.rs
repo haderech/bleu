@@ -1,5 +1,3 @@
-use diesel::{ExpressionMethods, NullableExpressionMethods};
-
 table! {
     optimism_tx_batches (optimism_tx_batches_id) {
         optimism_tx_batches_id -> BigInt,
@@ -107,34 +105,32 @@ table! {
     }
 }
 
-impl diesel::JoinTo<optimism_block_txs::table> for optimism_txs::table {
-    type FromClause = optimism_block_txs::table;
-    type OnClause = diesel::dsl::Eq<
-        diesel::expression::nullable::Nullable<optimism_block_txs::dsl::index>,
-        diesel::expression::nullable::Nullable<optimism_txs::dsl::index>,
-    >;
+joinable_inner!(
+    left_table_ty = optimism_txs::table,
+    right_table_ty = optimism_block_txs::table,
+    right_table_expr = optimism_block_txs::table,
+    foreign_key = optimism_block_txs::dsl::index,
+    primary_key_ty = optimism_txs::dsl::index,
+    primary_key_expr = optimism_txs::dsl::index,
+);
 
-    fn join_target(rhs: optimism_block_txs::table) -> (Self::FromClause, Self::OnClause) {
-        (
-            rhs,
-            optimism_block_txs::dsl::index.nullable().eq(optimism_txs::dsl::index.nullable()),
-        )
-    }
-}
+joinable_inner!(
+    left_table_ty = optimism_tx_batches::table,
+    right_table_ty = optimism_txs::table,
+    right_table_expr = optimism_txs::table,
+    foreign_key = optimism_txs::dsl::batch_index,
+    primary_key_ty = optimism_tx_batches::dsl::batch_index,
+    primary_key_expr = optimism_tx_batches::dsl::batch_index,
+);
+
+joinable_inner!(
+    left_table_ty = optimism_state_roots::table,
+    right_table_ty = optimism_block_txs::table,
+    right_table_expr = optimism_block_txs::table,
+    foreign_key = optimism_block_txs::dsl::index,
+    primary_key_ty = optimism_state_roots::dsl::index,
+    primary_key_expr = optimism_state_roots::dsl::index,
+);
+
 allow_tables_to_appear_in_same_query!(optimism_block_txs, optimism_txs);
-
-impl diesel::JoinTo<optimism_block_txs::table> for optimism_state_roots::table {
-    type FromClause = optimism_block_txs::table;
-    type OnClause = diesel::dsl::Eq<
-        diesel::expression::nullable::Nullable<optimism_block_txs::dsl::index>,
-        diesel::expression::nullable::Nullable<optimism_state_roots::dsl::index>,
-    >;
-
-    fn join_target(rhs: optimism_block_txs::table) -> (Self::FromClause, Self::OnClause) {
-        (
-            rhs,
-            optimism_block_txs::dsl::index.nullable().eq(optimism_state_roots::dsl::index.nullable()),
-        )
-    }
-}
 allow_tables_to_appear_in_same_query!(optimism_block_txs, optimism_state_roots);

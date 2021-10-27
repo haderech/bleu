@@ -2,7 +2,7 @@ use paperclip::actix::{api_v2_operation, web};
 use paperclip::actix::web::Json;
 
 use crate::error::error::ExpectedError;
-use crate::model::optimism::{OptimismBlockTx, OptimismL1ToL2Tx, OptimismStateBatch, OptimismTxBatch, OptimismTxBatchSummary, OptimismTxSummary, PaginatedOptimismBlockTx, PaginatedOptimismStateBatch, PaginatedOptimismTxBatch};
+use crate::model::optimism::{OptimismBlockTx, OptimismL1ToL2TxSummary, OptimismStateBatch, OptimismTxBatch, OptimismTxBatchSummary, OptimismTxSummary, PaginatedOptimismBlockTx, PaginatedOptimismStateBatch, PaginatedOptimismTxBatch};
 use crate::Pool;
 use crate::repository::optimism;
 
@@ -65,6 +65,6 @@ pub async fn get_state_batch_by_index(pool: web::Data<Pool>, path_params: web::P
 }
 
 #[api_v2_operation]
-pub async fn get_latest_l1_to_l2_tx(pool: web::Data<Pool>) -> Result<Json<Vec<OptimismL1ToL2Tx>>, ExpectedError> {
-    Ok(Json(optimism::l1_to_l2_tx::find_latest_l1_to_l2_tx(pool)?))
+pub async fn get_latest_l1_to_l2_tx_summary(pool: web::Data<Pool>) -> Result<Json<Vec<OptimismL1ToL2TxSummary>>, ExpectedError> {
+    Ok(Json(optimism::tx::find_latest_l1_to_l2_tx_summary(pool)?))
 }
