@@ -18,6 +18,9 @@ impl MultiSender {
     }
 
     pub fn get(&self, name: &str) -> Sender {
-        self.sender_map.get(name).unwrap().clone()
+        match self.sender_map.get(name) {
+            None => APP.channels.get(name),
+            Some(sender) => sender.clone()
+        }
     }
 }

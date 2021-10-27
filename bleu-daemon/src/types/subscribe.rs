@@ -78,10 +78,6 @@ impl SubscribeEvent {
         vec!(Working).contains(&self.status)
     }
 
-    pub fn event_id(&self) -> String {
-        format!("{}:{}:{}", self.chain, self.sub_id, self.curr_idx)
-    }
-
     pub fn handle_error(&mut self, rocks_channel: &channel::Sender, err_msg: String) {
         log::error!("{}", err_msg.clone());
 
@@ -178,17 +174,5 @@ mod subscribe_test {
 
         let subscribe_event = SubscribeEvent::new("tendermint", &params);
         assert!(subscribe_event.is_workable());
-    }
-
-    #[test]
-    fn subscribe_event_event_id_test() {
-        let mut params = Map::new();
-        params.insert(String::from("sub_id"), json!("cosmoshub-4"));
-        params.insert(String::from("start_idx"), json!(1u64));
-        params.insert(String::from("end_points"), json!(["https://api.cosmos.network"]));
-        params.insert(String::from("filter"), Value::String(String::from("")));
-
-        let subscribe_event = SubscribeEvent::new("tendermint", &params);
-        assert_eq!(subscribe_event.event_id(), "tendermint:cosmoshub-4:1");
     }
 }

@@ -20,11 +20,11 @@ use crate::libs::subscribe::load_task;
 use crate::message;
 use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
-use crate::plugin::rocks::{RocksMethod, RocksMsg, RocksPlugin};
+use crate::plugin::rocks::{RocksDB, RocksMethod, RocksMsg, RocksPlugin};
 use crate::types::channel::MultiSender;
 use crate::types::enumeration::Enumeration;
 use crate::types::subscribe::{SubscribeEvent, SubscribeStatus, SubscribeTask};
-use crate::validation::{start_subscribe, stop_subscribe};
+use crate::validation::task;
 
 #[appbase_plugin(JsonRpcPlugin, RocksPlugin, PostgresPlugin)]
 pub struct OptimismPlugin {
@@ -39,7 +39,7 @@ const TASK_FILE: &str = "task/optimism.json";
 
 type SubscribeEvents = Arc<FutureMutex<HashMap<String, SubscribeEvent>>>;
 
-message!((OptimismMsg; {value: Value}); (OptimismMethod; {Start: "start"}, {Stop: "stop"}));
+message!((OptimismMsg; {value: Value}); (OptimismMethod; {Start: "start"}, {Stop: "stop"}, {Remove: "remove"}));
 
 impl Plugin for OptimismPlugin {
     fn new() -> Self {
@@ -53,7 +53,7 @@ impl Plugin for OptimismPlugin {
     fn init(&mut self) {
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         self.sub_events = Some(Arc::new(FutureMutex::new(load_task(rocksdb, TASK_FILE, CHAIN, TASK_PREFIX))));
-        let senders = MultiSender::new(vec!("optimism", "rocks", "postgres", /*"elasticsearch"*/));
+        let senders = MultiSender::new(vec!("optimism", "rocks", "postgres", "tx_receipt" /*"elasticsearch"*/));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe("optimism"));
 
@@ -61,22 +61,22 @@ impl Plugin for OptimismPlugin {
     }
 
     fn startup(&mut self) {
-        let monitor = self.receiver.take().unwrap();
+        let receiver = self.task_receiver.take().unwrap();
         let sub_events = self.sub_events.take().unwrap();
         let senders = self.senders.take().unwrap();
         let app = APP.quit_handle().unwrap();
 
-        Self::recv(monitor, sub_events, senders, app);
+        Self::recv(receiver, sub_events, senders, app);
     }
 
     fn shutdown(&mut self) {}
 }
 
 impl OptimismPlugin {
-    fn recv(mut monitor: Receiver, sub_events: SubscribeEvents, senders: MultiSender, app: QuitHandle) {
+    fn recv(mut receiver: Receiver, sub_events: SubscribeEvents, senders: MultiSender, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Some(mut locked_events) = sub_events.try_lock() {
-                if let Ok(message) = monitor.try_recv() {
+                if let Ok(message) = receiver.try_recv() {
                     Self::message_handler(message, &mut locked_events, &senders);
                 }
                 for (_, sub_event) in locked_events.iter_mut() {
@@ -92,7 +92,7 @@ impl OptimismPlugin {
                 }
             }
             if !app.is_quitting() {
-                Self::recv(monitor, sub_events, senders, app);
+                Self::recv(receiver, sub_events, senders, app);
             }
         });
     }
@@ -110,7 +110,10 @@ impl OptimismPlugin {
         let sub_event = sub_events.get_mut(task_id).unwrap();
         match method {
             OptimismMethod::Start => sub_event.status(SubscribeStatus::Working),
-            OptimismMethod::Stop => sub_event.status(SubscribeStatus::Stopped)
+            OptimismMethod::Stop => sub_event.status(SubscribeStatus::Stopped),
+            OptimismMethod::Remove => {
+
+            }
         };
         let sub_task = SubscribeTask::from(sub_event, String::from(""));
         let rocks_sender = senders.get("rocks");
@@ -211,21 +214,10 @@ impl OptimismPlugin {
         let optimism_sender = self.senders.as_ref().unwrap().get("optimism");
         let rocks_db = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
-            jsonrpc.add_method(String::from("optimism_task_start"), move |params: Params| {
-                let params: Map<String, Value> = params.parse().unwrap();
-                let response = match start_subscribe::verify(&params) {
-                    Ok(_) => {
-                        let task_id = get_str(&params, "task_id").unwrap();
-                        let task = get_static(&rocks_db, task_id);
-                        match task.is_null() {
-                            true => json!({"error": format!("task does not exist! task_id={}", task_id)}),
-                            false => {
-                                let _ = optimism_sender.send(OptimismMsg::new(OptimismMethod::Start, Value::Object(params.to_owned())));
-                                Value::String(format!("start task requested! task_id={}", task_id))
-                            }
-                        }
-                    }
-                    Err(err) => json!({"error": err.to_string()})
+            jsonrpc.add_method(String::from("optimism_start_task"), move |params: Params| {
+                let response = match Self::task_request_handler(OptimismMethod::Start, params, &optimism_sender, &rocks_db) {
+                    Ok(response) => response,
+                    Err(err) => json!({"error": err.to_string()}),
                 };
                 Box::new(futures::future::ok(response))
             });
@@ -234,21 +226,23 @@ impl OptimismPlugin {
         let optimism_sender = self.senders.as_ref().unwrap().get("optimism");
         let rocks_db = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
-            jsonrpc.add_method(String::from("optimism_task_stop"), move |params: Params| {
-                let params: Map<String, Value> = params.parse().unwrap();
-                let response = match stop_subscribe::verify(&params) {
-                    Ok(_) => {
-                        let task_id = get_str(&params, "task_id").unwrap();
-                        let task = get_static(&rocks_db, task_id);
-                        match task.is_null() {
-                            true => json!({"error": format!("task does not exist! task_id={}", task_id)}),
-                            false => {
-                                let _ = optimism_sender.send(OptimismMsg::new(OptimismMethod::Stop, Value::Object(params.to_owned())));
-                                Value::String(format!("stop task requested! task_id={}", task_id))
-                            }
-                        }
-                    }
-                    Err(err) => json!({"error": err.to_string()})
+            jsonrpc.add_method(String::from("optimism_stop_task"), move |params: Params| {
+                let response = match Self::task_request_handler(OptimismMethod::Stop, params, &optimism_sender, &rocks_db) {
+                    Ok(response) => response,
+                    Err(err) => json!({"error": err.to_string()}),
+                };
+                Box::new(futures::future::ok(response))
+            });
+        });
+
+
+        let optimism_sender = self.senders.as_ref().unwrap().get("optimism");
+        let rocks_db = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
+        APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
+            jsonrpc.add_method(String::from("optimism_remove_task"), move |params: Params| {
+                let response = match Self::task_request_handler(OptimismMethod::Remove, params, &optimism_sender, &rocks_db) {
+                    Ok(response) => response,
+                    Err(err) => json!({"error": err.to_string()}),
                 };
                 Box::new(futures::future::ok(response))
             });
@@ -256,7 +250,7 @@ impl OptimismPlugin {
 
         let rocks_db = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
-            jsonrpc.add_method(String::from("optimism_tasks"), move |_| {
+            jsonrpc.add_method(String::from("optimism_get_tasks"), move |_| {
                 let tasks = get_by_prefix_static(&rocks_db, TASK_PREFIX);
                 Box::new(futures::future::ok(tasks))
             });
@@ -268,11 +262,26 @@ impl OptimismPlugin {
         let rocks_sender = senders.get("rocks");
         let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Put, task.get_task_id(), Value::String(json!(task).to_string())));
     }
+
+    fn task_request_handler(method: OptimismMethod, params: Params, optimism_sender: &Sender, rocks_db: &RocksDB) -> Result<Value, ExpectedError> {
+        let params: Map<String, Value> = params.parse().unwrap();
+        let _ = task::verify(&params)?;
+        let task_id = get_str(&params, "task_id")?;
+        let task = get_static(rocks_db, task_id)?;
+        match task.is_null() {
+            true => Err(ExpectedError::NoneError(format!("task does not exist! task_id={}", task_id))),
+            false => {
+                let _ = optimism_sender.send(OptimismMsg::new(method, Value::Object(params.to_owned())));
+                Ok(Value::String(format!("request registered! task_id={}", task_id)))
+            }
+        }
+    }
 }
 
 #[cfg(test)]
 mod optimism {
     use serde_json::{Map, Value};
+
     use crate::libs::request::adjust_url;
     use crate::plugin::optimism;
 
