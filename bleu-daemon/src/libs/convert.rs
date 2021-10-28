@@ -55,9 +55,9 @@ pub fn number_to_string_convert(origin_map: &Map<String, Value>, target_keys: Ve
 
 #[cfg(test)]
 mod number {
-    use serde_json::{json, Map, Value};
+    use serde_json::{Map, Value};
 
-    use crate::libs::number::{hex_to_decimal, hex_to_decimal_converter, number_to_string_convert};
+    use crate::libs::convert::{hex_to_decimal, hex_to_decimal_converter, number_to_string_convert};
 
     #[test]
     fn hex_to_decimal_test() {

@@ -12,7 +12,7 @@ use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::types::enumeration::Enumeration;
 use crate::validation::find_by_key;
 
-#[appbase_plugin]
+#[appbase_plugin(JsonRpcPlugin)]
 pub struct RocksPlugin {
     db: Option<RocksDB>,
     monitor: Option<Receiver>,

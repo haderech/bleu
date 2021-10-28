@@ -1,6 +1,8 @@
 use appbase::prelude::*;
-
-use crate::plugin::optimism::OptimismPlugin;
+use crate::plugin::l2_block_tx::L2BlockTxPlugin;
+use crate::plugin::l2_state_batch::L2StateBatchPlugin;
+use crate::plugin::l2_tx_batch::L2TxBatchPlugin;
+use crate::plugin::task::TaskPlugin;
 
 mod plugin;
 mod types;
@@ -10,9 +12,15 @@ mod error;
 
 fn main() {
     env_logger::init();
-    APP.register::<OptimismPlugin>();
+    APP.register::<L2BlockTxPlugin>();
+    APP.register::<L2TxBatchPlugin>();
+    APP.register::<L2StateBatchPlugin>();
+    APP.register::<TaskPlugin>();
     APP.init();
-    APP.plugin_init::<OptimismPlugin>();
+    APP.plugin_init::<L2BlockTxPlugin>();
+    APP.plugin_init::<L2TxBatchPlugin>();
+    APP.plugin_init::<L2StateBatchPlugin>();
+    APP.plugin_init::<TaskPlugin>();
     APP.startup();
     APP.execute();
 }

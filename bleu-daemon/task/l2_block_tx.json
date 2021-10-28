@@ -1,0 +1,9 @@
+{
+  "l2_block_tx": {
+    "start_idx": 0,
+    "end_points": [
+      "http://localhost:8545"
+    ],
+    "filter": ""
+  }
+}
