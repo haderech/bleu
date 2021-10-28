@@ -1,4 +1,8 @@
+use std::thread;
+use std::time::Duration;
+
 use appbase::prelude::*;
+use clap::Arg;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -18,6 +22,7 @@ pub struct L2StateBatchPlugin {
     sub_event: Option<SubscribeEvent>,
     senders: Option<MultiSender>,
     receiver: Option<Receiver>,
+    poll_interval: Option<u64>,
 }
 
 const CHAIN: &str = "optimism";
@@ -29,10 +34,12 @@ message!(L2StateBatchMsg; {method: String});
 
 impl Plugin for L2StateBatchPlugin {
     fn new() -> Self {
+        APP.options.arg(Arg::new("l2statebatch::poll-interval").long("l2statebatch-poll-interval").takes_value(true));
         L2StateBatchPlugin {
             sub_event: None,
             senders: None,
             receiver: None,
+            poll_interval: None,
         }
     }
 
@@ -42,22 +49,24 @@ impl Plugin for L2StateBatchPlugin {
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         self.sub_event = Some(task_loader(rocksdb, TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
+        self.poll_interval = Some(libs::opts::u64("l2statebatch::poll-interval").unwrap());
     }
 
     fn startup(&mut self) {
         let receiver = self.receiver.take().unwrap();
         let sub_event = self.sub_event.take().unwrap();
         let senders = self.senders.take().unwrap();
+        let poll_interval = self.poll_interval.take().unwrap();
         let app = APP.quit_handle().unwrap();
 
-        Self::recv(receiver, sub_event, senders, app);
+        Self::recv(receiver, sub_event, senders, poll_interval, app);
     }
 
     fn shutdown(&mut self) {}
 }
 
 impl L2StateBatchPlugin {
-    fn recv(mut receiver: Receiver, mut sub_event: SubscribeEvent, senders: MultiSender, app: QuitHandle) {
+    fn recv(mut receiver: Receiver, mut sub_event: SubscribeEvent, senders: MultiSender, poll_interval: u64, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Ok(message) = receiver.try_recv() {
                 libs::subscribe::message_handler(message, &mut sub_event, &senders);
@@ -72,7 +81,8 @@ impl L2StateBatchPlugin {
                 }
             }
             if !app.is_quitting() {
-                Self::recv(receiver, sub_event, senders, app);
+                thread::sleep(Duration::from_millis(poll_interval));
+                Self::recv(receiver, sub_event, senders, poll_interval, app);
             }
         });
     }

@@ -2,8 +2,6 @@
 host="0.0.0.0"
 port=9999
 
-[ethereum]
-
 [email]
 smtp-username="smtp_username"
 smtp-password="smtp_password"
@@ -28,6 +26,15 @@ error="https://hooks.slack.com/services/"
 
 [elasticsearch]
 url="http://localhost:9200"
+
+[l2blocktx]
+poll-interval=10
+
+[l2txbatch]
+poll-interval=1000
+
+[l2statebatch]
+poll-interval=1000
 
 [app]
 plugin=[]
