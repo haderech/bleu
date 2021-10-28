@@ -47,10 +47,10 @@ impl Plugin for L2StateBatchPlugin {
     fn startup(&mut self) {
         let receiver = self.receiver.take().unwrap();
         let sub_event = self.sub_event.take().unwrap();
-        let sender = self.senders.take().unwrap();
+        let senders = self.senders.take().unwrap();
         let app = APP.quit_handle().unwrap();
 
-        Self::recv(receiver, sub_event, sender, app);
+        Self::recv(receiver, sub_event, senders, app);
     }
 
     fn shutdown(&mut self) {}

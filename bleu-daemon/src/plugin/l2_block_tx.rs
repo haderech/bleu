@@ -7,15 +7,16 @@ use crate::libs;
 use crate::libs::convert::hex_to_decimal_converter;
 use crate::libs::opts::opt_to_result;
 use crate::libs::request;
-use crate::libs::serde::{get_array, get_object};
+use crate::libs::serde::{get_array, get_object, get_string};
 use crate::libs::subscribe::task_loader;
 use crate::message;
+use crate::plugin::l2_tx_receipt::{L2TxReceiptMsg, L2TxReceiptPlugin};
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::RocksPlugin;
 use crate::types::channel::MultiSender;
 use crate::types::subscribe::SubscribeEvent;
 
-#[appbase_plugin(RocksPlugin, PostgresPlugin)]
+#[appbase_plugin(RocksPlugin, PostgresPlugin, L2TxReceiptPlugin)]
 pub struct L2BlockTxPlugin {
     sub_event: Option<SubscribeEvent>,
     senders: Option<MultiSender>,
@@ -39,7 +40,7 @@ impl Plugin for L2BlockTxPlugin {
     }
 
     fn init(&mut self) {
-        let senders = MultiSender::new(vec!("rocks", "postgres" /*"elasticsearch"*/));
+        let senders = MultiSender::new(vec!("rocks", "postgres", "l2_tx_receipt" /*"elasticsearch"*/));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
@@ -49,10 +50,10 @@ impl Plugin for L2BlockTxPlugin {
     fn startup(&mut self) {
         let receiver = self.receiver.take().unwrap();
         let sub_event = self.sub_event.take().unwrap();
-        let sender = self.senders.take().unwrap();
+        let senders = self.senders.take().unwrap();
         let app = APP.quit_handle().unwrap();
 
-        Self::recv(receiver, sub_event, sender, app);
+        Self::recv(receiver, sub_event, senders, app);
     }
 
     fn shutdown(&mut self) {}
@@ -96,9 +97,13 @@ impl L2BlockTxPlugin {
                 let pg_sender = senders.get("postgres");
                 let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_blocks"), Value::Object(converted_block.to_owned())))?;
                 let txs = get_array(&block, "transactions")?;
+
+                let receipt_sender = senders.get("l2_tx_receipt");
                 for tx in txs.iter() {
                     let tx_map = opt_to_result(tx.as_object())?;
                     let converted_tx = hex_to_decimal_converter(tx_map, vec!["blockNumber", "gas", "gasPrice", "nonce", "transactionIndex", "value", "l1BlockNumber", "l1TimeStamp", "index", "queueIndex"])?;
+                    let tx_hash = get_string(&converted_tx, "hash")?;
+                    let _ = receipt_sender.send(L2TxReceiptMsg::new(tx_hash))?;
                     let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_block_txs"), Value::Object(converted_tx.to_owned())))?;
                 }
             }
