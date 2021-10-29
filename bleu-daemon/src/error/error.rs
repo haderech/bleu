@@ -2,6 +2,7 @@ use std::env::VarError;
 use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;
 use std::str::ParseBoolError;
+use std::string::FromUtf8Error;
 
 use lettre::transport::smtp;
 
@@ -18,6 +19,7 @@ pub enum ExpectedError {
     BlockHeightError(String),
     PostgresError(String),
     IoError(String),
+    RocksDBError(String),
 }
 
 impl From<smtp::Error> for ExpectedError {
@@ -77,6 +79,18 @@ impl From<std::io::Error> for ExpectedError {
     }
 }
 
+impl From<rocksdb::Error> for ExpectedError {
+    fn from(err: rocksdb::Error) -> Self {
+        ExpectedError::RocksDBError(err.to_string())
+    }
+}
+
+impl From<FromUtf8Error> for ExpectedError {
+    fn from(err: FromUtf8Error) -> Self {
+        ExpectedError::ParsingError(err.to_string())
+    }
+}
+
 impl Display for ExpectedError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -91,6 +105,7 @@ impl Display for ExpectedError {
             ExpectedError::BlockHeightError(err) => write!(f, "{}", err),
             ExpectedError::PostgresError(err) => write!(f, "{}", err),
             ExpectedError::IoError(err) => write!(f, "{}", err),
+            ExpectedError::RocksDBError(err) => write!(f, "{}", err),
         }
     }
 }

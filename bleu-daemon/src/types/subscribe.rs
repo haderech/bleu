@@ -12,18 +12,18 @@ use crate::types::subscribe::SubscribeStatus::Working;
 pub struct SubscribeEvent {
     pub task_id: String,
     pub chain: String,
-    pub sub_id: String,
+    pub task: String,
     pub start_idx: u64,
     pub curr_idx: u64,
-    pub nodes: Vec<String>,
-    pub node_idx: u16,
+    pub end_points: Vec<String>,
+    pub end_point_idx: u16,
     pub filter: String,
     pub status: SubscribeStatus,
 }
 
 impl SubscribeEvent {
     pub fn new(chain: &str, params: &Map<String, Value>) -> Self {
-        let sub_id = get_string(params, "sub_id").unwrap();
+        let task = get_string(params, "task").unwrap();
         let start_idx = get_u64(params, "start_idx").unwrap();
         let filter_result = get_string(params, "filter");
         let filter = match filter_result {
@@ -31,13 +31,13 @@ impl SubscribeEvent {
             Err(_) => String::from("")
         };
         SubscribeEvent {
-            task_id: format!("task:{}:{}", chain, sub_id),
+            task_id: format!("task:{}:{}", chain, task),
             chain: String::from(chain),
-            sub_id,
+            task,
             start_idx,
             curr_idx: start_idx,
-            nodes: get_string_vec(params, "nodes"),
-            node_idx: 0,
+            end_points: get_string_vec(params, "end_points"),
+            end_point_idx: 0,
             filter,
             status: SubscribeStatus::Working,
         }
@@ -47,13 +47,30 @@ impl SubscribeEvent {
         SubscribeEvent {
             task_id: get_string(params, "task_id").unwrap(),
             chain: get_string(params, "chain").unwrap(),
-            sub_id: get_string(params, "sub_id").unwrap(),
+            task: get_string(params, "task").unwrap(),
             start_idx: get_u64(params, "start_idx").unwrap(),
             curr_idx: get_u64(params, "curr_idx").unwrap(),
-            nodes: get_string_vec(params, "nodes"),
-            node_idx: get_u64(params, "node_idx").unwrap() as u16,
+            end_points: get_string_vec(params, "end_points"),
+            end_point_idx: get_u64(params, "end_point_idx").unwrap() as u16,
             filter: get_string(params, "filter").unwrap(),
             status: SubscribeStatus::find(get_str(params, "status").unwrap()).unwrap(),
+        }
+    }
+
+    pub fn load(task_id: String, task: String, chain: String, task_map: &Map<String, Value>) -> Self {
+        let start_idx = get_u64(task_map, "start_idx").unwrap();
+        let end_points = get_string_vec(task_map, "end_points");
+        let filter = get_string(task_map, "filter").unwrap();
+        SubscribeEvent {
+            task_id,
+            chain,
+            task,
+            start_idx,
+            curr_idx: start_idx,
+            end_points,
+            end_point_idx: 0,
+            filter,
+            status: SubscribeStatus::Working,
         }
     }
 
@@ -61,15 +78,11 @@ impl SubscribeEvent {
         vec!(Working).contains(&self.status)
     }
 
-    pub fn event_id(&self) -> String {
-        format!("{}:{}:{}", self.chain, self.sub_id, self.curr_idx)
-    }
-
     pub fn handle_error(&mut self, rocks_channel: &channel::Sender, err_msg: String) {
         log::error!("{}", err_msg.clone());
 
-        if usize::from(self.node_idx) + 1 < self.nodes.len() {
-            self.node_idx += 1;
+        if usize::from(self.end_point_idx) + 1 < self.end_points.len() {
+            self.end_point_idx += 1;
         } else {
             self.status = SubscribeStatus::Error;
         }
@@ -79,24 +92,26 @@ impl SubscribeEvent {
     }
 
     pub fn active_node(&self) -> String {
-        let usize_idx = usize::from(self.node_idx);
-        self.nodes[usize_idx].clone()
+        let usize_idx = usize::from(self.end_point_idx);
+        self.end_points[usize_idx].clone()
     }
 
-    pub fn next_idx(&mut self) {
-        self.curr_idx += 1;
-    }
+    pub fn next_idx(&mut self) { self.curr_idx += 1; }
+
+    pub fn get_task_id(&self) -> String { self.task_id.clone() }
+
+    pub fn status(&mut self, status: SubscribeStatus) { self.status = status; }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct SubscribeTask {
     pub task_id: String,
     pub chain: String,
-    pub sub_id: String,
+    pub task: String,
     pub start_idx: u64,
     pub curr_idx: u64,
-    pub nodes: Vec<String>,
-    pub node_idx: u16,
+    pub end_points: Vec<String>,
+    pub end_point_idx: u16,
     pub filter: String,
     pub status: String,
     pub err_msg: String,
@@ -107,23 +122,24 @@ impl SubscribeTask {
         SubscribeTask {
             task_id: sub_event.task_id.clone(),
             chain: sub_event.chain.clone(),
-            sub_id: sub_event.sub_id.clone(),
+            task: sub_event.task.clone(),
             start_idx: sub_event.start_idx,
             curr_idx: sub_event.curr_idx,
-            nodes: sub_event.nodes.clone(),
-            node_idx: sub_event.node_idx,
+            end_points: sub_event.end_points.clone(),
+            end_point_idx: sub_event.end_point_idx,
             filter: sub_event.filter.clone(),
             status: sub_event.status.value(),
             err_msg,
         }
     }
 
-    pub fn task_id(chain: &str, params: &Map<String, Value>) -> String {
-        format!("task:{}:{}", chain, get_str(params, "sub_id").unwrap())
+    pub fn get_task_id(&self) -> String {
+        self.task_id.clone()
     }
 }
 
 enumeration!(SubscribeStatus; {Working: "working"}, {Stopped: "stopped"}, {Error: "error"});
+enumeration!(TaskMethod; {Start: "start"}, {Stop: "stop"});
 
 #[cfg(test)]
 mod subscribe_test {
@@ -134,9 +150,9 @@ mod subscribe_test {
     #[test]
     fn subscribe_event_task_id_test() {
         let mut params = Map::new();
-        params.insert(String::from("sub_id"), json!("cosmoshub-4"));
+        params.insert(String::from("task"), json!("cosmoshub-4"));
         params.insert(String::from("start_idx"), json!(1u64));
-        params.insert(String::from("nodes"), json!(["https://api.cosmos.network"]));
+        params.insert(String::from("end_points"), json!(["https://api.cosmos.network"]));
         params.insert(String::from("filter"), Value::String(String::from("")));
 
         let subscribe_event = SubscribeEvent::new("tendermint", &params);
@@ -146,24 +162,12 @@ mod subscribe_test {
     #[test]
     fn subscribe_event_is_workable_test() {
         let mut params = Map::new();
-        params.insert(String::from("sub_id"), json!("cosmoshub-4"));
+        params.insert(String::from("task"), json!("cosmoshub-4"));
         params.insert(String::from("start_idx"), json!(1u64));
-        params.insert(String::from("nodes"), json!(["https://api.cosmos.network"]));
+        params.insert(String::from("end_points"), json!(["https://api.cosmos.network"]));
         params.insert(String::from("filter"), Value::String(String::from("")));
 
         let subscribe_event = SubscribeEvent::new("tendermint", &params);
         assert!(subscribe_event.is_workable());
-    }
-
-    #[test]
-    fn subscribe_event_event_id_test() {
-        let mut params = Map::new();
-        params.insert(String::from("sub_id"), json!("cosmoshub-4"));
-        params.insert(String::from("start_idx"), json!(1u64));
-        params.insert(String::from("nodes"), json!(["https://api.cosmos.network"]));
-        params.insert(String::from("filter"), Value::String(String::from("")));
-
-        let subscribe_event = SubscribeEvent::new("tendermint", &params);
-        assert_eq!(subscribe_event.event_id(), "tendermint:cosmoshub-4:1");
     }
 }

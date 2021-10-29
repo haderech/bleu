@@ -12,13 +12,13 @@ use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::types::enumeration::Enumeration;
 use crate::validation::find_by_key;
 
-#[appbase_plugin]
+#[appbase_plugin(JsonRpcPlugin)]
 pub struct RocksPlugin {
     db: Option<RocksDB>,
     monitor: Option<Receiver>,
 }
 
-type RocksDB = Arc<DBWithThreadMode<SingleThreaded>>;
+pub type RocksDB = Arc<DBWithThreadMode<SingleThreaded>>;
 
 message!((RocksMsg; {key: String}, {value: Value}); (RocksMethod; {Put: "put"}, {Delete: "delete"}));
 

@@ -1,0 +1,9 @@
+{
+  "l2_state_batch": {
+    "start_idx": 0,
+    "end_points": [
+      "http://localhost:7878/batch/stateroot/index/"
+    ],
+    "filter": ""
+  }
+}
