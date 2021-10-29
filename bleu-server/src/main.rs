@@ -28,7 +28,7 @@ async fn main() -> std::io::Result<()> {
         let swagger_config = SwaggerConfig::load();
 
         App::new()
-            .wrap(Cors::default().allowed_origin(swagger_config.get_default_origin().as_str()))
+            .wrap(Cors::default().allow_any_origin().send_wildcard())
             .wrap_api_with_spec(swagger_config.get_spec())
             .data(postgres_config.get_pool())
             .service(

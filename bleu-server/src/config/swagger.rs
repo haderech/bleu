@@ -4,7 +4,6 @@ use paperclip::v2::models::{DefaultApiRaw, Info, Tag};
 
 pub struct SwaggerConfig {
     resource: String,
-    port: String,
     spec: DefaultApiRaw,
 }
 
@@ -15,25 +14,15 @@ impl SwaggerConfig {
         spec.info = SwaggerSpec::simple_info("0.1", "Bleu Server");
 
         let resource = env::var("SWAGGER_RESOURCE").expect("SWAGGER_RESOURCE does not exist!");
-        let port = env::var("SWAGGER_PORT").expect("SWAGGER_PORT does not exist!");
 
         Self {
             resource,
-            port,
             spec,
         }
     }
 
     pub fn get_resource(&self) -> &str {
         self.resource.as_str()
-    }
-
-    pub fn get_port(&self) -> &str {
-        self.port.as_str()
-    }
-
-    pub fn get_default_origin(&self) -> String {
-        format!("http://localhost:{}", self.get_port())
     }
 
     pub fn get_spec(&self) -> DefaultApiRaw {
