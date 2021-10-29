@@ -1,6 +1,7 @@
 use paperclip::actix::Apiv2Schema;
 use serde::{Deserialize, Serialize};
 
+use crate::libs;
 use crate::model::pagination::PageInfo;
 use crate::repository::pagination::PaginatedRecord;
 
@@ -162,4 +163,66 @@ pub struct OptimismL1ToL2Tx {
     l1_tx_hash: Option<String>,
     l1_tx_origin: Option<String>,
     gas_limit: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
+pub struct PaginatedOptimismL1ToL2Tx {
+    page_info: PageInfo,
+    records: Vec<OptimismL1ToL2Tx>,
+}
+
+impl PaginatedOptimismL1ToL2Tx {
+    pub fn new(paginated: PaginatedRecord<OptimismL1ToL2Tx>) -> Self {
+        Self {
+            page_info: PageInfo::new(paginated.page, paginated.count, paginated.total_page, paginated.total_count),
+            records: paginated.records,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
+pub struct OptimismTxReceiptLog {
+    optimism_tx_receipt_logs_id: i64,
+    address: Option<String>,
+    topics: Option<String>,
+    data: Option<String>,
+    block_number: Option<String>,
+    tx_hash: Option<String>,
+    tx_index: Option<String>,
+    block_hash: Option<String>,
+    log_index: Option<String>,
+    removed: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Apiv2Schema)]
+pub struct OptimismTxLog {
+    address: Option<String>,
+    topics: Option<Vec<String>>,
+    data: Option<String>,
+    block_number: Option<String>,
+    tx_hash: Option<String>,
+    tx_index: Option<String>,
+    block_hash: Option<String>,
+    log_index: Option<String>,
+    removed: Option<bool>,
+}
+
+impl OptimismTxLog {
+    pub fn from(e: OptimismTxReceiptLog) -> Self {
+        let topic_vec = match e.topics {
+            None => None,
+            Some(topics) => Some(libs::convert::convert_str_to_vec(topics))
+        };
+        Self {
+            address: e.address,
+            topics: topic_vec,
+            data: e.data,
+            block_number: e.block_number,
+            tx_hash: e.tx_hash,
+            tx_index: e.tx_index,
+            block_hash: e.block_hash,
+            log_index: e.log_index,
+            removed: e.removed,
+        }
+    }
 }

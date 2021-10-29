@@ -4,9 +4,9 @@ pub mod tx_batch {
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
+    use crate::config::postgres::Pool;
     use crate::error::error::ExpectedError;
     use crate::model::optimism::{OptimismTxBatch, OptimismTxBatchSummary};
-    use crate::Pool;
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
     use crate::schema::optimism::optimism_tx_batches;
     use crate::schema::optimism::optimism_tx_batches::columns::*;
@@ -41,9 +41,9 @@ pub mod tx {
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
+    use crate::config::postgres::Pool;
     use crate::error::error::ExpectedError;
-    use crate::model::optimism::{OptimismBlockTx, OptimismL1ToL2TxSummary, OptimismTxSummary};
-    use crate::Pool;
+    use crate::model::optimism::{OptimismBlockTx, OptimismTxSummary};
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
     use crate::schema::optimism::{optimism_block_txs, optimism_state_roots};
     use crate::schema::optimism::optimism_block_txs::columns::*;
@@ -88,14 +88,6 @@ pub mod tx {
         let paginated_tx = query.load_with_pagination(&conn, page, count)?;
         Ok(paginated_tx)
     }
-
-    #[cached(time = 60, key = "bool", convert = r#"{ true }"#, result = true)]
-    pub fn find_latest_l1_to_l2_tx_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismL1ToL2TxSummary>, ExpectedError> {
-        Ok(Vec::new())
-    }
-
-    // pub fn find_l1_to_l2_tx_by_page_count(pool: web::Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<OptimismL1ToL2Tx>, ExpectedError> {
-    // }
 }
 
 pub mod state_batch {
@@ -103,9 +95,9 @@ pub mod state_batch {
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
+    use crate::config::postgres::Pool;
     use crate::error::error::ExpectedError;
     use crate::model::optimism::OptimismStateBatch;
-    use crate::Pool;
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
     use crate::schema::optimism::optimism_state_batches;
     use crate::schema::optimism::optimism_state_batches::columns::*;
@@ -121,5 +113,43 @@ pub mod state_batch {
     pub fn find_batch_by_index(pool: web::Data<Pool>, index: i64) -> Result<OptimismStateBatch, ExpectedError> {
         let conn = pool.get()?;
         Ok(optimism_state_batches::table.filter(batch_index.eq(index.to_string())).first::<OptimismStateBatch>(&conn)?)
+    }
+}
+
+pub mod l1_to_l2 {
+    use actix_web::web;
+    use cached::proc_macro::cached;
+    use diesel::prelude::*;
+    use diesel::RunQueryDsl;
+
+    use crate::config::postgres::Pool;
+    use crate::error::error::ExpectedError;
+    use crate::model::optimism::{OptimismL1ToL2Tx, OptimismL1ToL2TxSummary};
+    use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
+
+    #[cached(time = 60, key = "bool", convert = r#"{ true }"#, result = true)]
+    pub fn find_latest_l1_to_l2_tx_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismL1ToL2TxSummary>, ExpectedError> {
+        Ok(Vec::new())
+    }
+
+    pub fn find_l1_to_l2_tx_by_page_count(pool: web::Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<OptimismL1ToL2Tx>, ExpectedError> {
+        Ok(PaginatedRecord::from(page, count, 0, 0, Vec::new()))
+    }
+}
+
+pub mod tx_logs {
+    use actix_web::web;
+    use diesel::prelude::*;
+    use diesel::RunQueryDsl;
+
+    use crate::config::postgres::Pool;
+    use crate::error::error::ExpectedError;
+    use crate::model::optimism::{OptimismTxLog, OptimismTxReceiptLog};
+    use crate::schema::optimism::optimism_tx_receipt_logs;
+    use crate::schema::optimism::optimism_tx_receipt_logs::columns::*;
+
+    pub fn find_tx_logs_by_hash(pool: web::Data<Pool>, hash: String) -> Result<Vec<OptimismTxReceiptLog>, ExpectedError> {
+        let conn = pool.get()?;
+        Ok(optimism_tx_receipt_logs::table.filter(tx_hash.eq(hash)).load::<OptimismTxReceiptLog>(&conn)?)
     }
 }

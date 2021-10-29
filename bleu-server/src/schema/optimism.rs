@@ -105,6 +105,21 @@ table! {
     }
 }
 
+table! {
+    optimism_tx_receipt_logs (optimism_tx_receipt_logs_id) {
+        optimism_tx_receipt_logs_id -> BigInt,
+        address -> Nullable<Text>,
+        topics -> Nullable<Text>,
+        data -> Nullable<Text>,
+        block_number -> Nullable<Text>,
+        tx_hash -> Nullable<Text>,
+        tx_index -> Nullable<Text>,
+        block_hash -> Nullable<Text>,
+        log_index -> Nullable<Text>,
+        removed -> Nullable<Bool>,
+    }
+}
+
 joinable_inner!(
     left_table_ty = optimism_txs::table,
     right_table_ty = optimism_block_txs::table,

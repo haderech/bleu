@@ -1,9 +1,9 @@
 use paperclip::actix::{api_v2_operation, web};
 use paperclip::actix::web::Json;
 
+use crate::config::postgres::Pool;
 use crate::error::error::ExpectedError;
-use crate::model::optimism::{OptimismBlockTx, OptimismL1ToL2TxSummary, OptimismStateBatch, OptimismTxBatch, OptimismTxBatchSummary, OptimismTxSummary, PaginatedOptimismBlockTx, PaginatedOptimismStateBatch, PaginatedOptimismTxBatch};
-use crate::Pool;
+use crate::model::optimism::*;
 use crate::repository::optimism;
 
 #[api_v2_operation(tags(TxBatch))]
@@ -64,7 +64,20 @@ pub async fn get_state_batch_by_index(pool: web::Data<Pool>, path_params: web::P
     Ok(Json(optimism::state_batch::find_batch_by_index(pool, index)?))
 }
 
-#[api_v2_operation]
+#[api_v2_operation(tags(L1ToL2))]
 pub async fn get_latest_l1_to_l2_tx_summary(pool: web::Data<Pool>) -> Result<Json<Vec<OptimismL1ToL2TxSummary>>, ExpectedError> {
-    Ok(Json(optimism::tx::find_latest_l1_to_l2_tx_summary(pool)?))
+    Ok(Json(optimism::l1_to_l2::find_latest_l1_to_l2_tx_summary(pool)?))
+}
+
+#[api_v2_operation(tags(L1ToL2))]
+pub async fn get_l1_to_l2_tx_by_page_count(pool: web::Data<Pool>, path_params: web::Path<(i64, i64)>) -> Result<Json<PaginatedOptimismL1ToL2Tx>, ExpectedError> {
+    let (page, count) = path_params.into_inner();
+    Ok(Json(PaginatedOptimismL1ToL2Tx::new(optimism::l1_to_l2::find_l1_to_l2_tx_by_page_count(pool, page, count)?)))
+}
+
+#[api_v2_operation(tags(TxLogs))]
+pub async fn get_tx_logs_by_hash(pool: web::Data<Pool>, path_params: web::Path<String>) -> Result<Json<Vec<OptimismTxLog>>, ExpectedError> {
+    let hash = path_params.into_inner();
+    let entity_vec = optimism::tx_logs::find_tx_logs_by_hash(pool, hash)?;
+    Ok(Json(entity_vec.into_iter().map(|e| { OptimismTxLog::from(e) }).collect::<Vec<OptimismTxLog>>()))
 }
