@@ -5,7 +5,7 @@ const path = require("path")
 
 require('dotenv').config({ path: path.join(__dirname, "../.env") });
 
-const swaggerResource = `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/spec`;
+const swaggerResource = `http://${process.env.SWAGGER_URL}:${process.env.SERVER_PORT}/api/spec`;
 const swaggerPort = process.env.SWAGGER_PORT;
 
 const indexContent = fs.readFileSync(`${pathToSwaggerUi}/index.html`).toString()
