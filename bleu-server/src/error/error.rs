@@ -1,10 +1,11 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 
 use actix_web::{HttpResponse, ResponseError};
 use r2d2;
 use serde::Serialize;
+use paperclip::actix::api_v2_errors;
 
-#[derive(Debug)]
+#[api_v2_errors(code = 400, code = 500)]
 pub enum ExpectedError {
     DieselError(String),
 }
@@ -43,12 +44,21 @@ impl Display for ExpectedError {
     }
 }
 
+impl Debug for ExpectedError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ExpectedError::DieselError(err) => write!(f, "{:?}", err),
+        }
+    }
+}
+
 #[derive(Serialize)]
 struct ErrorResponse {
     code: String,
     error: String,
     message: String,
 }
+
 
 impl ResponseError for ExpectedError {
     fn error_response(&self) -> HttpResponse {
