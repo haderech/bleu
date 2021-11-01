@@ -1,9 +1,10 @@
 use std::fmt::{Debug, Display, Formatter};
 
 use actix_web::{HttpResponse, ResponseError};
+use actix_web::error::BlockingError;
+use paperclip::actix::api_v2_errors;
 use r2d2;
 use serde::Serialize;
-use paperclip::actix::api_v2_errors;
 
 #[api_v2_errors(code = 400, code = 500)]
 pub enum ExpectedError {
@@ -32,6 +33,12 @@ impl From<r2d2::Error> for ExpectedError {
 
 impl From<diesel::result::Error> for ExpectedError {
     fn from(err: diesel::result::Error) -> Self {
+        ExpectedError::DieselError(err.to_string())
+    }
+}
+
+impl From<BlockingError<diesel::result::Error>> for ExpectedError {
+    fn from(err: BlockingError<diesel::result::Error>) -> Self {
         ExpectedError::DieselError(err.to_string())
     }
 }
