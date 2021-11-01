@@ -92,21 +92,17 @@ impl L2TxBatchPlugin {
     fn event_handler(sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let req_url = libs::subscribe::create_req_url(sub_event.active_node(), sub_event.curr_idx);
         let response = request::get(req_url.as_str())?;
-        match libs::subscribe::is_value_created(&response, "batch") {
-            true => {
-                let batch = get_object(&response, "batch")?;
-                let converted_batch = number_to_string_convert(batch, vec!["index", "timestamp", "size", "blockNumber", "prevTotalElements"])?;
-                let pg_sender = senders.get("postgres");
-                let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_tx_batches"), Value::Object(converted_batch.to_owned())))?;
-                let txs = get_array(&response, "transactions")?;
-                for tx in txs.iter() {
-                    let tx_map = opt_to_result(tx.as_object())?;
-                    let converted_tx = number_to_string_convert(tx_map, vec!["index", "batchIndex", "blockNumber", "timestamp", "queueIndex"])?;
-                    let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_txs"), Value::Object(converted_tx.to_owned())))?;
-                }
-            }
-            false => return Err(ExpectedError::BlockHeightError(format!("waiting for tx batch created...task={}", TASK_NAME)))
-        };
+        let _ = libs::subscribe::response_verifier(&response, TASK_NAME, "batch", sub_event.get_filter())?;
+        let batch = get_object(&response, "batch")?;
+        let converted_batch = number_to_string_convert(batch, vec!["index", "timestamp", "size", "blockNumber", "prevTotalElements"])?;
+        let pg_sender = senders.get("postgres");
+        let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_tx_batches"), Value::Object(converted_batch.to_owned())))?;
+        let txs = get_array(&response, "transactions")?;
+        for tx in txs.iter() {
+            let tx_map = opt_to_result(tx.as_object())?;
+            let converted_tx = number_to_string_convert(tx_map, vec!["index", "batchIndex", "blockNumber", "timestamp", "queueIndex"])?;
+            let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_txs"), Value::Object(converted_tx.to_owned())))?;
+        }
         Ok(())
     }
 }

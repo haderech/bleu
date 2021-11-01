@@ -100,25 +100,21 @@ impl L2BlockTxPlugin {
                     "id": 1
                 });
         let response = request::post(req_url.as_str(), req_body.to_string().as_str())?;
-        match libs::subscribe::is_value_created(&response, "result") {
-            true => {
-                let block = get_object(&response, "result")?;
-                let converted_block = hex_to_decimal_converter(block, vec!["number", "size", "timestamp", "gasLimit", "gasUsed"])?;
-                let pg_sender = senders.get("postgres");
-                let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_blocks"), Value::Object(converted_block.to_owned())))?;
-                let txs = get_array(&block, "transactions")?;
+        let _ = libs::subscribe::response_verifier(&response, TASK_NAME, "result", sub_event.get_filter())?;
+        let block = get_object(&response, "result")?;
+        let converted_block = hex_to_decimal_converter(block, vec!["number", "size", "timestamp", "gasLimit", "gasUsed"])?;
+        let pg_sender = senders.get("postgres");
+        let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_blocks"), Value::Object(converted_block.to_owned())))?;
+        let txs = get_array(&block, "transactions")?;
 
-                let receipt_sender = senders.get("l2_tx_receipt");
-                for tx in txs.iter() {
-                    let tx_map = opt_to_result(tx.as_object())?;
-                    let converted_tx = hex_to_decimal_converter(tx_map, vec!["blockNumber", "gas", "gasPrice", "nonce", "transactionIndex", "value", "l1BlockNumber", "l1TimeStamp", "index", "queueIndex"])?;
-                    let tx_hash = get_string(&converted_tx, "hash")?;
-                    let _ = receipt_sender.send(L2TxReceiptMsg::new(tx_hash))?;
-                    let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_block_txs"), Value::Object(converted_tx.to_owned())))?;
-                }
-            }
-            false => return Err(ExpectedError::BlockHeightError(format!("waiting for tx created...task={}", TASK_NAME)))
-        };
+        let receipt_sender = senders.get("l2_tx_receipt");
+        for tx in txs.iter() {
+            let tx_map = opt_to_result(tx.as_object())?;
+            let converted_tx = hex_to_decimal_converter(tx_map, vec!["blockNumber", "gas", "gasPrice", "nonce", "transactionIndex", "value", "l1BlockNumber", "l1TimeStamp", "index", "queueIndex"])?;
+            let tx_hash = get_string(&converted_tx, "hash")?;
+            let _ = receipt_sender.send(L2TxReceiptMsg::new(tx_hash))?;
+            let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_block_txs"), Value::Object(converted_tx.to_owned())))?;
+        }
         Ok(())
     }
 }

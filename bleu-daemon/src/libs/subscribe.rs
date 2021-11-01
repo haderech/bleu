@@ -6,7 +6,7 @@ use crate::error::error::ExpectedError;
 use crate::libs::opts::opt_to_result;
 use crate::libs::request::adjust_url;
 use crate::libs::rocks::get_static;
-use crate::libs::serde::{get_object, get_str};
+use crate::libs::serde::{filter, get_object, get_str};
 use crate::plugin::rocks::{RocksDB, RocksMethod, RocksMsg};
 use crate::types::channel::MultiSender;
 use crate::types::enumeration::Enumeration;
@@ -42,7 +42,12 @@ pub fn is_value_created(res_body: &Map<String, Value>, value_name: &str) -> bool
 pub fn error_handler(err: ExpectedError, sub_event: &mut SubscribeEvent, senders: &MultiSender) {
     let rocks_sender = senders.get("rocks");
     match err {
-        ExpectedError::BlockHeightError(err) => println!("{}", err),
+        ExpectedError::BlockHeightError(err) => log::info!("{}", err.to_string()),
+        ExpectedError::FilterError(err) => {
+            log::info!("{}", err.to_string());
+            task_syncer(sub_event, senders);
+            sub_event.next_idx();
+        }
         _ => sub_event.handle_error(&rocks_sender, err.to_string())
     };
 }
@@ -68,6 +73,16 @@ pub fn message_handler(message: Value, sub_event: &mut SubscribeEvent, senders: 
     let sub_task = SubscribeTask::from(sub_event, String::from(""));
     let rocks_sender = senders.get("rocks");
     let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Put, sub_event.get_task_id(), Value::String(json!(sub_task).to_string())));
+}
+
+pub fn response_verifier(response: &Map<String, Value>, task_name: &str, value_name: &str, condition: String) -> Result<(), ExpectedError> {
+    if !is_value_created(response, value_name) {
+        return Err(ExpectedError::BlockHeightError(format!("waiting for data created...task={}", task_name)));
+    }
+    if !filter(response, condition)? {
+        return Err(ExpectedError::FilterError(format!("not matched filter condition! task={}", task_name)));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
