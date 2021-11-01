@@ -21,6 +21,7 @@ mod config;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
+    env_logger::init();
 
     let server_config = ServerConfig::load();
     let postgres_config = PostgresConfig::load();
