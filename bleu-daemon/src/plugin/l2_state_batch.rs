@@ -90,18 +90,14 @@ impl L2StateBatchPlugin {
     fn event_handler(sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let req_url = libs::subscribe::create_req_url(sub_event.active_node(), sub_event.curr_idx);
         let response = request::get(req_url.as_str())?;
-        match libs::subscribe::is_value_created(&response, "batch") {
-            true => {
-                let batch = get_object(&response, "batch")?;
-                let pg_sender = senders.get("postgres");
-                let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_state_batches"), Value::Object(batch.clone())))?;
-                let txs = get_array(&response, "stateRoots")?;
-                for tx in txs.iter() {
-                    let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_state_roots"), tx.clone()))?;
-                }
-            }
-            false => return Err(ExpectedError::BlockHeightError(format!("waiting for state root batch created...task={}", TASK_NAME)))
-        };
+        let _ = libs::subscribe::response_verifier(&response, TASK_NAME, "batch", sub_event.get_filter())?;
+        let batch = get_object(&response, "batch")?;
+        let pg_sender = senders.get("postgres");
+        let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_state_batches"), Value::Object(batch.clone())))?;
+        let txs = get_array(&response, "stateRoots")?;
+        for tx in txs.iter() {
+            let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_state_roots"), tx.clone()))?;
+        }
         Ok(())
     }
 }

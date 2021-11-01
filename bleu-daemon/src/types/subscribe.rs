@@ -101,6 +101,8 @@ impl SubscribeEvent {
     pub fn get_task_id(&self) -> String { self.task_id.clone() }
 
     pub fn status(&mut self, status: SubscribeStatus) { self.status = status; }
+
+    pub fn get_filter(&self) -> String { self.filter.clone() }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]

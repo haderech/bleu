@@ -62,7 +62,9 @@ impl L2TxReceiptPlugin {
     fn recv(mut receiver: Receiver, sub_event: SubscribeEvent, senders: MultiSender, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Ok(message) = receiver.try_recv() {
-                let _ = Self::message_handler(message, &sub_event, &senders);
+                if let Err(err) = Self::message_handler(message, &sub_event, &senders) {
+                    log::error!("{}", err.to_string());
+                }
             }
             if !app.is_quitting() {
                 Self::recv(receiver, sub_event, senders, app);
@@ -81,21 +83,19 @@ impl L2TxReceiptPlugin {
                     "id": 1
                 });
         let response = request::post(req_url.as_str(), req_body.to_string().as_str())?;
-        match libs::subscribe::is_value_created(&response, "result") {
-            true => {
-                let receipt = get_object(&response, "result")?;
-                let converted_receipt = hex_to_decimal_converter(receipt, vec!["blockNumber", "cumulativeGasUsed", "gasUsed", "status", "transactionIndex"])?;
-                let pg_sender = senders.get("postgres");
-                let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_tx_receipts"), Value::Object(converted_receipt.to_owned())))?;
-                let logs = get_array(&receipt, "logs")?;
-                for log in logs.iter() {
-                    let log_map = opt_to_result(log.as_object())?;
-                    let converted_log = hex_to_decimal_converter(log_map, vec!["blockNumber", "transactionIndex", "logIndex"])?;
-                    let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_tx_receipt_logs"), Value::Object(converted_log.to_owned())))?;
-                }
-            }
-            false => return Err(ExpectedError::NoneError(format!("receipt does not created...tx_hash={}", tx_hash)))
-        };
+        if !libs::subscribe::is_value_created(&response, "result") {
+            return Err(ExpectedError::NoneError(format!("receipt does not created...tx_hash={}", tx_hash)));
+        }
+        let receipt = get_object(&response, "result")?;
+        let converted_receipt = hex_to_decimal_converter(receipt, vec!["blockNumber", "cumulativeGasUsed", "gasUsed", "status", "transactionIndex"])?;
+        let pg_sender = senders.get("postgres");
+        let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_tx_receipts"), Value::Object(converted_receipt.to_owned())))?;
+        let logs = get_array(&receipt, "logs")?;
+        for log in logs.iter() {
+            let log_map = opt_to_result(log.as_object())?;
+            let converted_log = hex_to_decimal_converter(log_map, vec!["blockNumber", "transactionIndex", "logIndex"])?;
+            let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_tx_receipt_logs"), Value::Object(converted_log.to_owned())))?;
+        }
         Ok(())
     }
 }
