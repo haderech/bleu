@@ -31,7 +31,7 @@ impl Plugin for TelegramPlugin {
     }
 
     fn init(&mut self) {
-        let token = libs::opts::string("telegram::bot-token").unwrap();
+        let token = libs::opt::get_value_str("telegram::bot-token").unwrap();
         self.token = Some(token.clone());
         let bot = Bot::new(token).auto_send();
         self.bot = Some(bot);

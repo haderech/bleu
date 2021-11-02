@@ -63,12 +63,12 @@ impl EmailPlugin {
     }
 
     pub fn send(to: &str, subject: &str, body: &str) -> Result<(), ExpectedError> {
-        let smtp_username = libs::opts::string("email::smtp-username")?;
-        let smtp_password = libs::opts::string("email::smtp-password")?;
+        let smtp_username = libs::opt::get_value_str("email::smtp-username")?;
+        let smtp_password = libs::opt::get_value_str("email::smtp-password")?;
         let credentials = Credentials::new(smtp_username, smtp_password);
-        let smtp_relay = libs::opts::string("email::smtp-relay")?;
-        let from = libs::opts::string("email::from")?;
-        let reply_to = libs::opts::string("email::reply-to")?;
+        let smtp_relay = libs::opt::get_value_str("email::smtp-relay")?;
+        let from = libs::opt::get_value_str("email::from")?;
+        let reply_to = libs::opt::get_value_str("email::reply-to")?;
 
         let email = Message::builder()
             .from(from.as_str().parse().unwrap())

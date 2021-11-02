@@ -3,7 +3,7 @@ use std::fs;
 use serde_json::{json, Map, Value};
 
 use crate::error::error::ExpectedError;
-use crate::libs::opts::opt_to_result;
+use crate::libs::opt::opt_to_result;
 use crate::libs::request::adjust_url;
 use crate::libs::rocks::get_static;
 use crate::libs::serde::{filter, get_object, get_str};

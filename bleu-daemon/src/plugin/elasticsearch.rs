@@ -30,7 +30,7 @@ impl Plugin for ElasticsearchPlugin {
     fn init(&mut self) {
         self.monitor = Some(APP.channels.subscribe("elasticsearch"));
 
-        let elasticsearch_url = libs::opts::string("elasticsearch::url").unwrap();
+        let elasticsearch_url = libs::opt::get_value_str("elasticsearch::url").unwrap();
         let url = Url::parse(elasticsearch_url.as_str()).unwrap();
         let conn_pool = SingleNodeConnectionPool::new(url);
         let transport = TransportBuilder::new(conn_pool).disable_proxy().build().unwrap();

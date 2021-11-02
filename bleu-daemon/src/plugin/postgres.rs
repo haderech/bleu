@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 
 use crate::{libs, message};
 use crate::error::error::ExpectedError;
-use crate::libs::opts::opt_to_result;
+use crate::libs::opt::opt_to_result;
 use crate::libs::postgres::{create_table, insert_value};
 use crate::libs::serde::{get_object, get_str};
 use crate::plugin::slack::{SlackMsg, SlackMsgLevel};
@@ -103,11 +103,11 @@ impl PostgresPlugin {
     }
 
     fn create_pool() -> Result<Pool, ExpectedError> {
-        let host = libs::opts::string("postgres::host")?;
-        let port = libs::opts::string("postgres::port")?;
-        let dbname = libs::opts::string("postgres::dbname")?;
-        let user = libs::opts::string("postgres::user")?;
-        let password = libs::opts::string("postgres::password")?;
+        let host = libs::opt::get_value_str("postgres::host")?;
+        let port = libs::opt::get_value_str("postgres::port")?;
+        let dbname = libs::opt::get_value_str("postgres::dbname")?;
+        let user = libs::opt::get_value_str("postgres::user")?;
+        let password = libs::opt::get_value_str("postgres::password")?;
 
         let config = format!("host={host} port={port} dbname={dbname} user={user} password={password}", host = host, port = port, dbname = dbname, user = user, password = password);
 

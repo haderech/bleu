@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 use crate::error::error::ExpectedError;
 use crate::libs;
 use crate::libs::convert::hex_to_decimal_converter;
-use crate::libs::opts::opt_to_result;
+use crate::libs::opt::opt_to_result;
 use crate::libs::request;
 use crate::libs::serde::{get_array, get_object, get_str};
 use crate::libs::subscribe::task_loader;

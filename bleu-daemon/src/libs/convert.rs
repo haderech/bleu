@@ -2,7 +2,7 @@ use regex::Regex;
 use serde_json::{Map, Value};
 
 use crate::error::error::ExpectedError;
-use crate::libs::opts::opt_to_result;
+use crate::libs::opt::opt_to_result;
 
 pub fn hex_to_decimal(hex_str: String) -> Result<String, ExpectedError> {
     match is_hex_string(&hex_str) {

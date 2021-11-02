@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::enumeration;
-use crate::libs::opts;
+use crate::libs::opt;
 use crate::libs::serde::get_str;
 use crate::message;
 use crate::types::enumeration::Enumeration;
@@ -35,9 +35,9 @@ impl Plugin for SlackPlugin {
 
     fn init(&mut self) {
         let mut slack_hooks: SlackHooks = HashMap::new();
-        slack_hooks.insert(String::from("info"), opts::string("slack::info").unwrap());
-        slack_hooks.insert(String::from("warn"), opts::string("slack::warn").unwrap());
-        slack_hooks.insert(String::from("error"), opts::string("slack::error").unwrap());
+        slack_hooks.insert(String::from("info"), opt::get_value_str("slack::info").unwrap());
+        slack_hooks.insert(String::from("warn"), opt::get_value_str("slack::warn").unwrap());
+        slack_hooks.insert(String::from("error"), opt::get_value_str("slack::error").unwrap());
 
         self.slack_hooks = Some(slack_hooks);
         self.monitor = Some(APP.channels.subscribe("slack"));

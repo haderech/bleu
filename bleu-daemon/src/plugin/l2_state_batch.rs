@@ -49,7 +49,7 @@ impl Plugin for L2StateBatchPlugin {
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         self.sub_event = Some(task_loader(rocksdb, TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
-        self.poll_interval = Some(libs::opts::u64("l2statebatch::poll-interval").unwrap());
+        self.poll_interval = Some(libs::opt::get_value("l2statebatch::poll-interval").unwrap());
     }
 
     fn startup(&mut self) {

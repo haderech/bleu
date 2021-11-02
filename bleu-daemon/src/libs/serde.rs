@@ -3,7 +3,7 @@ use std::str::FromStr;
 use serde_json::{Map, Value};
 
 use crate::error::error::ExpectedError;
-use crate::libs::opts::{opt_ref_to_result, opt_to_result};
+use crate::libs::opt::{opt_ref_to_result, opt_to_result};
 
 pub fn select_value(params: &Map<String, Value>, names: Vec<&str>) -> Result<Map<String, Value>, ExpectedError> {
     let mut values = Map::new();

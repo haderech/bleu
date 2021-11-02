@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 use crate::error::error::ExpectedError;
 use crate::libs;
 use crate::libs::convert::hex_to_decimal_converter;
-use crate::libs::opts::opt_to_result;
+use crate::libs::opt::opt_to_result;
 use crate::libs::request;
 use crate::libs::serde::{get_array, get_object, get_string};
 use crate::libs::subscribe::task_loader;
@@ -52,7 +52,7 @@ impl Plugin for L2BlockTxPlugin {
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         self.sub_event = Some(task_loader(rocksdb, TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
-        self.poll_interval = Some(libs::opts::u64("l2blocktx::poll-interval").unwrap());
+        self.poll_interval = Some(libs::opt::get_value("l2blocktx::poll-interval").unwrap());
     }
 
     fn startup(&mut self) {
