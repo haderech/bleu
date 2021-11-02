@@ -25,7 +25,7 @@ fn load_task_from_rocksdb(rocksdb: RocksDB, task_prefix: &str, task: &str) -> Re
     Ok(SubscribeEvent::from(opt_to_result(task_value.as_object())?))
 }
 
-fn load_task_from_json(file_path: &str, chain: &str, task_prefix: &str, task_name: &str) -> Result<SubscribeEvent, ExpectedError> {
+pub fn load_task_from_json(file_path: &str, chain: &str, task_prefix: &str, task_name: &str) -> Result<SubscribeEvent, ExpectedError> {
     let json_str = fs::read_to_string(file_path)?;
     let json_value: Value = serde_json::from_str(json_str.as_str())?;
     let task_map = opt_to_result(json_value.as_object())?;

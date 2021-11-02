@@ -8,14 +8,14 @@ use crate::libs::convert::hex_to_decimal_converter;
 use crate::libs::opt::opt_to_result;
 use crate::libs::request;
 use crate::libs::serde::{get_array, get_object, get_str};
-use crate::libs::subscribe::task_loader;
+use crate::libs::subscribe::load_task_from_json;
 use crate::message;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::RocksPlugin;
 use crate::types::channel::MultiSender;
 use crate::types::subscribe::SubscribeEvent;
 
-#[appbase_plugin(RocksPlugin, PostgresPlugin)]
+#[appbase_plugin(PostgresPlugin)]
 pub struct L2TxReceiptPlugin {
     sub_event: Option<SubscribeEvent>,
     senders: Option<MultiSender>,
@@ -43,7 +43,7 @@ impl Plugin for L2TxReceiptPlugin {
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
-        self.sub_event = Some(task_loader(rocksdb, TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
+        self.sub_event = Some(load_task_from_json( TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
     }
 
     fn startup(&mut self) {
