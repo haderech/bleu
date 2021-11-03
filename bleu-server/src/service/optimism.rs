@@ -4,6 +4,7 @@ use paperclip::actix::web::Json;
 use crate::config::postgres::Pool;
 use crate::error::error::ExpectedError;
 use crate::model::optimism::*;
+use crate::model::pagination::RequestPage;
 use crate::repository::optimism;
 
 #[api_v2_operation(tags(TxBatch))]
@@ -18,9 +19,8 @@ pub async fn get_tx_batch_by_index(pool: web::Data<Pool>, path_params: web::Path
 }
 
 #[api_v2_operation(tags(TxBatch))]
-pub async fn get_paginated_tx_batch(pool: web::Data<Pool>, path_params: web::Path<(i64, i64)>) -> Result<Json<PaginatedOptimismTxBatch>, ExpectedError> {
-    let (page, count) = path_params.into_inner();
-    Ok(Json(PaginatedOptimismTxBatch::new(optimism::tx_batch::find_batch_by_page_count(pool, page, count).await?)))
+pub async fn get_paginated_tx_batch(pool: web::Data<Pool>, req_page: web::Query<RequestPage>) -> Result<Json<PaginatedOptimismTxBatch>, ExpectedError> {
+    Ok(Json(PaginatedOptimismTxBatch::new(optimism::tx_batch::find_batch_by_page_count(pool, req_page.page, req_page.count).await?)))
 }
 
 #[api_v2_operation(tags(Tx))]
@@ -41,27 +41,26 @@ pub async fn get_tx_by_index(pool: web::Data<Pool>, path_params: web::Path<i64>)
 }
 
 #[api_v2_operation(tags(Tx))]
-pub async fn get_paginated_tx_by_tx_batch_index(pool: web::Data<Pool>, path_params: web::Path<(i64, i64, i64)>) -> Result<Json<PaginatedOptimismBlockTx>, ExpectedError> {
-    let (tx_batch_index, page, count) = path_params.into_inner();
-    Ok(Json(PaginatedOptimismBlockTx::new(optimism::tx::find_tx_by_tx_batch_index_page_count(pool, tx_batch_index, page, count).await?)))
+pub async fn get_paginated_tx_by_tx_batch_index(pool: web::Data<Pool>, path_params: web::Path<i64>, req_page: web::Query<RequestPage>) -> Result<Json<PaginatedOptimismBlockTx>, ExpectedError> {
+    let tx_batch_index = path_params.into_inner();
+    Ok(Json(PaginatedOptimismBlockTx::new(optimism::tx::find_tx_by_tx_batch_index_page_count(pool, tx_batch_index, req_page.page, req_page.count).await?)))
 }
 
 #[api_v2_operation(tags(Tx))]
-pub async fn get_paginated_tx_by_state_batch_index(pool: web::Data<Pool>, path_params: web::Path<(i64, i64, i64)>) -> Result<Json<PaginatedOptimismBlockTx>, ExpectedError> {
-    let (state_batch_index, page, count) = path_params.into_inner();
-    Ok(Json(PaginatedOptimismBlockTx::new(optimism::tx::find_tx_by_state_batch_index_page_count(pool, state_batch_index, page, count).await?)))
+pub async fn get_paginated_tx_by_state_batch_index(pool: web::Data<Pool>, path_params: web::Path<i64>, req_page: web::Query<RequestPage>) -> Result<Json<PaginatedOptimismBlockTx>, ExpectedError> {
+    let state_batch_index = path_params.into_inner();
+    Ok(Json(PaginatedOptimismBlockTx::new(optimism::tx::find_tx_by_state_batch_index_page_count(pool, state_batch_index, req_page.page, req_page.count).await?)))
 }
 
 #[api_v2_operation(tags(Tx))]
-pub async fn get_paginated_tx_by_address(pool: web::Data<Pool>, path_params: web::Path<(String, i64, i64)>) -> Result<Json<PaginatedOptimismBlockTx>, ExpectedError> {
-    let (address, page, count) = path_params.into_inner();
-    Ok(Json(PaginatedOptimismBlockTx::new(optimism::tx::find_tx_by_address_page_count(pool, address, page, count).await?)))
+pub async fn get_paginated_tx_by_address(pool: web::Data<Pool>, path_params: web::Path<String>, req_page: web::Query<RequestPage>) -> Result<Json<PaginatedOptimismBlockTx>, ExpectedError> {
+    let address = path_params.into_inner();
+    Ok(Json(PaginatedOptimismBlockTx::new(optimism::tx::find_tx_by_address_page_count(pool, address, req_page.page, req_page.count).await?)))
 }
 
 #[api_v2_operation(tags(StateRootBatch))]
-pub async fn get_paginated_state_batch(pool: web::Data<Pool>, path_params: web::Path<(i64, i64)>) -> Result<Json<PaginatedOptimismStateBatch>, ExpectedError> {
-    let (page, count) = path_params.into_inner();
-    Ok(Json(PaginatedOptimismStateBatch::new(optimism::state_batch::find_batch_by_page_count(pool, page, count).await?)))
+pub async fn get_paginated_state_batch(pool: web::Data<Pool>, req_page: web::Query<RequestPage>) -> Result<Json<PaginatedOptimismStateBatch>, ExpectedError> {
+    Ok(Json(PaginatedOptimismStateBatch::new(optimism::state_batch::find_batch_by_page_count(pool, req_page.page, req_page.count).await?)))
 }
 
 #[api_v2_operation(tags(StateRootBatch))]
@@ -76,9 +75,8 @@ pub async fn get_latest_l1_to_l2_tx_summary(pool: web::Data<Pool>) -> Result<Jso
 }
 
 #[api_v2_operation(tags(L1ToL2))]
-pub async fn get_l1_to_l2_tx_by_page_count(pool: web::Data<Pool>, path_params: web::Path<(i64, i64)>) -> Result<Json<PaginatedOptimismL1ToL2Tx>, ExpectedError> {
-    let (page, count) = path_params.into_inner();
-    Ok(Json(PaginatedOptimismL1ToL2Tx::new(optimism::l1_to_l2::find_l1_to_l2_tx_by_page_count(pool, page, count).await?)))
+pub async fn get_l1_to_l2_tx_by_page_count(pool: web::Data<Pool>, req_page: web::Query<RequestPage>) -> Result<Json<PaginatedOptimismL1ToL2Tx>, ExpectedError> {
+    Ok(Json(PaginatedOptimismL1ToL2Tx::new(optimism::l1_to_l2::find_l1_to_l2_tx_by_page_count(pool, req_page.page, req_page.count).await?)))
 }
 
 #[api_v2_operation(tags(TxLogs))]
