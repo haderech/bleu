@@ -11,7 +11,6 @@ use crate::libs::serde::{get_array, get_object, get_str};
 use crate::libs::subscribe::load_task_from_json;
 use crate::message;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
-use crate::plugin::rocks::RocksPlugin;
 use crate::types::channel::MultiSender;
 use crate::types::subscribe::SubscribeEvent;
 
@@ -42,7 +41,6 @@ impl Plugin for L2TxReceiptPlugin {
         let senders = MultiSender::new(vec!("postgres" /*"elasticsearch"*/));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
-        let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         self.sub_event = Some(load_task_from_json( TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
     }
 

@@ -414,5 +414,43 @@
     },
     "indexes": [ [ "address" ], [ "block_number" ], [ "tx_hash" ], [ "block_hash" ] ],
     "uniques": [ [ "tx_hash", "log_index" ] ]
+  },
+  "optimism_enqueue": {
+    "attributes": {
+      "index": {
+        "type": [ "string", "null" ],
+        "description": "index"
+      },
+      "target": {
+        "type": [ "string", "null" ],
+        "description": "target"
+      },
+      "data": {
+        "type": [ "string", "null" ],
+        "description": "data"
+      },
+      "gas_limit": {
+        "type": [ "string", "null" ],
+        "description": "gasLimit"
+      },
+      "origin": {
+        "type": [ "string", "null" ],
+        "description": "origin"
+      },
+      "block_number": {
+        "type": [ "string", "null" ],
+        "description": "blockNumber"
+      },
+      "timestamp": {
+        "type": [ "string", "null" ],
+        "description": "timestamp"
+      },
+      "ctc_index": {
+        "type": [ "string", "null" ],
+        "description": "ctcIndex"
+      }
+    },
+    "indexes": [ [ "index" ], [ "target" ], [ "origin" ], [ "block_number" ], [ "ctc_index" ]  ],
+    "uniques": [ [ "index" ] ]
   }
 }
