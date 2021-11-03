@@ -27,6 +27,16 @@ pub struct OptimismTxBatch {
     submitter: Option<String>,
 }
 
+impl OptimismTxBatch {
+    pub fn get_batch_index(&self) -> String {
+        if self.batch_index.is_none() {
+            String::from("0")
+        } else {
+            self.batch_index.clone().unwrap()
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct PaginatedOptimismTxBatch {
     page_info: PageInfo,
@@ -122,6 +132,15 @@ pub struct OptimismStateBatch {
     submitter: Option<String>,
 }
 
+impl OptimismStateBatch {
+    pub fn get_batch_index(&self) -> String {
+        if self.batch_index.is_none() {
+            String::from("0")
+        } else {
+            self.batch_index.clone().unwrap()
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct PaginatedOptimismStateBatch {
@@ -223,6 +242,27 @@ impl OptimismTxLog {
             block_hash: e.block_hash,
             log_index: e.log_index,
             removed: e.removed,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
+pub struct BoardSummary {
+    latest_tx_batch_index: String,
+    latest_state_batch_index: String,
+    tx_count: i64,
+}
+
+impl BoardSummary {
+    pub fn new(
+        latest_tx_batch_index: String,
+        latest_state_batch_index: String,
+        tx_count: i64,
+    ) -> Self {
+        Self {
+            latest_tx_batch_index,
+            latest_state_batch_index,
+            tx_count,
         }
     }
 }

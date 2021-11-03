@@ -47,6 +47,7 @@ async fn main() -> std::io::Result<()> {
                     .service(web::resource("/optimism/tx/l1tol2/latest").route(web::get().to(optimism::get_latest_l1_to_l2_tx_summary)))
                     .service(web::resource("/optimism/tx/l1tol2/page/{page}/count/{count}").route(web::get().to(optimism::get_l1_to_l2_tx_by_page_count)))
                     .service(web::resource("/optimism/tx/logs/hash/{hash}").route(web::get().to(optimism::get_tx_logs_by_hash)))
+                    .service(web::resource("/optimism/board/summary").route(web::get().to(optimism::get_board_summary)))
             )
             .with_json_spec_at(swagger_config.get_resource())
             .build()

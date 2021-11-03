@@ -81,3 +81,9 @@ pub async fn get_tx_logs_by_hash(pool: web::Data<Pool>, path_params: web::Path<S
     let entity_vec = optimism::tx_logs::find_tx_logs_by_hash(pool, hash).await?;
     Ok(Json(entity_vec.into_iter().map(|e| { OptimismTxLog::from(e) }).collect::<Vec<OptimismTxLog>>()))
 }
+
+#[api_v2_operation(tags(BoardSummary))]
+pub async fn get_board_summary(pool: web::Data<Pool>) -> Result<Json<BoardSummary>, ExpectedError> {
+    let board_summary = optimism::summary::find_board_summary(pool).await?;
+    Ok(Json(board_summary))
+}

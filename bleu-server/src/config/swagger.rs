@@ -10,7 +10,7 @@ pub struct SwaggerConfig {
 impl SwaggerConfig {
     pub fn load() -> Self {
         let mut spec = DefaultApiRaw::default();
-        spec.tags = SwaggerSpec::simple_tags(vec!["TxBatch", "StateRootBatch", "Tx", "L1ToL2", "TxLogs"]);
+        spec.tags = SwaggerSpec::simple_tags(vec!["TxBatch", "StateRootBatch", "Tx", "L1ToL2", "TxLogs", "BoardSummary"]);
         spec.info = SwaggerSpec::simple_info("0.1", "Bleu Server");
 
         let resource = env::var("SWAGGER_RESOURCE").expect("SWAGGER_RESOURCE does not exist!");

@@ -4,7 +4,7 @@ pub mod tx_batch {
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
-    use crate::config::postgres::Pool;
+    use crate::config::postgres::{PgConn, Pool};
     use crate::error::error::ExpectedError;
     use crate::model::optimism::{OptimismTxBatch, OptimismTxBatchSummary};
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
@@ -41,6 +41,15 @@ pub mod tx_batch {
         }).await?;
         Ok(paginated_batch)
     }
+
+    pub async fn find_latest_tx_batch(conn: PgConn) -> Result<OptimismTxBatch, ExpectedError> {
+        let latest_tx_batch = web::block(move || {
+            optimism_tx_batches::table.into_boxed()
+                .order(batch_index.desc())
+                .first::<OptimismTxBatch>(&conn)
+        }).await?;
+        Ok(latest_tx_batch)
+    }
 }
 
 pub mod tx {
@@ -49,7 +58,7 @@ pub mod tx {
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
-    use crate::config::postgres::Pool;
+    use crate::config::postgres::{PgConn, Pool};
     use crate::error::error::ExpectedError;
     use crate::model::optimism::{OptimismBlockTx, OptimismTxSummary};
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
@@ -110,6 +119,13 @@ pub mod tx {
         }).await?;
         Ok(paginated_tx)
     }
+
+    pub async fn find_tx_count(conn: PgConn) -> Result<i64, ExpectedError> {
+        let tx_count = web::block(move || {
+            optimism_block_txs::table.count().first(&conn)
+        }).await?;
+        Ok(tx_count)
+    }
 }
 
 pub mod state_batch {
@@ -117,7 +133,7 @@ pub mod state_batch {
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
-    use crate::config::postgres::Pool;
+    use crate::config::postgres::{PgConn, Pool};
     use crate::error::error::ExpectedError;
     use crate::model::optimism::OptimismStateBatch;
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
@@ -141,6 +157,15 @@ pub mod state_batch {
                 .first::<OptimismStateBatch>(&conn)
         }).await?;
         Ok(state_batch)
+    }
+
+    pub async fn find_latest_state_batch(conn: PgConn) -> Result<OptimismStateBatch, ExpectedError> {
+        let latest_state_batch = web::block(move || {
+            optimism_state_batches::table.into_boxed()
+                .order(batch_index.desc())
+                .first::<OptimismStateBatch>(&conn)
+        }).await?;
+        Ok(latest_state_batch)
     }
 }
 
@@ -183,5 +208,36 @@ pub mod tx_logs {
                 .load::<OptimismTxReceiptLog>(&conn)
         }).await?;
         Ok(tx_logs)
+    }
+}
+
+pub mod summary {
+    use actix_web::web;
+    use cached::proc_macro::cached;
+    use diesel::prelude::*;
+    use diesel::RunQueryDsl;
+
+    use crate::config::postgres::Pool;
+    use crate::error::error::ExpectedError;
+    use crate::model::optimism::BoardSummary;
+    use crate::repository::optimism::state_batch::find_latest_state_batch;
+    use crate::repository::optimism::tx::find_tx_count;
+    use crate::repository::optimism::tx_batch::find_latest_tx_batch;
+
+    #[cached(time = 60, key = "bool", convert = r#"{ true }"#, result = true)]
+    pub async fn find_board_summary(pool: web::Data<Pool>) -> Result<BoardSummary, ExpectedError> {
+        let conn = pool.get()?;
+        let latest_tx_batch = find_latest_tx_batch(conn).await?;
+        let conn = pool.get()?;
+        let latest_state_batch = find_latest_state_batch(conn).await?;
+        let conn = pool.get()?;
+        let tx_count = find_tx_count(conn).await?;
+
+        let board_summary = BoardSummary::new(
+            latest_tx_batch.get_batch_index(),
+            latest_state_batch.get_batch_index(),
+            tx_count,
+        );
+        Ok(board_summary)
     }
 }

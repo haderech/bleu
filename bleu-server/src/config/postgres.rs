@@ -1,9 +1,10 @@
 use std::env;
 
 use diesel::PgConnection;
-use diesel::r2d2::ConnectionManager;
+use diesel::r2d2::{ConnectionManager, PooledConnection};
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+pub type PgConn = PooledConnection<ConnectionManager<PgConnection>>;
 
 #[derive(Clone)]
 pub struct PostgresConfig {
