@@ -52,6 +52,12 @@ pub async fn get_paginated_tx_by_state_batch_index(pool: web::Data<Pool>, path_p
     Ok(Json(PaginatedOptimismBlockTx::new(optimism::tx::find_tx_by_state_batch_index_page_count(pool, state_batch_index, page, count).await?)))
 }
 
+#[api_v2_operation(tags(Tx))]
+pub async fn get_paginated_tx_by_address(pool: web::Data<Pool>, path_params: web::Path<(String, i64, i64)>) -> Result<Json<PaginatedOptimismBlockTx>, ExpectedError> {
+    let (address, page, count) = path_params.into_inner();
+    Ok(Json(PaginatedOptimismBlockTx::new(optimism::tx::find_tx_by_address_page_count(pool, address, page, count).await?)))
+}
+
 #[api_v2_operation(tags(StateRootBatch))]
 pub async fn get_paginated_state_batch(pool: web::Data<Pool>, path_params: web::Path<(i64, i64)>) -> Result<Json<PaginatedOptimismStateBatch>, ExpectedError> {
     let (page, count) = path_params.into_inner();

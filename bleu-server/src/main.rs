@@ -42,6 +42,7 @@ async fn main() -> std::io::Result<()> {
                     .service(web::resource("/optimism/tx/index/{index}").route(web::get().to(optimism::get_tx_by_index)))
                     .service(web::resource("/optimism/tx/batch/{index}/page/{page}/count/{count}").route(web::get().to(optimism::get_paginated_tx_by_tx_batch_index)))
                     .service(web::resource("/optimism/tx/stateroot/{index}/page/{page}/count/{count}").route(web::get().to(optimism::get_paginated_tx_by_state_batch_index)))
+                    .service(web::resource("/optimism/tx/address/{address}/page/{page}/count/{count}").route(web::get().to(optimism::get_paginated_tx_by_address)))
                     .service(web::resource("/optimism/batch/stateroot/page/{page}/count/{count}").route(web::get().to(optimism::get_paginated_state_batch)))
                     .service(web::resource("/optimism/batch/stateroot/index/{index}").route(web::get().to(optimism::get_state_batch_by_index)))
                     .service(web::resource("/optimism/tx/l1tol2/latest").route(web::get().to(optimism::get_latest_l1_to_l2_tx_summary)))

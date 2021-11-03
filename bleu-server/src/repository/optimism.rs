@@ -126,6 +126,16 @@ pub mod tx {
         }).await?;
         Ok(tx_count)
     }
+
+    pub async fn find_tx_by_address_page_count(pool: web::Data<Pool>, address: String, page: i64, count: i64) -> Result<PaginatedRecord<OptimismBlockTx>, ExpectedError> {
+        let conn = pool.get()?;
+        let paginated_tx = web::block(move || {
+            optimism_block_txs::table.filter(from_address.eq(address.clone()).or(to_address.eq(address)))
+                .order(optimism_block_txs_id.desc())
+                .load_with_pagination(&conn, page, count)
+        }).await?;
+        Ok(paginated_tx)
+    }
 }
 
 pub mod state_batch {
