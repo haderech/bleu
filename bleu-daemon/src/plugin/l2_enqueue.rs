@@ -9,8 +9,10 @@ use serde_json::{json, Value};
 use crate::error::error::ExpectedError;
 use crate::libs;
 use crate::libs::request;
+use crate::libs::serde::get_u64;
 use crate::libs::subscribe::{is_value_created, task_loader};
 use crate::message;
+use crate::plugin::l1_tx_log::L1TxLogMsg;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::RocksPlugin;
 use crate::types::channel::MultiSender;
@@ -43,7 +45,7 @@ impl Plugin for L2EnqueuePlugin {
     }
 
     fn init(&mut self) {
-        let senders = MultiSender::new(vec!("rocks", "postgres" /*"elasticsearch"*/));
+        let senders = MultiSender::new(vec!("rocks", "postgres", "l1_tx_log" /*"elasticsearch"*/));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
@@ -92,6 +94,10 @@ impl L2EnqueuePlugin {
         if let false = is_value_created(&response, "ctcIndex") {
             return Err(ExpectedError::BlockHeightError(format!("ctcIndex does not inserted yet! task={}", TASK_NAME)));
         }
+        let block_number = get_u64(&response, "blockNumber")?;
+        let queue_index = get_u64(&response, "index")?;
+        let l1_tx_log_sender = senders.get("l1_tx_log");
+        let _ = l1_tx_log_sender.send(L1TxLogMsg::new(block_number, queue_index))?;
         let pg_sender = senders.get("postgres");
         let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_enqueue"), Value::Object(response.to_owned())))?;
         Ok(())

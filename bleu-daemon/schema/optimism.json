@@ -96,7 +96,7 @@
         "description": "confirmed"
       }
     },
-    "indexes": [ [ "index" ], [ "batch_number" ], [ "target" ], [ "origin" ] ],
+    "indexes": [ [ "index" ], [ "batch_index" ], [ "target" ], [ "origin" ] ],
     "uniques": [ [ "index" ] ]
   },
   "optimism_state_batches": {

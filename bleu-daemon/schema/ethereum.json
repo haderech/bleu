@@ -1,0 +1,48 @@
+{
+  "ethereum_tx_logs": {
+    "attributes": {
+      "address": {
+        "type": [ "string", "null" ],
+        "description": "address"
+      },
+      "topics": {
+        "type": [ "string", "null" ],
+        "description": "topics"
+      },
+      "data": {
+        "type": [ "string", "null" ],
+        "description": "data"
+      },
+      "block_number": {
+        "type": [ "string", "null" ],
+        "description": "blockNumber"
+      },
+      "tx_hash": {
+        "type": [ "string", "null" ],
+        "description": "transactionHash"
+      },
+      "tx_index": {
+        "type": [ "string", "null" ],
+        "description": "transactionIndex"
+      },
+      "block_hash": {
+        "type": [ "string", "null" ],
+        "description": "blockHash"
+      },
+      "log_index": {
+        "type": [ "string", "null" ],
+        "description": "logIndex"
+      },
+      "removed": {
+        "type": [ "boolean", "null" ],
+        "description": "removed"
+      },
+      "queue_index": {
+        "type": [ "string", "null" ],
+        "description": "queue_index"
+      }
+    },
+    "indexes": [ [ "address" ], [ "block_number" ], [ "tx_hash" ], [ "block_hash" ] ],
+    "uniques": [ [ "tx_hash", "log_index" ] ]
+  }
+}

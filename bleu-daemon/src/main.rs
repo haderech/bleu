@@ -1,5 +1,6 @@
 use appbase::prelude::*;
 
+use crate::plugin::l1_tx_log::L1TxLogPlugin;
 use crate::plugin::l2_block_tx::L2BlockTxPlugin;
 use crate::plugin::l2_enqueue::L2EnqueuePlugin;
 use crate::plugin::l2_state_batch::L2StateBatchPlugin;
@@ -20,6 +21,7 @@ fn main() {
     APP.register::<L2StateBatchPlugin>();
     APP.register::<L2TxReceiptPlugin>();
     APP.register::<L2EnqueuePlugin>();
+    APP.register::<L1TxLogPlugin>();
     APP.register::<TaskPlugin>();
     APP.init();
     APP.plugin_init::<L2BlockTxPlugin>();
@@ -27,6 +29,7 @@ fn main() {
     APP.plugin_init::<L2StateBatchPlugin>();
     APP.plugin_init::<L2TxReceiptPlugin>();
     APP.plugin_init::<L2EnqueuePlugin>();
+    APP.plugin_init::<L1TxLogPlugin>();
     APP.plugin_init::<TaskPlugin>();
     APP.startup();
     APP.execute();

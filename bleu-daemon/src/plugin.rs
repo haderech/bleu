@@ -11,3 +11,4 @@ pub mod l2_tx_batch;
 pub mod l2_state_batch;
 pub mod l2_tx_receipt;
 pub mod l2_enqueue;
+pub mod l1_tx_log;

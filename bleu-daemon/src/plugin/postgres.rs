@@ -89,7 +89,7 @@ impl PostgresPlugin {
     }
 
     fn load_schema() -> Result<HashMap<String, PostgresSchema>, ExpectedError> {
-        let schema_files = vec![String::from("schema/optimism.json")];
+        let schema_files = vec![String::from("schema/optimism.json"), String::from("schema/ethereum.json")];
         let mut schema_map = HashMap::new();
         for schema_file in schema_files.iter() {
             let json_str = fs::read_to_string(schema_file)?;
