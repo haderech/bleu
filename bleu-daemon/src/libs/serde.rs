@@ -76,6 +76,15 @@ pub fn get_array<'a>(params: &'a Map<String, Value>, name: &'a str) -> Result<&'
     Ok(opt_to_result(unwrapped.as_array())?)
 }
 
+pub fn get_value_string(params: &Map<String, Value>, name: &str) -> Result<String, ExpectedError> {
+    let value = unwrap(params, name)?;
+    let value_string = match value {
+        Value::String(str) => str.clone(),
+        _ => value.to_string()
+    };
+    Ok(value_string)
+}
+
 // pub fn get_bool(params: &Map<String, Value>, name: &str) -> Result<bool, ExpectedError> {
 //     let unwrapped = unwrap(params, name)?;
 //     Ok(opt_to_result(unwrapped.as_bool())?)

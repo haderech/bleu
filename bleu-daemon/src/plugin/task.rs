@@ -12,6 +12,7 @@ use crate::libs::serde::get_str;
 use crate::message;
 use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::plugin::l2_block_tx::L2BlockTxMsg;
+use crate::plugin::l2_enqueue::L2EnqueueMsg;
 use crate::plugin::l2_state_batch::L2StateBatchMsg;
 use crate::plugin::l2_tx_batch::L2TxBatchMsg;
 use crate::plugin::rocks::RocksPlugin;
@@ -28,7 +29,7 @@ pub struct TaskPlugin {
 
 const TASK_PREFIX: &str = "task:optimism";
 
-enumeration!(TaskType; {L2BlockTx: "l2_block_tx"}, {L2TxBatch: "l2_tx_batch"}, {L2StateBatch: "l2_state_batch"});
+enumeration!(TaskType; {L2BlockTx: "l2_block_tx"}, {L2TxBatch: "l2_tx_batch"}, {L2StateBatch: "l2_state_batch"}, {L2Enqueue: "l2_enqueue"});
 message!(TaskMsg; {method: String}, {task: String});
 
 impl Plugin for TaskPlugin {
@@ -40,7 +41,7 @@ impl Plugin for TaskPlugin {
     }
 
     fn init(&mut self) {
-        let senders = MultiSender::new(vec!["task", "l2_block_tx", "l2_tx_batch", "l2_state_batch"]);
+        let senders = MultiSender::new(vec!["task", "l2_block_tx", "l2_tx_batch", "l2_state_batch", "l2_enqueue"]);
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe("task"));
 
@@ -122,6 +123,7 @@ impl TaskPlugin {
             TaskType::L2BlockTx => L2BlockTxMsg::new(method.value()),
             TaskType::L2TxBatch => L2TxBatchMsg::new(method.value()),
             TaskType::L2StateBatch => L2StateBatchMsg::new(method.value()),
+            TaskType::L2Enqueue => L2EnqueueMsg::new(method.value()),
         };
         let sender = senders.get(&task.value());
         let _ = sender.send(message)?;

@@ -39,6 +39,11 @@ pub fn is_value_created(res_body: &Map<String, Value>, value_name: &str) -> bool
     value.is_some() && !value.unwrap().is_null()
 }
 
+pub fn is_log_created(res_body: &Map<String, Value>, value_name: &str) -> bool {
+    let value = res_body.get(value_name);
+    value.is_some() && !value.unwrap().is_null() && !value.unwrap().as_array().unwrap().is_empty()
+}
+
 pub fn error_handler(err: ExpectedError, sub_event: &mut SubscribeEvent, senders: &MultiSender) {
     let rocks_sender = senders.get("rocks");
     match err {

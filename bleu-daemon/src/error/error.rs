@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;
 use std::str::ParseBoolError;
 use std::string::FromUtf8Error;
+use hex::FromHexError;
 
 use lettre::transport::smtp;
 
@@ -20,6 +21,7 @@ pub enum ExpectedError {
     PostgresError(String),
     IoError(String),
     RocksDBError(String),
+    EthAbiError(String),
 }
 
 impl From<smtp::Error> for ExpectedError {
@@ -91,6 +93,18 @@ impl From<FromUtf8Error> for ExpectedError {
     }
 }
 
+impl From<ethabi::Error> for ExpectedError {
+    fn from(err: ethabi::Error) -> Self {
+        ExpectedError::EthAbiError(err.to_string())
+    }
+}
+
+impl From<FromHexError> for ExpectedError {
+    fn from(err: FromHexError) -> Self {
+        ExpectedError::ParsingError(err.to_string())
+    }
+}
+
 impl Display for ExpectedError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -106,6 +120,7 @@ impl Display for ExpectedError {
             ExpectedError::PostgresError(err) => write!(f, "{}", err),
             ExpectedError::IoError(err) => write!(f, "{}", err),
             ExpectedError::RocksDBError(err) => write!(f, "{}", err),
+            ExpectedError::EthAbiError(err) => write!(f, "{}", err),
         }
     }
 }

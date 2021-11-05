@@ -28,13 +28,16 @@ error="https://hooks.slack.com/services/"
 url="http://localhost:9200"
 
 [l2blocktx]
-poll-interval=10
+poll-interval=100
 
 [l2txbatch]
 poll-interval=1000
 
 [l2statebatch]
 poll-interval=1000
+
+[l2enqueue]
+poll-interval=100
 
 [app]
 plugin=[]
