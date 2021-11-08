@@ -70,7 +70,7 @@ impl L1TxLogPlugin {
         APP.spawn_blocking(move || {
             if let Ok(message) = receiver.try_recv() {
                 if let Err(err) = Self::message_handler(message, &sub_event, &senders) {
-                    log::error!("{}", err.to_string());
+                    log::error!("{}, message={:?}", err.to_string(), message);
                 }
             }
             if !app.is_quitting() {
