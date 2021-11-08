@@ -72,7 +72,7 @@ impl Plugin for L1TxLogPlugin {
     }
 
     fn init(&mut self) {
-        let senders = MultiSender::new(vec!("postgres" /*"elasticsearch"*/));
+        let senders = MultiSender::new(vec!("rocks", "postgres" /*"elasticsearch"*/));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         self.sub_event = Some(load_task_from_json(TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
@@ -97,7 +97,7 @@ impl L1TxLogPlugin {
     fn recv(mut receiver: Receiver, sub_event: SubscribeEvent, senders: MultiSender, mut retry_queue: HashMap<String, L1TxLogRetryJob>, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Ok(message) = receiver.try_recv() {
-                if let Err(err) = Self::message_handler(message.clone(), &sub_event, &senders) {
+                if let Err(err) = Self::message_handler(message.clone(), &sub_event, &senders, &mut retry_queue) {
                     log::error!("{}, message={:?}", err.to_string(), message);
                 }
             }
@@ -111,7 +111,7 @@ impl L1TxLogPlugin {
         });
     }
 
-    fn message_handler(message: Value, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
+    fn message_handler(message: Value, sub_event: &SubscribeEvent, senders: &MultiSender, retry_queue: &mut HashMap<String, L1TxLogRetryJob>) -> Result<(), ExpectedError> {
         let parsed_msg = opt_to_result(message.as_object())?;
         let block_number = get_u64(parsed_msg, "block_number")?;
         let queue_index = get_u64(parsed_msg, "queue_index")?;
@@ -123,8 +123,9 @@ impl L1TxLogPlugin {
                 Ok(())
             }
             Err(err) => {
-                let rocks_sender = senders.get("rocks");
                 let retry_job = L1TxLogRetryJob::new(block_number, queue_index);
+                retry_queue.insert(retry_job.get_retry_id(), retry_job.clone());
+                let rocks_sender = senders.get("rocks");
                 let _ = save_retry_queue(rocks_sender, retry_job.get_retry_id(), Value::String(json!(retry_job).to_string()))?;
                 Err(err)
             }
