@@ -101,8 +101,8 @@ impl L1TxLogPlugin {
                     log::error!("{}, message={:?}", err.to_string(), message);
                 }
             }
-            let Err(err) = Self::retry_handler(&mut retry_queue, &sub_event, &senders) {
-                log::error!("{}, message={:?}", err.to_string(), message);
+            if let Err(err) = Self::retry_handler(&mut retry_queue, &sub_event, &senders) {
+                log::error!("{}", err.to_string());
             }
 
             if !app.is_quitting() {
