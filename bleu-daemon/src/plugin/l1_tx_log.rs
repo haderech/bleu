@@ -98,7 +98,7 @@ impl L1TxLogPlugin {
                 });
         let response = request::post(req_url.as_str(), req_body.to_string().as_str())?;
         if !libs::subscribe::is_log_created(&response, "result") {
-            return Err(ExpectedError::NoneError(format!("logs does not created! block_number={}, topic={}", block_number, TOPIC0)));
+            return Err(ExpectedError::NoneError(format!("logs does not created! response={:?}, block_number={}, topic={}", response, block_number, TOPIC0)));
         }
         let logs = get_array(&response, "result")?;
         let pg_sender = senders.get("postgres");
