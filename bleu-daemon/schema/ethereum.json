@@ -42,7 +42,7 @@
         "description": "queue_index"
       }
     },
-    "indexes": [ [ "address" ], [ "block_number" ], [ "tx_hash" ], [ "block_hash" ] ],
+    "indexes": [ [ "address" ], [ "block_number" ], [ "tx_hash" ], [ "block_hash" ], [ "queue_index" ] ],
     "uniques": [ [ "tx_hash", "log_index" ] ]
   }
 }

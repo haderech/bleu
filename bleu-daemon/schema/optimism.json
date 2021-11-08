@@ -320,7 +320,7 @@
         "description": "value"
       }
     },
-    "indexes": [ [ "block_hash" ], [ "block_number" ], [ "from_address" ], [ "to_address" ], [ "hash" ], [ "l1_block_number" ], [ "index" ] ],
+    "indexes": [ [ "block_hash" ], [ "block_number" ], [ "from_address" ], [ "to_address" ], [ "hash" ], [ "l1_block_number" ], [ "index" ], [ "queue_index" ], [ "queue_origin" ] ],
     "uniques": [ [ "hash" ] ]
   },
   "optimism_tx_receipts": {

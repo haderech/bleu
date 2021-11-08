@@ -110,7 +110,7 @@ impl L2BlockTxPlugin {
         let receipt_sender = senders.get("l2_tx_receipt");
         for tx in txs.iter() {
             let tx_map = opt_to_result(tx.as_object())?;
-            let converted_tx = hex_to_decimal_converter(tx_map, vec!["blockNumber", "gas", "gasPrice", "nonce", "transactionIndex", "value", "l1BlockNumber", "l1TimeStamp", "index", "queueIndex"])?;
+            let converted_tx = hex_to_decimal_converter(tx_map, vec!["blockNumber", "gas", "gasPrice", "nonce", "transactionIndex", "value", "l1BlockNumber", "l1Timestamp", "index", "queueIndex"])?;
             let tx_hash = get_string(&converted_tx, "hash")?;
             let _ = receipt_sender.send(L2TxReceiptMsg::new(tx_hash))?;
             let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_block_txs"), Value::Object(converted_tx.to_owned())))?;
