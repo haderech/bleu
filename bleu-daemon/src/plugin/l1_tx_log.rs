@@ -170,7 +170,7 @@ impl L1TxLogPlugin {
                     "params": [{
                         "fromBlock": block_number_hex,
                         "toBlock": block_number_hex,
-                        "topic": [ TOPIC0 ]
+                        "topics": [ TOPIC0 ]
                     }],
                     "id": 1
                 });
@@ -180,7 +180,8 @@ impl L1TxLogPlugin {
         }
         let logs = get_array(&response, "result")?;
         for log_value in logs {
-            if Self::is_matched_log(ABI_FILE, EVENT, log_value, queue_index_hex.clone())? {
+            let is_matched = Self::is_matched_log(ABI_FILE, EVENT, log_value, queue_index_hex.clone());
+            if is_matched.is_ok() && is_matched.unwrap() {
                 return Ok(log_value.to_owned());
             }
         }
