@@ -45,7 +45,7 @@ pub mod tx_batch {
     pub async fn find_latest_tx_batch(conn: PgConn) -> Result<OptimismTxBatch, ExpectedError> {
         let latest_tx_batch = web::block(move || {
             optimism_tx_batches::table.into_boxed()
-                .order(batch_index.desc())
+                .order(optimism_tx_batches_id.desc())
                 .first::<OptimismTxBatch>(&conn)
         }).await?;
         Ok(latest_tx_batch)
@@ -172,7 +172,7 @@ pub mod state_batch {
     pub async fn find_latest_state_batch(conn: PgConn) -> Result<OptimismStateBatch, ExpectedError> {
         let latest_state_batch = web::block(move || {
             optimism_state_batches::table.into_boxed()
-                .order(batch_index.desc())
+                .order(optimism_state_batches_id.desc())
                 .first::<OptimismStateBatch>(&conn)
         }).await?;
         Ok(latest_state_batch)
