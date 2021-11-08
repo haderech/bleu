@@ -1,16 +1,19 @@
+use std::collections::HashMap;
 use std::fs;
 
+use appbase::prelude::*;
+use serde::de::DeserializeOwned;
 use serde_json::{json, Map, Value};
 
 use crate::error::error::ExpectedError;
 use crate::libs::opt::opt_to_result;
 use crate::libs::request::adjust_url;
-use crate::libs::rocks::get_static;
+use crate::libs::rocks::{get_by_prefix_static, get_static};
 use crate::libs::serde::{filter, get_object, get_str};
 use crate::plugin::rocks::{RocksDB, RocksMethod, RocksMsg};
 use crate::types::channel::MultiSender;
 use crate::types::enumeration::Enumeration;
-use crate::types::subscribe::{SubscribeEvent, SubscribeStatus, SubscribeTask, TaskMethod};
+use crate::types::subscribe::{RetryJob, SubscribeEvent, SubscribeStatus, SubscribeTask, TaskMethod};
 
 pub fn task_loader(rocksdb: RocksDB, file_path: &str, chain: &str, task_prefix: &str, task_name: &str) -> Result<SubscribeEvent, ExpectedError> {
     match load_task_from_rocksdb(rocksdb, task_prefix, task_name) {
@@ -87,6 +90,29 @@ pub fn response_verifier(response: &Map<String, Value>, task_name: &str, value_n
     if !filter(response, condition)? {
         return Err(ExpectedError::FilterError(format!("not matched filter condition! task={}", task_name)));
     }
+    Ok(())
+}
+
+pub fn load_retry_queue<T>(rocksdb: RocksDB, queue_prefix: &str) -> Result<HashMap<String, T>, ExpectedError>
+    where
+        T: DeserializeOwned + RetryJob {
+    let values = get_by_prefix_static(&rocksdb, queue_prefix);
+    let raw_item_vec = opt_to_result(values.as_array())?;
+    let mut results = HashMap::new();
+    for raw_item in raw_item_vec.into_iter() {
+        let retry_job = serde_json::from_value::<T>(raw_item.to_owned())?;
+        results.insert(retry_job.get_retry_id(), retry_job);
+    }
+    Ok(results)
+}
+
+pub fn save_retry_queue(rocks_sender: Sender, queue_key: String, queue_value: Value) -> Result<(), ExpectedError> {
+    let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Put, queue_key, queue_value))?;
+    Ok(())
+}
+
+pub fn remove_from_retry_queue(rocks_sender: Sender, queue_key: String) -> Result<(), ExpectedError> {
+    let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Delete, queue_key, Value::Null))?;
     Ok(())
 }
 
