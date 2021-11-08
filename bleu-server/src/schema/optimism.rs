@@ -1,3 +1,5 @@
+use crate::schema::ethereum::ethereum_tx_logs;
+
 table! {
     optimism_tx_batches (optimism_tx_batches_id) {
         optimism_tx_batches_id -> BigInt,
@@ -147,5 +149,15 @@ joinable_inner!(
     primary_key_expr = optimism_state_roots::dsl::index,
 );
 
+joinable_inner!(
+    left_table_ty = optimism_block_txs::table,
+    right_table_ty = ethereum_tx_logs::table,
+    right_table_expr = ethereum_tx_logs::table,
+    foreign_key = ethereum_tx_logs::dsl::queue_index,
+    primary_key_ty = optimism_block_txs::dsl::queue_index,
+    primary_key_expr = optimism_block_txs::dsl::queue_index,
+);
+
 allow_tables_to_appear_in_same_query!(optimism_block_txs, optimism_txs);
 allow_tables_to_appear_in_same_query!(optimism_block_txs, optimism_state_roots);
+allow_tables_to_appear_in_same_query!(optimism_block_txs, ethereum_tx_logs);
