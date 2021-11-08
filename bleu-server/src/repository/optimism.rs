@@ -189,14 +189,45 @@ pub mod l1_to_l2 {
     use crate::error::error::ExpectedError;
     use crate::model::optimism::{OptimismL1ToL2Tx, OptimismL1ToL2TxSummary};
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
+    use crate::schema::ethereum::ethereum_tx_logs;
+    use crate::schema::optimism::optimism_block_txs;
 
     #[cached(time = 60, key = "bool", convert = r#"{ true }"#, result = true)]
     pub async fn find_latest_l1_to_l2_tx_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismL1ToL2TxSummary>, ExpectedError> {
-        Ok(Vec::new())
+        let conn = pool.get()?;
+        let l1_to_l2_tx_summary = web::block(move || {
+            optimism_block_txs::table.inner_join(
+                ethereum_tx_logs::table.on(optimism_block_txs::queue_index.eq(ethereum_tx_logs::queue_index))
+            )
+                .filter(optimism_block_txs::queue_origin.eq("l1"))
+                .order(optimism_block_txs::optimism_block_txs_id.desc())
+                .select((optimism_block_txs::l1_block_number, ethereum_tx_logs::tx_hash, optimism_block_txs::hash))
+                .limit(10)
+                .load::<OptimismL1ToL2TxSummary>(&conn)
+        }).await?;
+        Ok(l1_to_l2_tx_summary)
     }
 
     pub async fn find_l1_to_l2_tx_by_page_count(pool: web::Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<OptimismL1ToL2Tx>, ExpectedError> {
-        Ok(PaginatedRecord::from(page, count, 0, 0, Vec::new()))
+        let conn = pool.get()?;
+        let paginated_l1_to_l2_tx = web::block(move || {
+            optimism_block_txs::table.inner_join(
+                ethereum_tx_logs::table.on(optimism_block_txs::queue_index.eq(ethereum_tx_logs::queue_index))
+            )
+                .filter(optimism_block_txs::queue_origin.eq("l1"))
+                .order(optimism_block_txs::optimism_block_txs_id.desc())
+                .select((
+                    optimism_block_txs::l1_block_number,
+                    optimism_block_txs::queue_index,
+                    optimism_block_txs::hash,
+                    optimism_block_txs::l1_timestamp,
+                    ethereum_tx_logs::tx_hash,
+                    optimism_block_txs::l1_tx_origin,
+                    optimism_block_txs::gas
+                ))
+                .load_with_pagination(&conn, page, count)
+        }).await?;
+        Ok(paginated_l1_to_l2_tx)
     }
 }
 
@@ -224,8 +255,6 @@ pub mod tx_logs {
 pub mod summary {
     use actix_web::web;
     use cached::proc_macro::cached;
-    use diesel::prelude::*;
-    use diesel::RunQueryDsl;
 
     use crate::config::postgres::Pool;
     use crate::error::error::ExpectedError;
