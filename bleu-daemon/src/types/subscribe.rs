@@ -22,26 +22,26 @@ pub struct SubscribeEvent {
 }
 
 impl SubscribeEvent {
-    pub fn new(chain: &str, params: &Map<String, Value>) -> Self {
-        let task = get_string(params, "task").unwrap();
-        let start_idx = get_u64(params, "start_idx").unwrap();
-        let filter_result = get_string(params, "filter");
-        let filter = match filter_result {
-            Ok(filter) => filter,
-            Err(_) => String::from("")
-        };
-        SubscribeEvent {
-            task_id: format!("task:{}:{}", chain, task),
-            chain: String::from(chain),
-            task,
-            start_idx,
-            curr_idx: start_idx,
-            end_points: get_string_vec(params, "end_points"),
-            end_point_idx: 0,
-            filter,
-            status: SubscribeStatus::Working,
-        }
-    }
+    // pub fn new(chain: &str, params: &Map<String, Value>) -> Self {
+    //     let task = get_string(params, "task").unwrap();
+    //     let start_idx = get_u64(params, "start_idx").unwrap();
+    //     let filter_result = get_string(params, "filter");
+    //     let filter = match filter_result {
+    //         Ok(filter) => filter,
+    //         Err(_) => String::from("")
+    //     };
+    //     SubscribeEvent {
+    //         task_id: format!("task:{}:{}", chain, task),
+    //         chain: String::from(chain),
+    //         task,
+    //         start_idx,
+    //         curr_idx: start_idx,
+    //         end_points: get_string_vec(params, "end_points"),
+    //         end_point_idx: 0,
+    //         filter,
+    //         status: SubscribeStatus::Working,
+    //     }
+    // }
 
     pub fn from(params: &Map<String, Value>) -> Self {
         SubscribeEvent {
@@ -138,6 +138,10 @@ impl SubscribeTask {
     pub fn get_task_id(&self) -> String {
         self.task_id.clone()
     }
+}
+
+pub trait RetryJob {
+    fn get_retry_id(&self) -> String;
 }
 
 enumeration!(SubscribeStatus; {Working: "working"}, {Stopped: "stopped"}, {Error: "error"});

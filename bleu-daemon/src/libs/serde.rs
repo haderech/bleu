@@ -5,14 +5,14 @@ use serde_json::{Map, Value};
 use crate::error::error::ExpectedError;
 use crate::libs::opt::{opt_ref_to_result, opt_to_result};
 
-pub fn select_value(params: &Map<String, Value>, names: Vec<&str>) -> Result<Map<String, Value>, ExpectedError> {
-    let mut values = Map::new();
-    for name in names.into_iter() {
-        let value = find_value(params, name);
-        values.insert(String::from(name), value);
-    }
-    Ok(values)
-}
+// pub fn select_value(params: &Map<String, Value>, names: Vec<&str>) -> Result<Map<String, Value>, ExpectedError> {
+//     let mut values = Map::new();
+//     for name in names.into_iter() {
+//         let value = find_value(params, name);
+//         values.insert(String::from(name), value);
+//     }
+//     Ok(values)
+// }
 
 pub fn find_value(values: &Map<String, Value>, target_name: &str) -> Value {
     if values.get(target_name).is_some() {
@@ -76,14 +76,14 @@ pub fn get_array<'a>(params: &'a Map<String, Value>, name: &'a str) -> Result<&'
     Ok(opt_to_result(unwrapped.as_array())?)
 }
 
-pub fn get_value_string(params: &Map<String, Value>, name: &str) -> Result<String, ExpectedError> {
-    let value = unwrap(params, name)?;
-    let value_string = match value {
-        Value::String(str) => str.clone(),
-        _ => value.to_string()
-    };
-    Ok(value_string)
-}
+// pub fn get_value_string(params: &Map<String, Value>, name: &str) -> Result<String, ExpectedError> {
+//     let value = unwrap(params, name)?;
+//     let value_string = match value {
+//         Value::String(str) => str.clone(),
+//         _ => value.to_string()
+//     };
+//     Ok(value_string)
+// }
 
 // pub fn get_bool(params: &Map<String, Value>, name: &str) -> Result<bool, ExpectedError> {
 //     let unwrapped = unwrap(params, name)?;
