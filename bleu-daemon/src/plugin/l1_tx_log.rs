@@ -125,7 +125,7 @@ impl L1TxLogPlugin {
             Err(err) => {
                 let rocks_sender = senders.get("rocks");
                 let retry_job = L1TxLogRetryJob::new(block_number, queue_index);
-                let _ = save_retry_queue(rocks_sender, retry_job.get_retry_id(), json!(retry_job))?;
+                let _ = save_retry_queue(rocks_sender, retry_job.get_retry_id(), Value::String(json!(retry_job).to_string()))?;
                 Err(err)
             }
         }
