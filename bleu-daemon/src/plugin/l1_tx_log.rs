@@ -69,7 +69,7 @@ impl L1TxLogPlugin {
     fn recv(mut receiver: Receiver, sub_event: SubscribeEvent, senders: MultiSender, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Ok(message) = receiver.try_recv() {
-                if let Err(err) = Self::message_handler(message, &sub_event, &senders) {
+                if let Err(err) = Self::message_handler(message.clone(), &sub_event, &senders) {
                     log::error!("{}, message={:?}", err.to_string(), message);
                 }
             }
