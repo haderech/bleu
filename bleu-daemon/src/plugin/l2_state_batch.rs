@@ -8,6 +8,8 @@ use serde_json::{json, Value};
 
 use crate::error::error::ExpectedError;
 use crate::libs;
+use crate::libs::convert::number_to_string_convert;
+use crate::libs::opt::opt_to_result;
 use crate::libs::request;
 use crate::libs::serde::{get_array, get_object};
 use crate::libs::subscribe::task_loader;
@@ -92,11 +94,17 @@ impl L2StateBatchPlugin {
         let response = request::get(req_url.as_str())?;
         let _ = libs::subscribe::response_verifier(&response, TASK_NAME, "batch", sub_event.get_filter())?;
         let batch = get_object(&response, "batch")?;
+        let converted_batch = number_to_string_convert(batch, vec!["index", "blockNumber", "timestamp", "size", "prevTotalElements"])?;
         let pg_sender = senders.get("postgres");
         let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_state_batches"), Value::Object(batch.clone())))?;
-        let txs = get_array(&response, "stateRoots")?;
-        for tx in txs.iter() {
-            let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_state_roots"), tx.clone()))?;
+
+        let state_roots = get_array(&response, "stateRoots")?;
+        let l1_tx_hash = opt_to_result(converted_batch.get("l1TransactionHash"))?;
+        for state_root in state_roots.iter() {
+            let state_root_map = opt_to_result(state_root.as_object())?;
+            let mut converted_state_root = number_to_string_convert(state_root_map, vec!["index", "batchIndex"])?;
+            converted_state_root.insert(String::from("l1_tx_hash"), l1_tx_hash.clone());
+            let _ = pg_sender.send(PostgresMsg::new(String::from("optimism_state_roots"), Value::Object(converted_state_root)))?;
         }
         Ok(())
     }

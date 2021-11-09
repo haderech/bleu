@@ -94,6 +94,10 @@
       "confirmed": {
         "type": [ "boolean", "null" ],
         "description": "confirmed"
+      },
+      "l1_tx_hash": {
+        "type": [ "string", "null" ],
+        "description": "l1_tx_hash"
       }
     },
     "indexes": [ [ "index" ], [ "batch_index" ], [ "target" ], [ "origin" ] ],
@@ -158,6 +162,10 @@
       "confirmed": {
         "type": [ "boolean", "null" ],
         "description": "confirmed"
+      },
+      "l1_tx_hash": {
+        "type": [ "string", "null" ],
+        "description": "l1_tx_hash"
       }
     },
     "indexes": [ [ "index" ], [ "batch_index" ], [ "value" ] ],
