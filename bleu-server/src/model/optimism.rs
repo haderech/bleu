@@ -87,7 +87,7 @@ pub struct OptimismBlockTx {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct OptimismBlockTxExtended {
-    optimism_block_tx: OptimismBlockTx,
+    tx: OptimismBlockTx,
     l1_tx_batch_index: Option<String>,
     l1_submission_tx_hash: Option<String>,
     l1_state_batch_index: Option<String>,
@@ -97,24 +97,24 @@ pub struct OptimismBlockTxExtended {
 
 impl OptimismBlockTxExtended {
     pub fn is_l1_origin(&self) -> bool {
-        self.optimism_block_tx.queue_origin.is_some() && self.optimism_block_tx.queue_origin.clone().unwrap() == "l1".to_string()
+        self.tx.queue_origin.is_some() && self.tx.queue_origin.clone().unwrap() == "l1".to_string()
     }
 
     pub fn get_queue_index(&self) -> Option<String> {
-        self.optimism_block_tx.queue_index.clone()
+        self.tx.queue_index.clone()
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct OptimismBlockTxDetail {
-    optimism_block_tx_ext: OptimismBlockTxExtended,
+    tx_ext: OptimismBlockTxExtended,
     l1_origin_tx_hash: Option<String>,
 }
 
 impl OptimismBlockTxDetail {
-    pub fn from(optimism_block_tx_ext: OptimismBlockTxExtended, l1_origin_tx_hash: Option<String>) -> Self {
+    pub fn from(tx_ext: OptimismBlockTxExtended, l1_origin_tx_hash: Option<String>) -> Self {
         Self {
-            optimism_block_tx_ext,
+            tx_ext,
             l1_origin_tx_hash,
         }
     }
