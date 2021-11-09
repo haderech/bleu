@@ -31,6 +31,7 @@ table! {
         queue_index -> Nullable<Text>,
         decoded -> Nullable<Text>,
         confirmed -> Nullable<Bool>,
+        l1_tx_hash -> Nullable<Text>,
     }
 }
 
@@ -56,6 +57,7 @@ table! {
         batch_index -> Nullable<Text>,
         value -> Nullable<Text>,
         confirmed -> Nullable<Bool>,
+        l1_tx_hash -> Nullable<Text>,
     }
 }
 
@@ -104,6 +106,23 @@ table! {
         tx_index -> Nullable<Text>,
         tx_type -> Nullable<Text>,
         value -> Nullable<Text>,
+    }
+}
+
+table! {
+    optimism_tx_receipts (optimism_tx_receipts_id) {
+        optimism_tx_receipts_id -> BigInt,
+        block_hash -> Nullable<Text>,
+        block_number -> Nullable<Text>,
+        contract_address -> Nullable<Text>,
+        cumulative_gas_used -> Nullable<Text>,
+        from_address -> Nullable<Text>,
+        gas_used -> Nullable<Text>,
+        logs_bloom -> Nullable<Text>,
+        status -> Nullable<Text>,
+        to_address -> Nullable<Text>,
+        tx_hash -> Nullable<Text>,
+        tx_index -> Nullable<Text>,
     }
 }
 
@@ -158,6 +177,13 @@ joinable_inner!(
     primary_key_expr = optimism_block_txs::dsl::queue_index,
 );
 
-allow_tables_to_appear_in_same_query!(optimism_block_txs, optimism_txs);
-allow_tables_to_appear_in_same_query!(optimism_block_txs, optimism_state_roots);
-allow_tables_to_appear_in_same_query!(optimism_block_txs, ethereum_tx_logs);
+joinable_inner!(
+    left_table_ty = optimism_block_txs::table,
+    right_table_ty = optimism_tx_receipts::table,
+    right_table_expr = optimism_tx_receipts::table,
+    foreign_key = optimism_tx_receipts::dsl::tx_hash,
+    primary_key_ty = optimism_block_txs::dsl::hash,
+    primary_key_expr = optimism_block_txs::dsl::hash,
+);
+
+allow_tables_to_appear_in_same_query!(optimism_block_txs, optimism_txs, optimism_state_roots, ethereum_tx_logs, optimism_tx_receipts);

@@ -29,13 +29,13 @@ pub async fn get_latest_tx_summary(pool: web::Data<Pool>) -> Result<Json<Vec<Opt
 }
 
 #[api_v2_operation(tags(Tx))]
-pub async fn get_tx_by_hash(pool: web::Data<Pool>, path_params: web::Path<String>) -> Result<Json<OptimismBlockTx>, ExpectedError> {
+pub async fn get_tx_by_hash(pool: web::Data<Pool>, path_params: web::Path<String>) -> Result<Json<OptimismBlockTxDetail>, ExpectedError> {
     let hash = path_params.into_inner();
     Ok(Json(optimism::tx::find_tx_by_hash(pool, hash).await?))
 }
 
 #[api_v2_operation(tags(Tx))]
-pub async fn get_tx_by_index(pool: web::Data<Pool>, path_params: web::Path<i64>) -> Result<Json<OptimismBlockTx>, ExpectedError> {
+pub async fn get_tx_by_index(pool: web::Data<Pool>, path_params: web::Path<i64>) -> Result<Json<OptimismBlockTxDetail>, ExpectedError> {
     let batch_tx_index = path_params.into_inner();
     Ok(Json(optimism::tx::find_tx_by_index(pool, batch_tx_index).await?))
 }

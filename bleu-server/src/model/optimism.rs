@@ -62,24 +62,6 @@ pub struct OptimismTxSummary {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
-pub struct OptimismTx {
-    optimism_txs_id: i64,
-    index: Option<String>,
-    batch_index: Option<String>,
-    block_number: Option<String>,
-    tx_timestamp: Option<String>,
-    gas_limit: Option<String>,
-    target: Option<String>,
-    origin: Option<String>,
-    data: Option<String>,
-    queue_origin: Option<String>,
-    value: Option<String>,
-    queue_index: Option<String>,
-    decoded: Option<String>,
-    confirmed: Option<bool>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
 pub struct OptimismBlockTx {
     optimism_block_txs_id: i64,
     block_hash: Option<String>,
@@ -101,6 +83,41 @@ pub struct OptimismBlockTx {
     tx_index: Option<String>,
     tx_type: Option<String>,
     value: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
+pub struct OptimismBlockTxExtended {
+    optimism_block_tx: OptimismBlockTx,
+    l1_tx_batch_index: Option<String>,
+    l1_submission_tx_hash: Option<String>,
+    l1_state_batch_index: Option<String>,
+    l1_state_root_submission_tx_hash: Option<String>,
+    state: Option<String>,
+}
+
+impl OptimismBlockTxExtended {
+    pub fn is_l1_origin(&self) -> bool {
+        self.optimism_block_tx.queue_origin.is_some() && self.optimism_block_tx.queue_origin.clone().unwrap() == "l1".to_string()
+    }
+
+    pub fn get_queue_index(&self) -> Option<String> {
+        self.optimism_block_tx.queue_index.clone()
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
+pub struct OptimismBlockTxDetail {
+    optimism_block_tx_ext: OptimismBlockTxExtended,
+    l1_origin_tx_hash: Option<String>,
+}
+
+impl OptimismBlockTxDetail {
+    pub fn from(optimism_block_tx_ext: OptimismBlockTxExtended, l1_origin_tx_hash: Option<String>) -> Self {
+        Self {
+            optimism_block_tx_ext,
+            l1_origin_tx_hash,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
@@ -155,15 +172,6 @@ impl PaginatedOptimismStateBatch {
             records: paginated.records,
         }
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]
-pub struct OptimismStateRoot {
-    optimism_state_roots_id: i64,
-    index: Option<String>,
-    batch_index: Option<String>,
-    value: Option<String>,
-    confirmed: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Apiv2Schema)]

@@ -1,6 +1,6 @@
 table! {
-    ethereum_tx_logs (ethereum_tx_log_id) {
-        ethereum_tx_log_id -> BigInt,
+    ethereum_tx_logs (ethereum_tx_logs_id) {
+        ethereum_tx_logs_id -> BigInt,
         address -> Nullable<Text>,
         topics -> Nullable<Text>,
         data -> Nullable<Text>,

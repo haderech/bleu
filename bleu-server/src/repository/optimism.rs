@@ -60,9 +60,10 @@ pub mod tx {
 
     use crate::config::postgres::{PgConn, Pool};
     use crate::error::error::ExpectedError;
-    use crate::model::optimism::{OptimismBlockTx, OptimismTxSummary};
+    use crate::model::optimism::{OptimismBlockTx, OptimismBlockTxDetail, OptimismBlockTxExtended, OptimismTxSummary};
+    use crate::repository::ethereum::ethereum_log::find_by_queue_index;
     use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
-    use crate::schema::optimism::{optimism_block_txs, optimism_state_roots};
+    use crate::schema::optimism::{optimism_block_txs, optimism_state_roots, optimism_tx_receipts};
     use crate::schema::optimism::optimism_block_txs::columns::*;
     use crate::schema::optimism::optimism_txs;
 
@@ -78,22 +79,42 @@ pub mod tx {
         Ok(tx_summary)
     }
 
-    pub async fn find_tx_by_hash(pool: web::Data<Pool>, tx_hash: String) -> Result<OptimismBlockTx, ExpectedError> {
-        let conn = pool.get()?;
-        let tx = web::block(move || {
-            optimism_block_txs::table.filter(hash.eq(tx_hash.clone()))
-                .first::<OptimismBlockTx>(&conn)
-        }).await?;
-        Ok(tx)
+    pub async fn find_tx_by_hash(pool: web::Data<Pool>, tx_hash: String) -> Result<OptimismBlockTxDetail, ExpectedError> {
+        Ok(find_tx_detail_by_condition(pool, Some(tx_hash), None).await?)
     }
 
-    pub async fn find_tx_by_index(pool: web::Data<Pool>, batch_tx_index: i64) -> Result<OptimismBlockTx, ExpectedError> {
+    pub async fn find_tx_by_index(pool: web::Data<Pool>, batch_tx_index: i64) -> Result<OptimismBlockTxDetail, ExpectedError> {
+        Ok(find_tx_detail_by_condition(pool, None, Some(batch_tx_index)).await?)
+    }
+
+    pub async fn find_tx_detail_by_condition(pool: web::Data<Pool>, tx_hash: Option<String>, batch_tx_index: Option<i64>) -> Result<OptimismBlockTxDetail, ExpectedError> {
         let conn = pool.get()?;
-        let tx = web::block(move || {
-            optimism_block_txs::table.filter(index.eq(batch_tx_index.to_string()))
-                .first::<OptimismBlockTx>(&conn)
+        let tx_ext: OptimismBlockTxExtended = web::block(move || {
+            let query = optimism_block_txs::table
+                .left_outer_join(optimism_txs::table.on(optimism_block_txs::columns::index.eq(optimism_txs::columns::index)))
+                .left_outer_join(optimism_state_roots::table.on(optimism_block_txs::columns::index.eq(optimism_state_roots::columns::index)))
+                .left_outer_join(optimism_tx_receipts::table.on(optimism_block_txs::columns::hash.eq(optimism_tx_receipts::columns::tx_hash)))
+                .select((
+                    optimism_block_txs::all_columns,
+                    optimism_txs::columns::batch_index.nullable(),
+                    optimism_txs::columns::l1_tx_hash.nullable(),
+                    optimism_state_roots::columns::batch_index.nullable(),
+                    optimism_state_roots::columns::l1_tx_hash.nullable(),
+                    optimism_tx_receipts::columns::status.nullable()
+                ));
+            if tx_hash.is_some() {
+                query.filter(hash.eq(tx_hash.unwrap().clone())).first::<OptimismBlockTxExtended>(&conn)
+            } else {
+                query.filter(optimism_block_txs::index.eq(batch_tx_index.unwrap().to_string())).first::<OptimismBlockTxExtended>(&conn)
+            }
         }).await?;
-        Ok(tx)
+        let conn = pool.get()?;
+        let l1_tx_hash: Option<String> = match tx_ext.is_l1_origin() {
+            true => find_by_queue_index(conn, tx_ext.get_queue_index()
+                .ok_or(ExpectedError::NoneError("queue_index is none!".to_string()))?).await?.get_tx_hash(),
+            false => None
+        };
+        Ok(OptimismBlockTxDetail::from(tx_ext, l1_tx_hash))
     }
 
     pub async fn find_tx_by_tx_batch_index_page_count(pool: web::Data<Pool>, tx_batch_index: i64, page: i64, count: i64) -> Result<PaginatedRecord<OptimismBlockTx>, ExpectedError> {

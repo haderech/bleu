@@ -9,18 +9,21 @@ use serde::Serialize;
 #[api_v2_errors(code = 400, code = 500)]
 pub enum ExpectedError {
     DieselError(String),
+    NoneError(String),
 }
 
 impl ExpectedError {
     pub fn code(&self) -> String {
         match self {
             ExpectedError::DieselError(_) => String::from("DIESEL_ERROR"),
+            ExpectedError::NoneError(_) => String::from("NONE_ERROR"),
         }
     }
 
     pub fn name(&self) -> String {
         match self {
             ExpectedError::DieselError(_) => String::from("DieselError"),
+            ExpectedError::NoneError(_) => String::from("NoneError"),
         }
     }
 }
@@ -47,6 +50,7 @@ impl Display for ExpectedError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ExpectedError::DieselError(err) => write!(f, "{}", err),
+            ExpectedError::NoneError(err) => write!(f, "{}", err),
         }
     }
 }
@@ -55,6 +59,7 @@ impl Debug for ExpectedError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ExpectedError::DieselError(err) => write!(f, "{:?}", err),
+            ExpectedError::NoneError(err) => write!(f, "{:?}", err),
         }
     }
 }
