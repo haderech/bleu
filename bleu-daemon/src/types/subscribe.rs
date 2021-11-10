@@ -142,6 +142,9 @@ impl SubscribeTask {
 
 pub trait RetryJob {
     fn get_retry_id(&self) -> String;
+    fn get_retry_count(&self) -> u32;
+    fn decrease_retry_count(&mut self);
+    fn is_retry_available(&self) -> bool;
 }
 
 enumeration!(SubscribeStatus; {Working: "working"}, {Stopped: "stopped"}, {Error: "error"});

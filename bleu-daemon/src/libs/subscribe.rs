@@ -3,6 +3,7 @@ use std::fs;
 
 use appbase::prelude::*;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use serde_json::{json, Map, Value};
 
 use crate::error::error::ExpectedError;
@@ -106,12 +107,13 @@ pub fn load_retry_queue<T>(rocksdb: RocksDB, queue_prefix: &str) -> Result<HashM
     Ok(results)
 }
 
-pub fn save_retry_queue(rocks_sender: Sender, queue_key: String, queue_value: Value) -> Result<(), ExpectedError> {
-    let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Put, queue_key, queue_value))?;
+pub fn save_retry_queue<T>(rocks_sender: &Sender, queue_key: String, queue_value: T) -> Result<(), ExpectedError>
+    where T: Serialize {
+    let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Put, queue_key, Value::String(json!(queue_value).to_string())))?;
     Ok(())
 }
 
-pub fn remove_from_retry_queue(rocks_sender: Sender, queue_key: String) -> Result<(), ExpectedError> {
+pub fn remove_from_retry_queue(rocks_sender: &Sender, queue_key: String) -> Result<(), ExpectedError> {
     let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Delete, queue_key, Value::Null))?;
     Ok(())
 }

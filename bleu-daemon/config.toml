@@ -39,6 +39,12 @@ poll-interval=1000
 [l2enqueue]
 poll-interval=100
 
+[l1txlog]
+retry-count=3
+
+[l2txreceipt]
+retry-count=3
+
 [app]
 plugin=[]
 channel-capacity=1024

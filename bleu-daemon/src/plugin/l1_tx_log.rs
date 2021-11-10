@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 
 use appbase::prelude::*;
+use clap::Arg;
 use ethabi::{Contract, RawLog};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -35,24 +36,30 @@ const ABI_FILE: &str = "abi/tx_enqueued.json";
 const EVENT: &str = "TransactionEnqueued";
 const TOPIC0: &str = "0x4b388aecf9fa6cc92253704e5975a6129a4f735bdbd99567df4ed0094ee4ceb5";
 const RETRY_PREFIX: &str = "retry:ethereum:l1_tx_log";
+const DEFAULT_RETRY_COUNT: u32 = 3;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct L1TxLogRetryJob {
     retry_id: String,
     block_number: u64,
     queue_index: u64,
+    retry_count: u32,
 }
 
 impl RetryJob for L1TxLogRetryJob {
     fn get_retry_id(&self) -> String { self.retry_id.clone() }
+    fn get_retry_count(&self) -> u32 { self.retry_count }
+    fn decrease_retry_count(&mut self) { self.retry_count -= 1; }
+    fn is_retry_available(&self) -> bool { self.retry_count > 0 }
 }
 
 impl L1TxLogRetryJob {
-    fn new(block_number: u64, queue_index: u64) -> Self {
+    fn new(block_number: u64, queue_index: u64, retry_count: u32) -> Self {
         Self {
             retry_id: format!("{}:{}:{}", RETRY_PREFIX, block_number, queue_index),
             block_number,
             queue_index,
+            retry_count,
         }
     }
 }
@@ -63,6 +70,7 @@ message!(L1TxLogMsg; {block_number: u64}, {queue_index: u64});
 
 impl Plugin for L1TxLogPlugin {
     fn new() -> Self {
+        APP.options.arg(Arg::new("l1txlog::retry-count").long("l1txlog-retry-count").takes_value(true));
         L1TxLogPlugin {
             sub_event: None,
             senders: None,
@@ -116,20 +124,16 @@ impl L1TxLogPlugin {
         let block_number = get_u64(parsed_msg, "block_number")?;
         let queue_index = get_u64(parsed_msg, "queue_index")?;
 
-        match Self::log_filter(block_number, queue_index, sub_event) {
-            Ok(log_value) => {
-                let pg_sender = senders.get("postgres");
-                let _ = Self::save_log(log_value, queue_index, pg_sender)?;
-                Ok(())
-            }
-            Err(err) => {
-                let retry_job = L1TxLogRetryJob::new(block_number, queue_index);
-                retry_queue.insert(retry_job.get_retry_id(), retry_job.clone());
-                let rocks_sender = senders.get("rocks");
-                let _ = save_retry_queue(rocks_sender, retry_job.get_retry_id(), Value::String(json!(retry_job).to_string()))?;
-                Err(err)
-            }
+        let pg_sender = senders.get("postgres");
+        if let Err(err) = Self::log_syncer(block_number, queue_index, sub_event, &pg_sender) {
+            let retry_count = libs::opt::get_value::<u32>("l1txlog::retry-count").unwrap_or(DEFAULT_RETRY_COUNT);
+            let retry_job = L1TxLogRetryJob::new(block_number, queue_index, retry_count);
+            retry_queue.insert(retry_job.get_retry_id(), retry_job.clone());
+            let rocks_sender = senders.get("rocks");
+            let _ = save_retry_queue(&rocks_sender, retry_job.get_retry_id(), retry_job)?;
+            return Err(err)
         }
+        Ok(())
     }
 
     fn is_matched_log(abi_file: &str, event_name: &str, log_value: &Value, queue_index: String) -> Result<bool, ExpectedError> {
@@ -160,7 +164,7 @@ impl L1TxLogPlugin {
         Ok(log_map)
     }
 
-    fn log_filter(block_number: u64, queue_index: u64, sub_event: &SubscribeEvent) -> Result<Value, ExpectedError> {
+    fn log_syncer(block_number: u64, queue_index: u64, sub_event: &SubscribeEvent, pg_sender: &Sender) -> Result<(), ExpectedError> {
         let block_number_hex = format!("0x{:x}", block_number);
         let queue_index_hex = format!("{:x}", queue_index);
         let req_url = sub_event.active_node();
@@ -182,42 +186,35 @@ impl L1TxLogPlugin {
         for log_value in logs {
             let is_matched = Self::is_matched_log(ABI_FILE, EVENT, log_value, queue_index_hex.clone());
             if is_matched.is_ok() && is_matched.unwrap() {
-                return Ok(log_value.to_owned());
+                let mut converted_log = hex_to_decimal_converter(opt_to_result(log_value.as_object())?, vec!["blockNumber", "logIndex", "transactionIndex"])?;
+                converted_log.insert(String::from("queue_index"), Value::String(queue_index.to_string()));
+                let _ = pg_sender.send(PostgresMsg::new(String::from("ethereum_tx_logs"), Value::Object(converted_log)));
+                return Ok(());
             }
         }
         Err(ExpectedError::NoneError(format!("matched log does not exist! block_number={}, queue_index={}, topic={}", block_number, queue_index, TOPIC0)))
     }
 
     fn retry_handler(retry_queue: &mut HashMap<String, L1TxLogRetryJob>, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
-        let mut success_job = Vec::new();
+        let mut remove_job = Vec::new();
+        let rocks_sender = senders.get("rocks");
         if !retry_queue.is_empty() {
-            for (retry_id, retry_job) in retry_queue.iter() {
-                if let Ok(()) = Self::retry(&retry_job, &sub_event, &senders) {
-                    success_job.push(retry_id.clone());
-                    let rocks_sender = senders.get("rocks");
-                    let _ = remove_from_retry_queue(rocks_sender, retry_id.clone());
+            for (retry_id, retry_job) in retry_queue.iter_mut() {
+                let pg_sender = senders.get("postgres");
+                if !retry_job.is_retry_available() || Self::log_syncer(retry_job.block_number, retry_job.queue_index, sub_event, &pg_sender).is_ok() {
+                    remove_job.push(retry_id.clone());
+                    let _ = remove_from_retry_queue(&rocks_sender, retry_id.clone());
+                } else {
+                    retry_job.decrease_retry_count();
+                    let _ = save_retry_queue(&rocks_sender, retry_job.get_retry_id(), retry_job)?;
+                }
+            }
+            if !remove_job.is_empty() {
+                for retry_id in remove_job {
+                    retry_queue.remove(&retry_id);
                 }
             }
         }
-        if !success_job.is_empty() {
-            for retry_id in success_job {
-                retry_queue.remove(&retry_id);
-            }
-        }
-        Ok(())
-    }
-
-    fn retry(retry_job: &L1TxLogRetryJob, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
-        let log_value = Self::log_filter(retry_job.block_number, retry_job.queue_index, sub_event)?;
-        let pg_sender = senders.get("postgres");
-        let _ = Self::save_log(log_value, retry_job.queue_index, pg_sender)?;
-        Ok(())
-    }
-
-    fn save_log(log_value: Value, queue_index: u64, pg_sender: Sender) -> Result<(), ExpectedError> {
-        let mut converted_log = hex_to_decimal_converter(opt_to_result(log_value.as_object())?, vec!["blockNumber", "logIndex", "transactionIndex"])?;
-        converted_log.insert(String::from("queue_index"), Value::String(queue_index.to_string()));
-        let _ = pg_sender.send(PostgresMsg::new(String::from("ethereum_tx_logs"), Value::Object(converted_log)));
         Ok(())
     }
 }

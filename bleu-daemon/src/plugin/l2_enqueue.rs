@@ -23,13 +23,13 @@ pub struct L2EnqueuePlugin {
     sub_event: Option<SubscribeEvent>,
     senders: Option<MultiSender>,
     receiver: Option<Receiver>,
-    poll_interval: Option<u64>,
 }
 
 const CHAIN: &str = "optimism";
 const TASK_PREFIX: &str = "task:optimism";
 const TASK_NAME: &str = "l2_enqueue";
 const TASK_FILE: &str = "task/l2_enqueue.json";
+const DEFAULT_POLL_INTERVAL: u64 = 100;
 
 message!(L2EnqueueMsg; {method: String});
 
@@ -40,7 +40,6 @@ impl Plugin for L2EnqueuePlugin {
             sub_event: None,
             senders: None,
             receiver: None,
-            poll_interval: None,
         }
     }
 
@@ -50,24 +49,22 @@ impl Plugin for L2EnqueuePlugin {
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         self.sub_event = Some(task_loader(rocksdb, TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
-        self.poll_interval = Some(libs::opt::get_value("l2enqueue::poll-interval").unwrap());
     }
 
     fn startup(&mut self) {
         let receiver = self.receiver.take().unwrap();
         let sub_event = self.sub_event.take().unwrap();
         let senders = self.senders.take().unwrap();
-        let poll_interval = self.poll_interval.take().unwrap();
         let app = APP.quit_handle().unwrap();
 
-        Self::recv(receiver, sub_event, senders, poll_interval, app);
+        Self::recv(receiver, sub_event, senders, app);
     }
 
     fn shutdown(&mut self) {}
 }
 
 impl L2EnqueuePlugin {
-    fn recv(mut receiver: Receiver, mut sub_event: SubscribeEvent, senders: MultiSender, poll_interval: u64, app: QuitHandle) {
+    fn recv(mut receiver: Receiver, mut sub_event: SubscribeEvent, senders: MultiSender, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Ok(message) = receiver.try_recv() {
                 libs::subscribe::message_handler(message, &mut sub_event, &senders);
@@ -82,8 +79,9 @@ impl L2EnqueuePlugin {
                 }
             }
             if !app.is_quitting() {
+                let poll_interval = libs::opt::get_value::<u64>("l2enqueue::poll-interval").unwrap_or(DEFAULT_POLL_INTERVAL);
                 thread::sleep(Duration::from_millis(poll_interval));
-                Self::recv(receiver, sub_event, senders, poll_interval, app);
+                Self::recv(receiver, sub_event, senders, app);
             }
         });
     }
