@@ -12,13 +12,14 @@ use crate::libs::request;
 use crate::libs::serde::get_u64;
 use crate::libs::subscribe::{is_value_created, task_loader};
 use crate::message;
-use crate::plugin::l1_tx_log::L1TxLogMsg;
+use crate::plugin::l1_tx_log::{L1TxLogMsg, L1TxLogPlugin};
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::RocksPlugin;
+use crate::plugin::slack::SlackPlugin;
 use crate::types::channel::MultiSender;
 use crate::types::subscribe::SubscribeEvent;
 
-#[appbase_plugin(RocksPlugin, PostgresPlugin)]
+#[appbase_plugin(RocksPlugin, PostgresPlugin, SlackPlugin, L1TxLogPlugin)]
 pub struct L2EnqueuePlugin {
     sub_event: Option<SubscribeEvent>,
     senders: Option<MultiSender>,
@@ -44,7 +45,7 @@ impl Plugin for L2EnqueuePlugin {
     }
 
     fn init(&mut self) {
-        let senders = MultiSender::new(vec!("rocks", "postgres", "l1_tx_log" /*"elasticsearch"*/));
+        let senders = MultiSender::new(vec!("rocks", "postgres", "slack", "l1_tx_log" /*"elasticsearch"*/));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
@@ -67,7 +68,9 @@ impl L2EnqueuePlugin {
     fn recv(mut receiver: Receiver, mut sub_event: SubscribeEvent, senders: MultiSender, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Ok(message) = receiver.try_recv() {
-                libs::subscribe::message_handler(message, &mut sub_event, &senders);
+                if let Err(err) = libs::subscribe::message_handler(message, &mut sub_event, &senders) {
+                    let _ = libs::error::warn_handler(senders.get("slack"), err);
+                }
             }
             if sub_event.is_workable() {
                 match Self::event_handler(&sub_event, &senders) {

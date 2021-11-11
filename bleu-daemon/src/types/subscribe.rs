@@ -79,16 +79,13 @@ impl SubscribeEvent {
     }
 
     pub fn handle_error(&mut self, rocks_channel: &channel::Sender, err_msg: String) {
-        log::error!("{}", err_msg.clone());
-
         if usize::from(self.end_point_idx) + 1 < self.end_points.len() {
             self.end_point_idx += 1;
         } else {
             self.status = SubscribeStatus::Error;
         }
         let task = SubscribeTask::from(self, err_msg.clone());
-        let msg = RocksMsg::new(RocksMethod::Put, self.task_id.clone(), Value::String(json!(task).to_string()));
-        let _ = rocks_channel.send(msg);
+        let _ = rocks_channel.send(RocksMsg::new(RocksMethod::Put, self.task_id.clone(), Value::String(json!(task).to_string())));
     }
 
     pub fn active_node(&self) -> String {

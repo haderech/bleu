@@ -17,10 +17,11 @@ use crate::message;
 use crate::plugin::l2_tx_receipt::{L2TxReceiptMsg, L2TxReceiptPlugin};
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::RocksPlugin;
+use crate::plugin::slack::SlackPlugin;
 use crate::types::channel::MultiSender;
 use crate::types::subscribe::SubscribeEvent;
 
-#[appbase_plugin(RocksPlugin, PostgresPlugin, L2TxReceiptPlugin)]
+#[appbase_plugin(RocksPlugin, PostgresPlugin, SlackPlugin, L2TxReceiptPlugin)]
 pub struct L2BlockTxPlugin {
     sub_event: Option<SubscribeEvent>,
     senders: Option<MultiSender>,
@@ -46,7 +47,7 @@ impl Plugin for L2BlockTxPlugin {
     }
 
     fn init(&mut self) {
-        let senders = MultiSender::new(vec!("rocks", "postgres", "l2_tx_receipt" /*"elasticsearch"*/));
+        let senders = MultiSender::new(vec!("rocks", "postgres", "slack", "l2_tx_receipt" /*"elasticsearch"*/));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
@@ -69,7 +70,9 @@ impl L2BlockTxPlugin {
     fn recv(mut receiver: Receiver, mut sub_event: SubscribeEvent, senders: MultiSender, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Ok(message) = receiver.try_recv() {
-                libs::subscribe::message_handler(message, &mut sub_event, &senders);
+                if let Err(err) = libs::subscribe::message_handler(message, &mut sub_event, &senders) {
+                    let _ = libs::error::warn_handler(senders.get("slack"), err);
+                }
             }
             if sub_event.is_workable() {
                 match Self::event_handler(&sub_event, &senders) {

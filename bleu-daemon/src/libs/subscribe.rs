@@ -7,6 +7,7 @@ use serde::Serialize;
 use serde_json::{json, Map, Value};
 
 use crate::error::error::ExpectedError;
+use crate::libs;
 use crate::libs::opt::opt_to_result;
 use crate::libs::request::adjust_url;
 use crate::libs::rocks::{get_by_prefix_static, get_static};
@@ -57,7 +58,10 @@ pub fn error_handler(err: ExpectedError, sub_event: &mut SubscribeEvent, senders
             task_syncer(sub_event, senders);
             sub_event.next_idx();
         }
-        _ => sub_event.handle_error(&rocks_sender, err.to_string())
+        _ => {
+            sub_event.handle_error(&rocks_sender, err.to_string());
+            let _ = libs::error::error_handler(senders.get("slack"), err);
+        }
     };
 }
 
@@ -72,16 +76,16 @@ pub fn create_req_url(node_url: String, curr_idx: u64) -> String {
     format!("{adjusted_url}{curr_idx}", adjusted_url = adjusted_url, curr_idx = curr_idx)
 }
 
-pub fn message_handler(message: Value, sub_event: &mut SubscribeEvent, senders: &MultiSender) {
-    let parsed_msg = message.as_object().unwrap();
-    let method = TaskMethod::find(get_str(parsed_msg, "method").unwrap()).unwrap();
+pub fn message_handler(message: Value, sub_event: &mut SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
+    let parsed_msg = opt_to_result(message.as_object())?;
+    let method = opt_to_result(TaskMethod::find(get_str(parsed_msg, "method")?))?;
     match method {
         TaskMethod::Start => sub_event.status(SubscribeStatus::Working),
         TaskMethod::Stop => sub_event.status(SubscribeStatus::Stopped)
     };
     let sub_task = SubscribeTask::from(sub_event, String::from(""));
-    let rocks_sender = senders.get("rocks");
-    let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Put, sub_event.get_task_id(), Value::String(json!(sub_task).to_string())));
+    let _ = senders.get("rocks").send(RocksMsg::new(RocksMethod::Put, sub_event.get_task_id(), Value::String(json!(sub_task).to_string())));
+    Ok(())
 }
 
 pub fn response_verifier(response: &Map<String, Value>, task_name: &str, value_name: &str, condition: String) -> Result<(), ExpectedError> {

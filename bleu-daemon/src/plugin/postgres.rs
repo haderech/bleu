@@ -21,7 +21,7 @@ use crate::types::postgres::PostgresSchema;
 #[appbase_plugin(SlackPlugin)]
 pub struct PostgresPlugin {
     monitor: Option<Receiver>,
-    channels: Option<MultiSender>,
+    senders: Option<MultiSender>,
     pool: Option<Pool>,
     schema_map: Option<HashMap<String, PostgresSchema>>,
 }
@@ -40,7 +40,7 @@ impl Plugin for PostgresPlugin {
 
         PostgresPlugin {
             monitor: None,
-            channels: None,
+            senders: None,
             pool: None,
             schema_map: None,
         }
@@ -49,9 +49,9 @@ impl Plugin for PostgresPlugin {
     fn init(&mut self) {
         let schema_map = Self::load_schema().expect("failed to load schema!");
         let pool = Self::create_pool().expect("failed to create pool!");
-        create_table(pool.clone(), &schema_map);
-        let channels = MultiSender::new(vec!("slack"));
-        self.channels = Some(channels.to_owned());
+        create_table(pool.clone(), &schema_map).expect("failed to create tables!");
+        let senders = MultiSender::new(vec!("slack"));
+        self.senders = Some(senders.to_owned());
         self.monitor = Some(APP.channels.subscribe("postgres"));
         self.pool = Some(pool);
         self.schema_map = Some(schema_map);
@@ -61,17 +61,17 @@ impl Plugin for PostgresPlugin {
         let pool = self.pool.as_ref().unwrap().clone();
         let schema_map = self.schema_map.as_ref().unwrap().clone();
         let monitor = self.monitor.take().unwrap();
-        let channels = self.channels.take().unwrap();
+        let senders = self.senders.take().unwrap();
         let app = APP.quit_handle().unwrap();
 
-        Self::recv(pool, schema_map, channels, monitor, app);
+        Self::recv(pool, schema_map, senders, monitor, app);
     }
 
     fn shutdown(&mut self) {}
 }
 
 impl PostgresPlugin {
-    fn recv(pool: Pool, schema_map: HashMap<String, PostgresSchema>, channels: MultiSender, mut monitor: Receiver, app: QuitHandle) {
+    fn recv(pool: Pool, schema_map: HashMap<String, PostgresSchema>, senders: MultiSender, mut monitor: Receiver, app: QuitHandle) {
         APP.spawn_blocking(move || {
             if let Ok(msg) = monitor.try_recv() {
                 let parsed_msg = msg.as_object().unwrap();
@@ -79,11 +79,11 @@ impl PostgresPlugin {
                 let selected_schema = schema_map.get(schema_name).unwrap();
                 let values = get_object(parsed_msg, "value").unwrap();
                 if let Err(error) = insert_value(pool.clone(), selected_schema, values) {
-                    Self::error_handler(error, &channels);
+                    let _ = senders.get("slack").send(SlackMsg::new(SlackMsgLevel::Warn.value(), error.to_string()));
                 }
             }
             if !app.is_quitting() {
-                Self::recv(pool, schema_map, channels, monitor, app);
+                Self::recv(pool, schema_map, senders, monitor, app);
             }
         });
     }
@@ -114,11 +114,5 @@ impl PostgresPlugin {
         let manager = PostgresConnectionManager::new(config.parse().unwrap(), NoTls);
         let pool: Pool = r2d2::Pool::builder().build(manager).expect("failed to create pool.");
         Ok(pool)
-    }
-
-    fn error_handler(error: ExpectedError, channels: &MultiSender) {
-        let slack_err_msg = SlackMsg::new(SlackMsgLevel::Warn.value(), error.to_string());
-        let slack_channel = channels.get("slack");
-        let _ = slack_channel.send(slack_err_msg);
     }
 }

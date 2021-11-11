@@ -5,3 +5,4 @@ pub mod request;
 pub mod postgres;
 pub mod convert;
 pub mod subscribe;
+pub mod error;

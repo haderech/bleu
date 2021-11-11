@@ -17,10 +17,11 @@ use crate::libs::subscribe::{load_retry_queue, load_task_from_json, remove_from_
 use crate::message;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::RocksPlugin;
+use crate::plugin::slack::SlackPlugin;
 use crate::types::channel::MultiSender;
 use crate::types::subscribe::{RetryJob, SubscribeEvent};
 
-#[appbase_plugin(RocksPlugin, PostgresPlugin)]
+#[appbase_plugin(RocksPlugin, PostgresPlugin, SlackPlugin)]
 pub struct L1TxLogPlugin {
     sub_event: Option<SubscribeEvent>,
     senders: Option<MultiSender>,
@@ -80,7 +81,7 @@ impl Plugin for L1TxLogPlugin {
     }
 
     fn init(&mut self) {
-        let senders = MultiSender::new(vec!("rocks", "postgres" /*"elasticsearch"*/));
+        let senders = MultiSender::new(vec!("rocks", "postgres", "slack" /*"elasticsearch"*/));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         self.sub_event = Some(load_task_from_json(TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
@@ -106,11 +107,11 @@ impl L1TxLogPlugin {
         APP.spawn_blocking(move || {
             if let Ok(message) = receiver.try_recv() {
                 if let Err(err) = Self::message_handler(message.clone(), &sub_event, &senders, &mut retry_queue) {
-                    log::error!("{}, message={:?}", err.to_string(), message);
+                    let _ = libs::error::error_handler(senders.get("slack"), err);
                 }
             }
             if let Err(err) = Self::retry_handler(&mut retry_queue, &sub_event, &senders) {
-                log::error!("{}", err.to_string());
+                let _ = libs::error::error_handler(senders.get("slack"), err);
             }
 
             if !app.is_quitting() {
@@ -131,7 +132,7 @@ impl L1TxLogPlugin {
             retry_queue.insert(retry_job.get_retry_id(), retry_job.clone());
             let rocks_sender = senders.get("rocks");
             let _ = save_retry_queue(&rocks_sender, retry_job.get_retry_id(), retry_job)?;
-            return Err(err)
+            return Err(err);
         }
         Ok(())
     }

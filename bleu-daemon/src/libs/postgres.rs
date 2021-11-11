@@ -26,17 +26,29 @@ pub fn convert_type(_type: String) -> Result<String, ExpectedError> {
     Ok(String::from(converted))
 }
 
-pub fn create_table(pool: Pool, schema_map: &HashMap<String, PostgresSchema>) {
+pub fn create_table(pool: Pool, schema_map: &HashMap<String, PostgresSchema>) -> Result<(), r2d2_postgres::postgres::Error> {
     let mut client = pool.get().unwrap();
     for (_, schema) in schema_map.iter() {
         if let Err(err) = client.execute(schema.create_table.as_str(), &[]) {
-            log::warn!("{}", err.to_string());
+            let _ = error_handler(err)?;
         }
         for create_index in schema.create_index.iter() {
             if let Err(err) = client.execute(create_index.as_str(), &[]) {
-                log::warn!("{}", err.to_string());
+                let _ = error_handler(err)?;
             }
         }
+    }
+    Ok(())
+}
+
+pub fn error_handler(err: r2d2_postgres::postgres::Error) -> Result<(), r2d2_postgres::postgres::Error> {
+    let err_str = err.to_string();
+    if err_str.contains("already exists") {
+        log::warn!("{}", err_str);
+        Ok(())
+    } else {
+        log::error!("{}", err_str);
+        Err(err)
     }
 }
 

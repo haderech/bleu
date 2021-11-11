@@ -7,7 +7,7 @@ use hex::FromHexError;
 
 use lettre::transport::smtp;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExpectedError {
     TypeError(String),
     NoneError(String),

@@ -4,7 +4,7 @@ use appbase::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::enumeration;
+use crate::{enumeration, libs};
 use crate::libs::opt;
 use crate::libs::serde::get_str;
 use crate::message;
@@ -23,6 +23,7 @@ enumeration!(SlackMsgLevel; {Info: "info"}, {Warn: "warn"}, {Error: "error"});
 
 impl Plugin for SlackPlugin {
     fn new() -> Self {
+        APP.options.arg(clap::Arg::new("slack::activate").long("slack-activate").takes_value(true));
         APP.options.arg(clap::Arg::new("slack::info").long("slack-info").takes_value(true));
         APP.options.arg(clap::Arg::new("slack::warn").long("slack-warn").takes_value(true));
         APP.options.arg(clap::Arg::new("slack::error").long("slack-error").takes_value(true));
@@ -57,22 +58,24 @@ impl SlackPlugin {
     fn recv(slack_hooks: SlackHooks, mut monitor: Receiver, app: QuitHandle) {
         APP.spawn(async move {
             if let Ok(msg) = monitor.try_recv() {
-                let parsed_msg = msg.as_object().unwrap();
-                let msg_level = SlackMsgLevel::find(get_str(parsed_msg, "msg_level").unwrap()).unwrap();
-                let msg_level_value = msg_level.value();
-                let slack_hook = slack_hooks.get(&msg_level_value).unwrap();
-                let slack_msg = get_str(parsed_msg, "msg").unwrap();
+                if libs::opt::get_value::<bool>("slack::activate").unwrap_or(false) {
+                    let parsed_msg = msg.as_object().unwrap();
+                    let msg_level = SlackMsgLevel::find(get_str(parsed_msg, "msg_level").unwrap()).unwrap();
+                    let msg_level_value = msg_level.value();
+                    let slack_hook = slack_hooks.get(&msg_level_value).unwrap();
+                    let slack_msg = get_str(parsed_msg, "msg").unwrap();
 
-                let mut text = HashMap::new();
-                text.insert("text", slack_msg);
-                let client = reqwest::Client::new();
-                let result = client.post(slack_hook)
-                    .json(&text)
-                    .send()
-                    .await;
+                    let mut text = HashMap::new();
+                    text.insert("text", slack_msg);
+                    let client = reqwest::Client::new();
+                    let result = client.post(slack_hook)
+                        .json(&text)
+                        .send()
+                        .await;
 
-                if let Err(err) = result {
-                    log::error!("slack error={:?}", err);
+                    if let Err(err) = result {
+                        log::error!("slack error! error={:?}", err);
+                    }
                 }
             }
             if !app.is_quitting() {

@@ -9,9 +9,6 @@ smtp-relay="smtp.gmail.com"
 from="NoBody <nobody@domain.dev>"
 reply-to="NoBody <nobody@domain.dev>"
 
-[telegram]
-bot-token="TELEGRAM_BOT_TOKEN"
-
 [postgres]
 host="localhost"
 port="5432"
@@ -20,6 +17,7 @@ user="root"
 password="postgresql"
 
 [slack]
+activate=false
 info="https://hooks.slack.com/services/"
 warn="https://hooks.slack.com/services/"
 error="https://hooks.slack.com/services/"
