@@ -114,7 +114,7 @@ impl L2TxReceiptPlugin {
         let parsed_msg = message.as_object().unwrap();
         let tx_hash = get_str(parsed_msg, "tx_hash")?;
         if let Err(err) = Self::receipt_syncer(tx_hash, sub_event, senders) {
-            let retry_count = libs::opt::get_value::<u32>("l1txlog::retry-count").unwrap_or(DEFAULT_RETRY_COUNT);
+            let retry_count = libs::opt::get_value::<u32>("l2txreceipt::retry-count").unwrap_or(DEFAULT_RETRY_COUNT);
             let retry_job = L2TxReceiptRetryJob::new(String::from(tx_hash), retry_count);
             retry_queue.insert(retry_job.get_retry_id(), retry_job.clone());
             let rocks_sender = senders.get("rocks");
