@@ -2,13 +2,14 @@
 extern crate diesel;
 
 use actix_cors::Cors;
+use actix_files as fs;
 use actix_web::{App, HttpServer};
 use paperclip::actix::{OpenApiExt, web};
 
 use crate::config::postgres::PostgresConfig;
 use crate::config::server::ServerConfig;
 use crate::config::swagger::SwaggerConfig;
-use crate::service::optimism;
+use crate::service::{optimism, swagger};
 
 mod service;
 mod repository;
@@ -29,6 +30,8 @@ async fn main() -> std::io::Result<()> {
         let swagger_config = SwaggerConfig::load();
 
         App::new()
+            .route("/swagger", actix_web::web::get().to(swagger::load_swagger))
+            .service(fs::Files::new("/swagger-ui", "./swagger-ui").show_files_listing())
             .wrap(Cors::default().allow_any_origin().send_wildcard())
             .wrap_api_with_spec(swagger_config.get_spec())
             .data(postgres_config.get_pool())
@@ -51,7 +54,7 @@ async fn main() -> std::io::Result<()> {
                     .service(web::resource("/optimism/stateroot-batch/index/{index}").route(web::get().to(optimism::get_state_batch_by_index)))
                     .service(web::resource("/optimism/board/summary").route(web::get().to(optimism::get_board_summary)))
             )
-            .with_json_spec_at(swagger_config.get_resource())
+            .with_json_spec_at("/api/spec")
             .build()
     })
         .bind(server_config.get_binding_url())?
