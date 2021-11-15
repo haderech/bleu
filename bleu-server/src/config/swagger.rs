@@ -1,9 +1,6 @@
-use std::env;
-
 use paperclip::v2::models::{DefaultApiRaw, Info, Tag};
 
 pub struct SwaggerConfig {
-    resource: String,
     spec: DefaultApiRaw,
 }
 
@@ -13,16 +10,9 @@ impl SwaggerConfig {
         spec.tags = SwaggerSpec::simple_tags(vec!["TxBatch", "StateRootBatch", "Tx", "L1ToL2", "TxLogs", "BoardSummary"]);
         spec.info = SwaggerSpec::simple_info("0.1", "Bleu Server");
 
-        let resource = env::var("SWAGGER_RESOURCE").expect("SWAGGER_RESOURCE does not exist!");
-
         Self {
-            resource,
             spec,
         }
-    }
-
-    pub fn get_resource(&self) -> &str {
-        self.resource.as_str()
     }
 
     pub fn get_spec(&self) -> DefaultApiRaw {
