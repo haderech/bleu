@@ -14,6 +14,8 @@ COPY --from=builder /bleu-server/.env.docker ./.env
 
 COPY --from=builder /bleu-server/target/release/bleu-server .
 
+COPY --from=builder /bleu-server/swagger-ui ./swagger-ui
+
 ENTRYPOINT ["./bleu-server"]
 
 EXPOSE 8888
