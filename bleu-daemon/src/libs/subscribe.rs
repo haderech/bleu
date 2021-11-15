@@ -79,12 +79,21 @@ pub fn create_req_url(node_url: String, curr_idx: u64) -> String {
 pub fn message_handler(message: Value, sub_event: &mut SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
     let parsed_msg = opt_to_result(message.as_object())?;
     let method = opt_to_result(TaskMethod::find(get_str(parsed_msg, "method")?))?;
+    let rocks_sender = senders.get("rocks");
     match method {
-        TaskMethod::Start => sub_event.status(SubscribeStatus::Working),
-        TaskMethod::Stop => sub_event.status(SubscribeStatus::Stopped)
+        TaskMethod::Start => {
+            sub_event.status(SubscribeStatus::Working);
+            let _ = libs::rocks::save(&rocks_sender, sub_event.get_task_id(), SubscribeTask::from(sub_event, String::from("")));
+        }
+        TaskMethod::Stop => {
+            sub_event.status(SubscribeStatus::Stopped);
+            let _ = libs::rocks::save(&rocks_sender, sub_event.get_task_id(), SubscribeTask::from(sub_event, String::from("")));
+        }
+        TaskMethod::Remove => {
+            sub_event.status(SubscribeStatus::Removed);
+            let _ = libs::rocks::delete(&rocks_sender, sub_event.get_task_id());
+        }
     };
-    let sub_task = SubscribeTask::from(sub_event, String::from(""));
-    let _ = senders.get("rocks").send(RocksMsg::new(RocksMethod::Put, sub_event.get_task_id(), Value::String(json!(sub_task).to_string())));
     Ok(())
 }
 

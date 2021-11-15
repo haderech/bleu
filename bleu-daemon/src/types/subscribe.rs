@@ -22,27 +22,6 @@ pub struct SubscribeEvent {
 }
 
 impl SubscribeEvent {
-    // pub fn new(chain: &str, params: &Map<String, Value>) -> Self {
-    //     let task = get_string(params, "task").unwrap();
-    //     let start_idx = get_u64(params, "start_idx").unwrap();
-    //     let filter_result = get_string(params, "filter");
-    //     let filter = match filter_result {
-    //         Ok(filter) => filter,
-    //         Err(_) => String::from("")
-    //     };
-    //     SubscribeEvent {
-    //         task_id: format!("task:{}:{}", chain, task),
-    //         chain: String::from(chain),
-    //         task,
-    //         start_idx,
-    //         curr_idx: start_idx,
-    //         end_points: get_string_vec(params, "end_points"),
-    //         end_point_idx: 0,
-    //         filter,
-    //         status: SubscribeStatus::Working,
-    //     }
-    // }
-
     pub fn from(params: &Map<String, Value>) -> Self {
         SubscribeEvent {
             task_id: get_string(params, "task_id").unwrap(),
@@ -144,8 +123,8 @@ pub trait RetryJob {
     fn is_retry_available(&self) -> bool;
 }
 
-enumeration!(SubscribeStatus; {Working: "working"}, {Stopped: "stopped"}, {Error: "error"});
-enumeration!(TaskMethod; {Start: "start"}, {Stop: "stop"});
+enumeration!(SubscribeStatus; {Working: "working"}, {Stopped: "stopped"}, {Removed: "removed"}, {Error: "error"});
+enumeration!(TaskMethod; {Start: "start"}, {Stop: "stop"}, {Remove: "remove"});
 
 #[cfg(test)]
 mod subscribe_test {

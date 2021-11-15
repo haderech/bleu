@@ -96,6 +96,17 @@ impl TaskPlugin {
             });
         });
 
+        let task_sender = senders.get("task");
+        APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
+            jsonrpc.add_method(String::from("remove_task"), move |params: Params| {
+                let response = match Self::task_request_handler(TaskMethod::Remove, params, &task_sender) {
+                    Ok(response) => response,
+                    Err(err) => json!({"error": err.to_string()}),
+                };
+                Box::new(futures::future::ok(response))
+            });
+        });
+
         let rocks_db = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
             jsonrpc.add_method(String::from("get_tasks"), move |_| {

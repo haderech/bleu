@@ -1,11 +1,14 @@
 use std::sync::Arc;
 
+use appbase::prelude::*;
 use jsonrpc_core::serde_from_str;
 use rocksdb::{DBWithThreadMode, SingleThreaded};
-use serde_json::{Map, Value};
-use crate::error::error::ExpectedError;
+use serde::Serialize;
+use serde_json::{json, Map, Value};
 
+use crate::error::error::ExpectedError;
 use crate::libs::rocks;
+use crate::plugin::rocks::{RocksMethod, RocksMsg};
 
 type RocksDB = Arc<DBWithThreadMode<SingleThreaded>>;
 
@@ -32,6 +35,19 @@ pub fn get_by_prefix_static(rocksdb: &RocksDB, prefix: &str) -> Value {
 
 pub fn deserialize(val: &[u8]) -> String {
     String::from_utf8(val.to_vec()).unwrap()
+}
+
+pub fn save<T>(rocks_sender: &Sender, key: String, value: T) -> Result<(), ExpectedError>
+    where
+        T: Serialize
+{
+    let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Put, key, Value::String(json!(value).to_string())))?;
+    Ok(())
+}
+
+pub fn delete(rocks_sender: &Sender, key: String) -> Result<(), ExpectedError> {
+    let _ = rocks_sender.send(RocksMsg::new(RocksMethod::Delete, key, Value::Null))?;
+    Ok(())
 }
 
 #[cfg(test)]
