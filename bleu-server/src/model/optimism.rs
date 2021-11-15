@@ -93,6 +93,7 @@ pub struct OptimismBlockTxExtended {
     l1_state_batch_index: Option<String>,
     l1_state_root_submission_tx_hash: Option<String>,
     state: Option<String>,
+    gas_used: Option<String>,
 }
 
 impl OptimismBlockTxExtended {

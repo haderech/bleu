@@ -100,7 +100,8 @@ pub mod tx {
                     optimism_txs::columns::l1_tx_hash.nullable(),
                     optimism_state_roots::columns::batch_index.nullable(),
                     optimism_state_roots::columns::l1_tx_hash.nullable(),
-                    optimism_tx_receipts::columns::status.nullable()
+                    optimism_tx_receipts::columns::status.nullable(),
+                    optimism_tx_receipts::columns::gas_used.nullable()
                 ));
             if tx_hash.is_some() {
                 query.filter(hash.eq(tx_hash.unwrap().clone())).first::<OptimismBlockTxExtended>(&conn)
