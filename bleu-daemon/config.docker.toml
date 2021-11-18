@@ -10,7 +10,7 @@ from="NoBody <nobody@domain.dev>"
 reply-to="NoBody <nobody@domain.dev>"
 
 [postgres]
-host="localhost"
+host="host.docker.internal"
 port="5432"
 dbname="postgres"
 user="root"
