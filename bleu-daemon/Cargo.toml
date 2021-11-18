@@ -17,11 +17,9 @@ serde_json = "1.0.66"
 env_logger = "0.9.0"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 futures = "0.3.15"
-rocksdb = "0.16.0"
+rocksdb = "0.17.0"
 lettre = "0.10.0-rc.3"
 clap = "3.0.0-beta.2"
-teloxide = { version = "0.4", features = ["auto-send", "macros"] }
-elasticsearch = "7.14.0-alpha.1"
 r2d2_postgres = "0.18.1"
 primitive-types = "0.10.1"
 regex = "1.5.4"

@@ -3,7 +3,6 @@ pub mod rocks;
 pub mod email;
 pub mod slack;
 pub mod postgres;
-pub mod elasticsearch;
 pub mod task;
 pub mod l2_block_tx;
 pub mod l2_tx_batch;
