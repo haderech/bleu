@@ -4,17 +4,19 @@ use std::fs::File;
 use appbase::prelude::*;
 use clap::Arg;
 use ethabi::{Contract, RawLog};
+use jsonrpc_core::Params;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+use crate::{libs, validation};
 use crate::error::error::ExpectedError;
-use crate::libs;
 use crate::libs::convert::hex_to_decimal_converter;
 use crate::libs::opt::opt_to_result;
 use crate::libs::request;
 use crate::libs::serde::{get_array, get_str, get_u64};
 use crate::libs::subscribe::{load_retry_queue, load_task_from_json, remove_from_retry_queue, save_retry_queue};
 use crate::message;
+use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::RocksPlugin;
 use crate::plugin::slack::SlackPlugin;
@@ -81,12 +83,13 @@ impl Plugin for L1TxLogPlugin {
     }
 
     fn init(&mut self) {
-        let senders = MultiSender::new(vec!("rocks", "postgres", "slack" /*"elasticsearch"*/));
+        let senders = MultiSender::new(vec!("rocks", "postgres", "slack", "l1_tx_log"));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         self.sub_event = Some(load_task_from_json(TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
         self.retry_queue = Some(load_retry_queue::<L1TxLogRetryJob>(rocksdb, RETRY_PREFIX).expect(format!("failed to load retry queue! task={}", TASK_NAME).as_str()));
+        self.jsonrpc_register();
     }
 
     fn startup(&mut self) {
@@ -217,5 +220,41 @@ impl L1TxLogPlugin {
             }
         }
         Ok(())
+    }
+
+    fn jsonrpc_register(&self) {
+        let senders = self.senders.as_ref().unwrap();
+        let self_sender = senders.get(TASK_NAME);
+
+        APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
+            jsonrpc.add_method(String::from("retry_l1_tx_log"), move |params: Params| {
+                let response = match Self::request_handler(params, &self_sender) {
+                    Ok(response) => response,
+                    Err(err) => json!({"error": err.to_string()}),
+                };
+                Box::new(futures::future::ok(response))
+            });
+        });
+    }
+
+    fn request_handler(params: Params, self_sender: &Sender) -> Result<Value, ExpectedError> {
+        let params: Vec<Value> = params.parse()?;
+        if let Err(err) = validation::l1_tx_log::verify(&params) {
+            log::warn!("{}", err);
+            return Err(ExpectedError::RequestError(String::from("request params must be array! params=[{\"block_number\": 123, \"queue_index\": 12}, {\"block_number\": 234, \"queue_index\": 23}]")));
+        }
+        let param_vec: Vec<(u64, u64)> = params.into_iter()
+            .map(|v| {
+                let o = v.as_object().unwrap();
+                (o.get("block_number").unwrap().as_u64().unwrap(), o.get("queue_index").unwrap().as_u64().unwrap())
+            })
+            .collect::<Vec<(u64, u64)>>();
+        for (block_number, queue_index) in param_vec.iter() {
+            let _ = self_sender.send(L1TxLogMsg::new(*block_number, *queue_index))?;
+        }
+        let param_vec_str = param_vec.into_iter()
+            .map(|(block_number, queue_index)| { format!("{{block_number: {}, queue_index: {}}}", block_number, queue_index) })
+            .collect::<Vec<String>>();
+        Ok(Value::String(format!("retry job registered! task={}, params=[{}]", TASK_NAME, param_vec_str.join(", "))))
     }
 }

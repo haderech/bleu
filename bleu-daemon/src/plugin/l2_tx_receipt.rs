@@ -2,17 +2,19 @@ use std::collections::HashMap;
 
 use appbase::prelude::*;
 use clap::Arg;
+use jsonrpc_core::Params;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+use crate::{libs, validation};
 use crate::error::error::ExpectedError;
-use crate::libs;
 use crate::libs::convert::hex_to_decimal_converter;
 use crate::libs::opt::opt_to_result;
 use crate::libs::request;
 use crate::libs::serde::{get_array, get_object, get_str};
 use crate::libs::subscribe::{load_retry_queue, load_task_from_json, remove_from_retry_queue, save_retry_queue};
 use crate::message;
+use crate::plugin::jsonrpc::JsonRpcPlugin;
 use crate::plugin::postgres::{PostgresMsg, PostgresPlugin};
 use crate::plugin::rocks::RocksPlugin;
 use crate::plugin::slack::SlackPlugin;
@@ -72,12 +74,13 @@ impl Plugin for L2TxReceiptPlugin {
     }
 
     fn init(&mut self) {
-        let senders = MultiSender::new(vec!("postgres", "slack" /*"elasticsearch"*/));
+        let senders = MultiSender::new(vec!("postgres", "slack", "l2_tx_receipt"));
         self.senders = Some(senders.to_owned());
         self.receiver = Some(APP.channels.subscribe(TASK_NAME));
         self.sub_event = Some(load_task_from_json(TASK_FILE, CHAIN, TASK_PREFIX, TASK_NAME).expect(format!("failed to load task! task={}", TASK_NAME).as_str()));
         let rocksdb = APP.run_with::<RocksPlugin, _, _>(|rocks| rocks.get_db());
-        self.retry_queue = Some(load_retry_queue::<L2TxReceiptRetryJob>(rocksdb, RETRY_PREFIX).expect(format!("failed to load retry queue! task={}", TASK_NAME).as_str()))
+        self.retry_queue = Some(load_retry_queue::<L2TxReceiptRetryJob>(rocksdb, RETRY_PREFIX).expect(format!("failed to load retry queue! task={}", TASK_NAME).as_str()));
+        self.jsonrpc_register();
     }
 
     fn startup(&mut self) {
@@ -169,5 +172,33 @@ impl L2TxReceiptPlugin {
             }
         }
         Ok(())
+    }
+
+    fn jsonrpc_register(&self) {
+        let senders = self.senders.as_ref().unwrap();
+        let self_sender = senders.get(TASK_NAME);
+
+        APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
+            jsonrpc.add_method(String::from("retry_l2_tx_receipt"), move |params: Params| {
+                let response = match Self::request_handler(params, &self_sender) {
+                    Ok(response) => response,
+                    Err(err) => json!({"error": err.to_string()}),
+                };
+                Box::new(futures::future::ok(response))
+            });
+        });
+    }
+
+    fn request_handler(params: Params, self_sender: &Sender) -> Result<Value, ExpectedError> {
+        let params: Vec<Value> = params.parse()?;
+        if let Err(err) = validation::l2_tx_receipt::verify(&params) {
+            log::warn!("{}", err);
+            return Err(ExpectedError::RequestError(String::from("request params must be string array! params: [\"0xabcd..\", \"0x1234..\"]")));
+        }
+        let tx_hash_vec = params.into_iter().map(|v| { v.as_str().unwrap().to_string() }).collect::<Vec<String>>();
+        for tx_hash in tx_hash_vec.iter() {
+            let _ = self_sender.send(L2TxReceiptMsg::new(tx_hash.clone()))?;
+        }
+        Ok(Value::String(format!("retry job registered! task={}, tx_hash=[{}]", TASK_NAME, tx_hash_vec.join(", "))))
     }
 }
