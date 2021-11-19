@@ -40,6 +40,8 @@ const EVENT: &str = "TransactionEnqueued";
 const TOPIC0: &str = "0x4b388aecf9fa6cc92253704e5975a6129a4f735bdbd99567df4ed0094ee4ceb5";
 const RETRY_PREFIX: &str = "retry:ethereum:l1_tx_log";
 const DEFAULT_RETRY_COUNT: u32 = 3;
+const RETRY_METHOD: &str = "retry_l1_tx_log";
+const DEFAULT_RETRY_ENDPOINT: &str = "http://0.0.0.0:9999";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct L1TxLogRetryJob {
@@ -74,6 +76,7 @@ message!(L1TxLogMsg; {block_number: u64}, {queue_index: u64});
 impl Plugin for L1TxLogPlugin {
     fn new() -> Self {
         APP.options.arg(Arg::new("l1txlog::retry-count").long("l1txlog-retry-count").takes_value(true));
+        APP.options.arg(Arg::new("l1txlog::retry-endpoint").long("l1txlog-retry-endpoint").takes_value(true));
         L1TxLogPlugin {
             sub_event: None,
             senders: None,
@@ -201,22 +204,38 @@ impl L1TxLogPlugin {
 
     fn retry_handler(retry_queue: &mut HashMap<String, L1TxLogRetryJob>, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let mut remove_job = Vec::new();
+        let mut manual_retry: Vec<(u64, u64)> = Vec::new();
         let rocks_sender = senders.get("rocks");
         if !retry_queue.is_empty() {
             for (retry_id, retry_job) in retry_queue.iter_mut() {
                 let pg_sender = senders.get("postgres");
-                if !retry_job.is_retry_available() || Self::log_syncer(retry_job.block_number, retry_job.queue_index, sub_event, &pg_sender).is_ok() {
+                if !retry_job.is_retry_available() {
+                    manual_retry.push((retry_job.block_number, retry_job.queue_index));
                     remove_job.push(retry_id.clone());
-                    let _ = remove_from_retry_queue(&rocks_sender, retry_id.clone());
                 } else {
-                    retry_job.decrease_retry_count();
-                    let _ = save_retry_queue(&rocks_sender, retry_job.get_retry_id(), retry_job)?;
+                    if Self::log_syncer(retry_job.block_number, retry_job.queue_index, sub_event, &pg_sender).is_ok() {
+                        remove_job.push(retry_id.clone());
+                    } else {
+                        retry_job.decrease_retry_count();
+                        let _ = save_retry_queue(&rocks_sender, retry_job.get_retry_id(), retry_job)?;
+                    }
                 }
             }
             if !remove_job.is_empty() {
                 for retry_id in remove_job {
                     retry_queue.remove(&retry_id);
+                    let _ = remove_from_retry_queue(&rocks_sender, retry_id.clone());
                 }
+            }
+            let retry_endpoint = libs::opt::get_value_str("l1txlog::retry-endpoint").unwrap_or(DEFAULT_RETRY_ENDPOINT.to_string());
+            if !manual_retry.is_empty() {
+                let params = manual_retry.iter()
+                    .map(|(block_number, queue_index)| {
+                        format!("{{\"block_number\": {}, \"queue_index\": {}}}", block_number, queue_index)
+                    })
+                    .collect::<Vec<String>>().join(",");
+                let retry_query = libs::subscribe::retry_creator(format!("[{}]", params), RETRY_METHOD, retry_endpoint)?;
+                return Err(ExpectedError::RetryFailError(retry_query));
             }
         }
         Ok(())
@@ -227,7 +246,7 @@ impl L1TxLogPlugin {
         let self_sender = senders.get(TASK_NAME);
 
         APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
-            jsonrpc.add_method(String::from("retry_l1_tx_log"), move |params: Params| {
+            jsonrpc.add_method(String::from(RETRY_METHOD), move |params: Params| {
                 let response = match Self::request_handler(params, &self_sender) {
                     Ok(response) => response,
                     Err(err) => json!({"error": err.to_string()}),

@@ -3,8 +3,8 @@ use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;
 use std::str::ParseBoolError;
 use std::string::FromUtf8Error;
-use hex::FromHexError;
 
+use hex::FromHexError;
 use lettre::transport::smtp;
 
 #[derive(Debug, Clone)]
@@ -23,6 +23,7 @@ pub enum ExpectedError {
     RocksDBError(String),
     EthAbiError(String),
     JsonRpcError(String),
+    RetryFailError(String),
 }
 
 impl From<smtp::Error> for ExpectedError {
@@ -129,6 +130,7 @@ impl Display for ExpectedError {
             ExpectedError::RocksDBError(err) => write!(f, "{}", err),
             ExpectedError::EthAbiError(err) => write!(f, "{}", err),
             ExpectedError::JsonRpcError(err) => write!(f, "{}", err),
+            ExpectedError::RetryFailError(err) => write!(f, "{}", err),
         }
     }
 }

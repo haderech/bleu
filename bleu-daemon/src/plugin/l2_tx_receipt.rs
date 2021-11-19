@@ -35,6 +35,8 @@ const TASK_NAME: &str = "l2_tx_receipt";
 const TASK_FILE: &str = "task/l2_tx_receipt.json";
 const RETRY_PREFIX: &str = "retry:optimism:l2_tx_receipt";
 const DEFAULT_RETRY_COUNT: u32 = 3;
+const RETRY_METHOD: &str = "retry_l2_tx_receipt";
+const DEFAULT_RETRY_ENDPOINT: &str = "http://0.0.0.0:9999";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct L2TxReceiptRetryJob {
@@ -65,6 +67,7 @@ message!(L2TxReceiptMsg; {tx_hash: String});
 impl Plugin for L2TxReceiptPlugin {
     fn new() -> Self {
         APP.options.arg(Arg::new("l2txreceipt::retry-count").long("l2txreceipt-retry-count").takes_value(true));
+        APP.options.arg(Arg::new("l2txreceipt::retry-endpoint").long("l2txreceipt-retry-endpoint").takes_value(true));
         L2TxReceiptPlugin {
             sub_event: None,
             senders: None,
@@ -154,21 +157,36 @@ impl L2TxReceiptPlugin {
 
     fn retry_handler(retry_queue: &mut HashMap<String, L2TxReceiptRetryJob>, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let mut remove_job = Vec::new();
+        let mut manual_retry: Vec<String> = Vec::new();
         let rocks_sender = senders.get("rocks");
         if !retry_queue.is_empty() {
             for (retry_id, retry_job) in retry_queue.iter_mut() {
-                if !retry_job.is_retry_available() || Self::receipt_syncer(&retry_job.tx_hash, sub_event, senders).is_ok() {
+                if !retry_job.is_retry_available() {
+                    manual_retry.push(retry_job.tx_hash.clone());
                     remove_job.push(retry_id.clone());
-                    let _ = remove_from_retry_queue(&rocks_sender, retry_id.clone())?;
                 } else {
-                    retry_job.decrease_retry_count();
-                    let _ = save_retry_queue(&rocks_sender, retry_job.get_retry_id(), retry_job)?;
+                    if Self::receipt_syncer(&retry_job.tx_hash, sub_event, senders).is_ok() {
+                        remove_job.push(retry_id.clone());
+                    } else {
+                        retry_job.decrease_retry_count();
+                        let _ = save_retry_queue(&rocks_sender, retry_job.get_retry_id(), retry_job)?;
+                    }
                 }
             }
             if !remove_job.is_empty() {
                 for retry_id in remove_job {
                     retry_queue.remove(&retry_id);
+                    let _ = remove_from_retry_queue(&rocks_sender, retry_id.clone())?;
                 }
+            }
+            let retry_endpoint = libs::opt::get_value_str("l2txreceipt::retry-endpoint").unwrap_or(DEFAULT_RETRY_ENDPOINT.to_string());
+            if !manual_retry.is_empty() {
+                let params = manual_retry.iter()
+                    .map(|s| {
+                        format!("\"{}\"", s)
+                    }).collect::<Vec<String>>().join(",");
+                let retry_query = libs::subscribe::retry_creator(format!("[{}]", params), RETRY_METHOD, retry_endpoint)?;
+                return Err(ExpectedError::RetryFailError(retry_query));
             }
         }
         Ok(())
@@ -179,7 +197,7 @@ impl L2TxReceiptPlugin {
         let self_sender = senders.get(TASK_NAME);
 
         APP.run_with::<JsonRpcPlugin, _, _>(|jsonrpc| {
-            jsonrpc.add_method(String::from("retry_l2_tx_receipt"), move |params: Params| {
+            jsonrpc.add_method(String::from(RETRY_METHOD), move |params: Params| {
                 let response = match Self::request_handler(params, &self_sender) {
                     Ok(response) => response,
                     Err(err) => json!({"error": err.to_string()}),

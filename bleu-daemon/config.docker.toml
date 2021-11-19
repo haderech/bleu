@@ -36,9 +36,11 @@ poll-interval=100
 
 [l1txlog]
 retry-count=3
+retry-endpoint="http://0.0.0.0:9999"
 
 [l2txreceipt]
 retry-count=3
+retry-endpoint="http://0.0.0.0:9999"
 
 [app]
 plugin=[]

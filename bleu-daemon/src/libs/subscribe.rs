@@ -131,6 +131,11 @@ pub fn remove_from_retry_queue(rocks_sender: &Sender, queue_key: String) -> Resu
     Ok(())
 }
 
+pub fn retry_creator(params: String, retry_method: &str, end_point: String) -> Result<String, ExpectedError> {
+    let request = format!("curl --location --request POST '{}' --header 'Content-Type: application/json' --data-raw '{{\"jsonrpc\": \"2.0\", \"id\": \"1\", \"method\": \"{}\", \"params\": {}}}'", end_point, retry_method, params);
+    Ok(request)
+}
+
 #[cfg(test)]
 mod subscribe {
     use crate::libs::subscribe::load_task_from_json;
