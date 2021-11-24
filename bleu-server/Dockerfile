@@ -1,6 +1,6 @@
 FROM rust as builder
 
-RUN apt-get update && apt-get install build-essential -y
+RUN apt update && apt install apt-utils build-essential -y
 
 WORKDIR bleu-server
 
@@ -10,7 +10,7 @@ RUN cargo build --release --bin bleu-server
 
 FROM rust:1.56-slim as runtime
 
-RUN apt-get update && apt-get install libpq-dev -y
+RUN apt update && apt install apt-utils libpq-dev -y
 
 WORKDIR bleu-server
 
