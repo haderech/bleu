@@ -1,6 +1,6 @@
 FROM rust as builder
 
-RUN apt update && apt install libclang-dev -y
+RUN apt update && apt install apt-utils libclang-dev -y
 
 RUN rustup component add rustfmt
 
@@ -8,9 +8,11 @@ WORKDIR bleu-daemon
 
 COPY . .
 
-RUN cargo build -j4 --release --bin bleu-daemon
+RUN cargo build -j32 --release --bin bleu-daemon
 
 FROM rust:1.56-slim as runtime
+
+RUN apt update && apt install apt-utils -y
 
 WORKDIR bleu-daemon
 
