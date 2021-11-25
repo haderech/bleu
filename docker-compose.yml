@@ -1,0 +1,24 @@
+version: '3'
+services:
+  bleu-daemon:
+    container_name: bleu-daemon
+    build: ./bleu-daemon
+    ports:
+      - "9999:9999"
+    depends_on:
+      - postgres
+  bleu-server:
+    container_name: bleu-server
+    build: ./bleu-server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=postgresql
+    ports:
+      - "5432:5432"
