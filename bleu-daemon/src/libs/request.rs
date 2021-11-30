@@ -3,10 +3,10 @@ use serde_json::{Map, Value};
 use crate::error::error::ExpectedError;
 use crate::libs::serde::get_string;
 
-pub fn get(url: &str) -> Result<Map<String, Value>, ExpectedError> {
-    let res = reqwest::blocking::get(url)?;
+pub async fn get_async(url: &str) -> Result<Map<String, Value>, ExpectedError> {
+    let res = reqwest::get(url).await?;
     let status = res.status().clone();
-    let body = res.text()?;
+    let body = res.text().await?;
     let parsed_body: Map<String, Value> = serde_json::from_str(body.as_str())?;
 
     if !status.is_success() {
@@ -16,12 +16,12 @@ pub fn get(url: &str) -> Result<Map<String, Value>, ExpectedError> {
     Ok(parsed_body)
 }
 
-pub fn post(url: &str, req_body: &str) -> Result<Map<String, Value>, ExpectedError> {
+pub async fn post_async(url: &str, req_body: &str) -> Result<Map<String, Value>, ExpectedError> {
     let req = String::from(req_body);
-    let client = reqwest::blocking::Client::new();
-    let res = client.post(url).body(req).header("Content-Type", "application/json").send()?;
+    let client = reqwest::Client::new();
+    let res = client.post(url).body(req).header("Content-Type", "application/json").send().await?;
     let status = res.status().clone();
-    let body = res.text()?;
+    let body = res.text().await?;
     let parsed_body: Map<String, Value> = serde_json::from_str(body.as_str())?;
 
     if !status.is_success() {

@@ -94,6 +94,7 @@ impl RocksPlugin {
                 }
             }
             if !app.is_quitting() {
+                tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
                 Self::recv(db, monitor, app);
             }
         });

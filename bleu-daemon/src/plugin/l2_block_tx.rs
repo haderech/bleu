@@ -1,6 +1,3 @@
-use std::thread;
-use std::time::Duration;
-
 use appbase::prelude::*;
 use clap::Arg;
 use serde::{Deserialize, Serialize};
@@ -68,14 +65,14 @@ impl Plugin for L2BlockTxPlugin {
 
 impl L2BlockTxPlugin {
     fn recv(mut receiver: Receiver, mut sub_event: SubscribeEvent, senders: MultiSender, app: QuitHandle) {
-        APP.spawn_blocking(move || {
+        APP.spawn(async move {
             if let Ok(message) = receiver.try_recv() {
                 if let Err(err) = libs::subscribe::message_handler(message, &mut sub_event, &senders) {
                     let _ = libs::error::warn_handler(senders.get("slack"), err);
                 }
             }
             if sub_event.is_workable() {
-                match Self::event_handler(&sub_event, &senders) {
+                match Self::event_handler(&sub_event, &senders).await {
                     Ok(_) => {
                         libs::subscribe::task_syncer(&sub_event, &senders);
                         sub_event.next_idx();
@@ -85,13 +82,13 @@ impl L2BlockTxPlugin {
             }
             if !app.is_quitting() {
                 let poll_interval = libs::opt::get_value::<u64>("l2blocktx::poll-interval").unwrap_or(DEFAULT_POLL_INTERVAL);
-                thread::sleep(Duration::from_millis(poll_interval));
+                tokio::time::sleep(tokio::time::Duration::from_millis(poll_interval)).await;
                 Self::recv(receiver, sub_event, senders, app);
             }
         });
     }
 
-    fn event_handler(sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
+    async fn event_handler(sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let req_url = sub_event.active_node();
         let hex_idx = format!("0x{:x}", sub_event.curr_idx);
         let req_body = json!({
@@ -100,7 +97,7 @@ impl L2BlockTxPlugin {
                     "params": [ hex_idx, true ],
                     "id": 1
                 });
-        let response = request::post(req_url.as_str(), req_body.to_string().as_str())?;
+        let response = request::post_async(req_url.as_str(), req_body.to_string().as_str()).await?;
         let _ = libs::subscribe::response_verifier(&response, TASK_NAME, "result", sub_event.get_filter())?;
         let block = get_object(&response, "result")?;
         let converted_block = hex_to_decimal_converter(block, vec!["number", "size", "timestamp", "gasLimit", "gasUsed"])?;

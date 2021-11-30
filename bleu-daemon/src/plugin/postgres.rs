@@ -1,5 +1,6 @@
+use std::{fs, thread};
 use std::collections::HashMap;
-use std::fs;
+use std::time::Duration;
 
 use appbase::prelude::*;
 use r2d2_postgres::{PostgresConnectionManager, r2d2};
@@ -83,6 +84,7 @@ impl PostgresPlugin {
                 }
             }
             if !app.is_quitting() {
+                thread::sleep(Duration::from_millis(10));
                 Self::recv(pool, schema_map, senders, monitor, app);
             }
         });

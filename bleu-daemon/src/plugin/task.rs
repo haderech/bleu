@@ -61,11 +61,12 @@ impl Plugin for TaskPlugin {
 
 impl TaskPlugin {
     fn recv(mut receiver: Receiver, senders: MultiSender, app: QuitHandle) {
-        APP.spawn_blocking(move || {
+        APP.spawn(async move {
             if let Ok(message) = receiver.try_recv() {
                 let _ = Self::message_handler(message, &senders);
             }
             if !app.is_quitting() {
+                tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
                 Self::recv(receiver, senders, app);
             }
         });

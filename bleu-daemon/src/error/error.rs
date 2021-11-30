@@ -21,7 +21,6 @@ pub enum ExpectedError {
     PostgresError(String),
     IoError(String),
     RocksDBError(String),
-    EthAbiError(String),
     JsonRpcError(String),
     RetryFailError(String),
 }
@@ -95,12 +94,6 @@ impl From<FromUtf8Error> for ExpectedError {
     }
 }
 
-impl From<ethabi::Error> for ExpectedError {
-    fn from(err: ethabi::Error) -> Self {
-        ExpectedError::EthAbiError(err.to_string())
-    }
-}
-
 impl From<FromHexError> for ExpectedError {
     fn from(err: FromHexError) -> Self {
         ExpectedError::ParsingError(err.to_string())
@@ -128,7 +121,6 @@ impl Display for ExpectedError {
             ExpectedError::PostgresError(err) => write!(f, "{}", err),
             ExpectedError::IoError(err) => write!(f, "{}", err),
             ExpectedError::RocksDBError(err) => write!(f, "{}", err),
-            ExpectedError::EthAbiError(err) => write!(f, "{}", err),
             ExpectedError::JsonRpcError(err) => write!(f, "{}", err),
             ExpectedError::RetryFailError(err) => write!(f, "{}", err),
         }

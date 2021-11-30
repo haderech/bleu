@@ -1,9 +1,8 @@
 use std::collections::HashMap;
-use std::fs::File;
+use std::str::FromStr;
 
 use appbase::prelude::*;
 use clap::Arg;
-use ethabi::{Contract, RawLog};
 use jsonrpc_core::Params;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -13,7 +12,7 @@ use crate::error::error::ExpectedError;
 use crate::libs::convert::hex_to_decimal_converter;
 use crate::libs::opt::opt_to_result;
 use crate::libs::request;
-use crate::libs::serde::{get_array, get_str, get_u64};
+use crate::libs::serde::{get_array, get_u64};
 use crate::libs::subscribe::{load_retry_queue, load_task_from_json, remove_from_retry_queue, save_retry_queue};
 use crate::message;
 use crate::plugin::jsonrpc::JsonRpcPlugin;
@@ -35,8 +34,6 @@ const CHAIN: &str = "ethereum";
 const TASK_PREFIX: &str = "task:ethereum";
 const TASK_NAME: &str = "l1_tx_log";
 const TASK_FILE: &str = "task/l1_tx_log.json";
-const ABI_FILE: &str = "abi/tx_enqueued.json";
-const EVENT: &str = "TransactionEnqueued";
 const TOPIC0: &str = "0x4b388aecf9fa6cc92253704e5975a6129a4f735bdbd99567df4ed0094ee4ceb5";
 const RETRY_PREFIX: &str = "retry:ethereum:l1_tx_log";
 const DEFAULT_RETRY_COUNT: u32 = 3;
@@ -68,8 +65,6 @@ impl L1TxLogRetryJob {
         }
     }
 }
-
-type LogKeyValue = HashMap<String, String>;
 
 message!(L1TxLogMsg; {block_number: u64}, {queue_index: u64});
 
@@ -110,29 +105,30 @@ impl Plugin for L1TxLogPlugin {
 
 impl L1TxLogPlugin {
     fn recv(mut receiver: Receiver, sub_event: SubscribeEvent, senders: MultiSender, mut retry_queue: HashMap<String, L1TxLogRetryJob>, app: QuitHandle) {
-        APP.spawn_blocking(move || {
+        APP.spawn(async move {
             if let Ok(message) = receiver.try_recv() {
-                if let Err(err) = Self::message_handler(message.clone(), &sub_event, &senders, &mut retry_queue) {
+                if let Err(err) = Self::message_handler(message.clone(), &sub_event, &senders, &mut retry_queue).await {
                     let _ = libs::error::error_handler(senders.get("slack"), err);
                 }
             }
-            if let Err(err) = Self::retry_handler(&mut retry_queue, &sub_event, &senders) {
+            if let Err(err) = Self::retry_handler(&mut retry_queue, &sub_event, &senders).await {
                 let _ = libs::error::error_handler(senders.get("slack"), err);
             }
 
             if !app.is_quitting() {
+                tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
                 Self::recv(receiver, sub_event, senders, retry_queue, app);
             }
         });
     }
 
-    fn message_handler(message: Value, sub_event: &SubscribeEvent, senders: &MultiSender, retry_queue: &mut HashMap<String, L1TxLogRetryJob>) -> Result<(), ExpectedError> {
+    async fn message_handler(message: Value, sub_event: &SubscribeEvent, senders: &MultiSender, retry_queue: &mut HashMap<String, L1TxLogRetryJob>) -> Result<(), ExpectedError> {
         let parsed_msg = opt_to_result(message.as_object())?;
         let block_number = get_u64(parsed_msg, "block_number")?;
         let queue_index = get_u64(parsed_msg, "queue_index")?;
 
         let pg_sender = senders.get("postgres");
-        if let Err(err) = Self::log_syncer(block_number, queue_index, sub_event, &pg_sender) {
+        if let Err(err) = Self::log_syncer(block_number, queue_index, sub_event, &pg_sender).await {
             let retry_count = libs::opt::get_value::<u32>("l1txlog::retry-count").unwrap_or(DEFAULT_RETRY_COUNT);
             let retry_job = L1TxLogRetryJob::new(block_number, queue_index, retry_count);
             retry_queue.insert(retry_job.get_retry_id(), retry_job.clone());
@@ -143,37 +139,23 @@ impl L1TxLogPlugin {
         Ok(())
     }
 
-    fn is_matched_log(abi_file: &str, event_name: &str, log_value: &Value, queue_index: String) -> Result<bool, ExpectedError> {
+    fn is_matched_log(log_value: &Value, queue_index: u64) -> Result<bool, ExpectedError> {
         let log_map = opt_to_result(log_value.as_object())?;
-        let data = get_str(log_map, "data")?;
-        let log_kv = Self::log_parser(abi_file, event_name, data)?;
-        let log_queue_idx = opt_to_result(log_kv.get("_queueIndex"))?;
-        Ok(log_queue_idx.clone() == queue_index)
-    }
-
-    fn log_parser(abi_file: &str, event_name: &str, data: &str) -> Result<LogKeyValue, ExpectedError> {
-        let contract = Contract::load(File::open(abi_file)?)?;
-        let event = contract.event(event_name)?;
-        let topic_hash = event.signature();
-        let prefix_removed_data = data.trim_start_matches("0x");
-        let raw_log = RawLog {
-            topics: vec![topic_hash],
-            data: hex::decode(prefix_removed_data)?,
-        };
-        let parsed_log = event.parse_log(raw_log)?;
-        let log_params = parsed_log.params;
-        let mut log_map = HashMap::new();
-        for log_param in log_params {
-            let name = log_param.name;
-            let value = log_param.value;
-            log_map.insert(name, value.to_string());
+        let topics = get_array(log_map, "topics")?;
+        if topics.len() >= 4 {
+            let raw_index = opt_to_result(topics.get(3))?;
+            let hex_index = opt_to_result(raw_index.as_str())?;
+            let decimal_index = libs::convert::hex_to_decimal(hex_index.to_string())?;
+            let log_queue_index = u64::from_str(decimal_index.as_str())?;
+            Ok(log_queue_index == queue_index)
+        } else {
+            Ok(false)
         }
-        Ok(log_map)
     }
 
-    fn log_syncer(block_number: u64, queue_index: u64, sub_event: &SubscribeEvent, pg_sender: &Sender) -> Result<(), ExpectedError> {
+    async fn log_syncer(block_number: u64, queue_index: u64, sub_event: &SubscribeEvent, pg_sender: &Sender) -> Result<(), ExpectedError> {
         let block_number_hex = format!("0x{:x}", block_number);
-        let queue_index_hex = format!("{:x}", queue_index);
+        // let queue_index_hex = format!("{:x}", queue_index);
         let req_url = sub_event.active_node();
         let req_body = json!({
                     "jsonrpc": "2.0",
@@ -185,13 +167,13 @@ impl L1TxLogPlugin {
                     }],
                     "id": 1
                 });
-        let response = request::post(req_url.as_str(), req_body.to_string().as_str())?;
+        let response = request::post_async(req_url.as_str(), req_body.to_string().as_str()).await?;
         if !libs::subscribe::is_log_created(&response, "result") {
             return Err(ExpectedError::NoneError(format!("logs does not created! response={:?}, block_number={}, topic={}", response, block_number, TOPIC0)));
         }
         let logs = get_array(&response, "result")?;
         for log_value in logs {
-            let is_matched = Self::is_matched_log(ABI_FILE, EVENT, log_value, queue_index_hex.clone());
+            let is_matched = Self::is_matched_log(log_value, queue_index);
             if is_matched.is_ok() && is_matched.unwrap() {
                 let mut converted_log = hex_to_decimal_converter(opt_to_result(log_value.as_object())?, vec!["blockNumber", "logIndex", "transactionIndex"])?;
                 converted_log.insert(String::from("queue_index"), Value::String(queue_index.to_string()));
@@ -202,7 +184,7 @@ impl L1TxLogPlugin {
         Err(ExpectedError::NoneError(format!("matched log does not exist! block_number={}, queue_index={}, topic={}", block_number, queue_index, TOPIC0)))
     }
 
-    fn retry_handler(retry_queue: &mut HashMap<String, L1TxLogRetryJob>, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
+    async fn retry_handler(retry_queue: &mut HashMap<String, L1TxLogRetryJob>, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let mut remove_job = Vec::new();
         let mut manual_retry: Vec<(u64, u64)> = Vec::new();
         let rocks_sender = senders.get("rocks");
@@ -213,7 +195,7 @@ impl L1TxLogPlugin {
                     manual_retry.push((retry_job.block_number, retry_job.queue_index));
                     remove_job.push(retry_id.clone());
                 } else {
-                    if Self::log_syncer(retry_job.block_number, retry_job.queue_index, sub_event, &pg_sender).is_ok() {
+                    if Self::log_syncer(retry_job.block_number, retry_job.queue_index, sub_event, &pg_sender).await.is_ok() {
                         remove_job.push(retry_id.clone());
                     } else {
                         retry_job.decrease_retry_count();

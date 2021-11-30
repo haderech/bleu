@@ -101,25 +101,26 @@ impl Plugin for L2TxReceiptPlugin {
 
 impl L2TxReceiptPlugin {
     fn recv(mut receiver: Receiver, sub_event: SubscribeEvent, senders: MultiSender, mut retry_queue: HashMap<String, L2TxReceiptRetryJob>, app: QuitHandle) {
-        APP.spawn_blocking(move || {
+        APP.spawn(async move {
             if let Ok(message) = receiver.try_recv() {
-                if let Err(err) = Self::message_handler(message, &sub_event, &senders, &mut retry_queue) {
+                if let Err(err) = Self::message_handler(message, &sub_event, &senders, &mut retry_queue).await {
                     let _ = libs::error::error_handler(senders.get("slack"), err);
                 }
             }
-            if let Err(err) = Self::retry_handler(&mut retry_queue, &sub_event, &senders) {
+            if let Err(err) = Self::retry_handler(&mut retry_queue, &sub_event, &senders).await {
                 let _ = libs::error::error_handler(senders.get("slack"), err);
             }
             if !app.is_quitting() {
+                tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
                 Self::recv(receiver, sub_event, senders, retry_queue, app);
             }
         });
     }
 
-    fn message_handler(message: Value, sub_event: &SubscribeEvent, senders: &MultiSender, retry_queue: &mut HashMap<String, L2TxReceiptRetryJob>) -> Result<(), ExpectedError> {
+    async fn message_handler(message: Value, sub_event: &SubscribeEvent, senders: &MultiSender, retry_queue: &mut HashMap<String, L2TxReceiptRetryJob>) -> Result<(), ExpectedError> {
         let parsed_msg = message.as_object().unwrap();
         let tx_hash = get_str(parsed_msg, "tx_hash")?;
-        if let Err(err) = Self::receipt_syncer(tx_hash, sub_event, senders) {
+        if let Err(err) = Self::receipt_syncer(tx_hash, sub_event, senders).await {
             let retry_count = libs::opt::get_value::<u32>("l2txreceipt::retry-count").unwrap_or(DEFAULT_RETRY_COUNT);
             let retry_job = L2TxReceiptRetryJob::new(String::from(tx_hash), retry_count);
             retry_queue.insert(retry_job.get_retry_id(), retry_job.clone());
@@ -130,7 +131,7 @@ impl L2TxReceiptPlugin {
         Ok(())
     }
 
-    fn receipt_syncer(tx_hash: &str, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
+    async fn receipt_syncer(tx_hash: &str, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let req_url = sub_event.active_node();
         let req_body = json!({
                     "jsonrpc": "2.0",
@@ -138,7 +139,7 @@ impl L2TxReceiptPlugin {
                     "params": [ tx_hash ],
                     "id": 1
                 });
-        let response = request::post(req_url.as_str(), req_body.to_string().as_str())?;
+        let response = request::post_async(req_url.as_str(), req_body.to_string().as_str()).await?;
         if !libs::subscribe::is_value_created(&response, "result") {
             return Err(ExpectedError::NoneError(format!("receipt does not created...tx_hash={}", tx_hash)));
         }
@@ -155,7 +156,7 @@ impl L2TxReceiptPlugin {
         Ok(())
     }
 
-    fn retry_handler(retry_queue: &mut HashMap<String, L2TxReceiptRetryJob>, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
+    async fn retry_handler(retry_queue: &mut HashMap<String, L2TxReceiptRetryJob>, sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let mut remove_job = Vec::new();
         let mut manual_retry: Vec<String> = Vec::new();
         let rocks_sender = senders.get("rocks");
@@ -165,7 +166,7 @@ impl L2TxReceiptPlugin {
                     manual_retry.push(retry_job.tx_hash.clone());
                     remove_job.push(retry_id.clone());
                 } else {
-                    if Self::receipt_syncer(&retry_job.tx_hash, sub_event, senders).is_ok() {
+                    if Self::receipt_syncer(&retry_job.tx_hash, sub_event, senders).await.is_ok() {
                         remove_job.push(retry_id.clone());
                     } else {
                         retry_job.decrease_retry_count();

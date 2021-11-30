@@ -1,6 +1,3 @@
-use std::thread;
-use std::time::Duration;
-
 use appbase::prelude::*;
 use clap::Arg;
 use serde::{Deserialize, Serialize};
@@ -66,14 +63,14 @@ impl Plugin for L2EnqueuePlugin {
 
 impl L2EnqueuePlugin {
     fn recv(mut receiver: Receiver, mut sub_event: SubscribeEvent, senders: MultiSender, app: QuitHandle) {
-        APP.spawn_blocking(move || {
+        APP.spawn(async move {
             if let Ok(message) = receiver.try_recv() {
                 if let Err(err) = libs::subscribe::message_handler(message, &mut sub_event, &senders) {
                     let _ = libs::error::warn_handler(senders.get("slack"), err);
                 }
             }
             if sub_event.is_workable() {
-                match Self::event_handler(&sub_event, &senders) {
+                match Self::event_handler(&sub_event, &senders).await {
                     Ok(_) => {
                         libs::subscribe::task_syncer(&sub_event, &senders);
                         sub_event.next_idx();
@@ -83,15 +80,15 @@ impl L2EnqueuePlugin {
             }
             if !app.is_quitting() {
                 let poll_interval = libs::opt::get_value::<u64>("l2enqueue::poll-interval").unwrap_or(DEFAULT_POLL_INTERVAL);
-                thread::sleep(Duration::from_millis(poll_interval));
+                tokio::time::sleep(tokio::time::Duration::from_millis(poll_interval)).await;
                 Self::recv(receiver, sub_event, senders, app);
             }
         });
     }
 
-    fn event_handler(sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
+    async fn event_handler(sub_event: &SubscribeEvent, senders: &MultiSender) -> Result<(), ExpectedError> {
         let req_url = libs::subscribe::create_req_url(sub_event.active_node(), sub_event.curr_idx);
-        let response = request::get(req_url.as_str())?;
+        let response = request::get_async(req_url.as_str()).await?;
         if let false = is_value_created(&response, "ctcIndex") {
             return Err(ExpectedError::BlockHeightError(format!("ctcIndex does not inserted yet! task={}", TASK_NAME)));
         }
