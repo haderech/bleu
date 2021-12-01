@@ -182,5 +182,10 @@ docker build -t bleu-daemon .
 
 ### Run Docker
 ```shell
-docker run -d -p 9999:9999 --name bleu-daemon bleu-daemon:latest
+docker run -d -p 9999:9999 \
+-v /absolute/host/path/task:/bleu-daemon/task \
+-v /absolute/host/path/schema:/bleu-daemon/schema \
+-v /absolute/host/path/config.docker.toml:/bleu-daemon/config.toml \
+--name bleu-daemon \
+bleu-daemon:latest
 ```
