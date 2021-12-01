@@ -7,6 +7,10 @@ services:
       - "9999:9999"
     depends_on:
       - postgres
+    volumes:
+      - /absolute/host/path/task:/bleu-daemon/task
+      - /absolute/host/path/schema:/bleu-daemon/schema
+      - /absolute/host/path/config.docker.toml:/bleu-daemon/config.toml
   bleu-server:
     container_name: bleu-server
     build: ./bleu-server
@@ -14,6 +18,8 @@ services:
       - "8888:8888"
     depends_on:
       - postgres
+    volumes:
+      - /absolute/host/path/.env:/bleu-server/.env
   postgres:
     image: postgres
     container_name: postgres
