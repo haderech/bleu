@@ -58,10 +58,22 @@ RUST_LOG=INFO && cargo run --package bleu-server --bin bleu-server
 When creating a docker image, `.env.docker` and `swagger-ui` in the project folder are used in the docker image. You can add and edit files as needed and then build the image.
 
 ```shell
-docker build -t bleu-server .
+docker build --tag bleu-server .
 ```
 
 ### Run Docker
 ```shell
-docker run -d -p 8888:8888 --name bleu-server bleu-server:latest
+docker run -d -p 8888:8888 \
+-v /absolute/host/path/.env:/bleu-server/.env \
+--name bleu-server \
+bleu-server:latest
+```
+or
+```shell
+docker run -d -p 8888:8888 \
+-e POSTGRES_URL=postgres://root:postgresql@host.docker.internal:5432/postgres \
+-e SERVER_HOST=0.0.0.0 \
+-e SERVER_PORT=8888 \
+--name bleu-server \
+bleu-server:latest
 ```
