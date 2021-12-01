@@ -8,7 +8,7 @@ WORKDIR bleu-daemon
 
 COPY . .
 
-RUN cargo build -j8 --release --bin bleu-daemon
+RUN cargo build -j4 --release --bin bleu-daemon
 
 FROM rust:1.56-slim as runtime
 
@@ -19,8 +19,6 @@ WORKDIR bleu-daemon
 COPY --from=builder /bleu-daemon/config.docker.toml ./config.toml
 
 COPY --from=builder /bleu-daemon/schema ./schema
-
-COPY --from=builder /bleu-daemon/abi ./abi
 
 COPY --from=builder /bleu-daemon/task ./task
 
