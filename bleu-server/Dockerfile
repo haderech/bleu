@@ -14,8 +14,6 @@ RUN apt update && apt install apt-utils libpq-dev -y
 
 WORKDIR bleu-server
 
-COPY --from=builder /bleu-server/.env.docker ./.env
-
 COPY --from=builder /bleu-server/target/release/bleu-server .
 
 COPY --from=builder /bleu-server/swagger-ui ./swagger-ui

@@ -16,12 +16,6 @@ RUN apt update && apt install apt-utils -y
 
 WORKDIR bleu-daemon
 
-COPY --from=builder /bleu-daemon/config.docker.toml ./config.toml
-
-COPY --from=builder /bleu-daemon/schema ./schema
-
-COPY --from=builder /bleu-daemon/task ./task
-
 COPY --from=builder /bleu-daemon/target/release/bleu-daemon .
 
 ENV RUST_LOG INFO
