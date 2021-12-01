@@ -54,7 +54,6 @@ pub mod tx_batch {
 
 pub mod tx {
     use actix_web::web;
-    use cached::proc_macro::cached;
     use diesel::prelude::*;
     use diesel::RunQueryDsl;
 
@@ -67,7 +66,6 @@ pub mod tx {
     use crate::schema::optimism::optimism_block_txs::columns::*;
     use crate::schema::optimism::optimism_txs;
 
-    #[cached(time = 60, key = "bool", convert = r#"{ true }"#, result = true)]
     pub async fn find_latest_tx_summary(pool: web::Data<Pool>) -> Result<Vec<OptimismTxSummary>, ExpectedError> {
         let conn = pool.get()?;
         let tx_summary = web::block(move || {
