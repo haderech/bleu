@@ -4,6 +4,7 @@ import {
   Card,
   Divider,
   Grid,
+  Link,
   Typography
 } from '@mui/material';
 import {wrappedEth, summary} from './Overview/state';
@@ -36,9 +37,21 @@ function TitledContent(props: any) {
       <Typography variant='h6' sx={{fontSize:'0.8rem', color:'rgb(135,150,170)'}}>
         {props.title}
       </Typography>
-      <Typography variant='h6' sx={{fontSize: '1rem', color: (props.content ? 'text.primary' : 'background.paper')}}>
-        {props.content || 'N/A'} {props.suffix}
-      </Typography>
+      {
+        props.content
+        ? <Box sx={{display:'flex',gap:'4px'}}>
+            { props.href
+              ? <Link variant='h6' underline='none' sx={{fontSize: '1rem'}} href={props.href}>
+                  {props.content || 'N/A'}
+                </Link>
+              : <Typography variant='h6'>{props.content}</Typography>
+            }
+            <Typography variant='h6'>
+              {props.suffix}
+            </Typography>
+          </Box>
+        : null
+      }
     </Box>
   );
 }
@@ -54,15 +67,15 @@ function Overview() {
           <Box sx={outer0}>
             <TitledContent title={'WRAPPED ETHER'} content={toEther(weth.contents)} suffix='ETH' />
             <Divider />
-            <TitledContent title={'TRANSACTIONS'} content={sum.contents.tx_count} suffix='TXs' />
+            <TitledContent title={'TRANSACTIONS'} content={sum.contents.tx_count} suffix='TXs' href={'/txs'} />
             <Divider sx={{display:{xs:'block', sm:'none'}}} />
           </Box>
         </Grid>
         <Grid item lg={4} md={4} sm={6} xs={12}>
           <Box sx={outer1}>
-            <TitledContent title={'LATEST TRANSACTION BATCH INDEX'} content={sum.contents.latest_tx_batch_index} />
+            <TitledContent title={'LATEST TRANSACTION BATCH INDEX'} content={sum.contents.latest_tx_batch_index} href={'/blocks'} />
             <Divider />
-            <TitledContent title={'LATEST STATE BATCH INDEX'} content={sum.contents.latest_state_batch_index} />
+            <TitledContent title={'LATEST STATE BATCH INDEX'} content={sum.contents.latest_state_batch_index} href={'/blocks?isState=true'} />
           </Box>
         </Grid>
         <Grid item lg={4} md={4} sm={12} xs={12}>
