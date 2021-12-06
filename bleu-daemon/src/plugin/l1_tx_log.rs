@@ -148,8 +148,9 @@ impl L1TxLogPlugin {
         let log_map = opt_to_result(log_value.as_object())?;
         let data = get_str(log_map, "data")?;
         let log_kv = Self::log_parser(ABI_FILE, EVENT, data)?;
-        let log_queue_idx = opt_to_result(log_kv.get("_queueIndex"))?;
-        Ok(log_queue_idx.clone() == queue_index.to_string())
+        let log_queue_idx = opt_to_result(log_kv.get("_queueIndex"))?.to_lowercase();
+        let queue_hex_idx = format!("{:x}", queue_index);
+        Ok(log_queue_idx.clone() == queue_hex_idx)
     }
 
     fn log_parser(abi_file: &str, event_name: &str, data: &str) -> Result<LogKeyValue, ExpectedError> {
