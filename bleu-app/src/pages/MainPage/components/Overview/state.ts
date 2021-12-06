@@ -5,7 +5,7 @@ import {api} from '../../../../utils/urlResolver';
 import erc20ABI from './erc20.abi.json';
 
 const provider = new ethers.providers.JsonRpcProvider(L2JsonRpcEndpoint);
-const erc20 = new ethers.Contract('0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000', erc20ABI, provider);
+const erc20 = new ethers.Contract('0x4200000000000000000000000000000000000006', erc20ABI, provider);
 
 export const wrappedEth = selector({
   key: 'MainPageL2WrappedEther',
