@@ -1,8 +1,9 @@
 use std::collections::HashMap;
-use std::str::FromStr;
+use std::fs::File;
 
 use appbase::prelude::*;
 use clap::Arg;
+use ethabi::{Contract, RawLog};
 use jsonrpc_core::Params;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -12,7 +13,7 @@ use crate::error::error::ExpectedError;
 use crate::libs::convert::hex_to_decimal_converter;
 use crate::libs::opt::opt_to_result;
 use crate::libs::request;
-use crate::libs::serde::{get_array, get_u64};
+use crate::libs::serde::{get_array, get_str, get_u64};
 use crate::libs::subscribe::{load_retry_queue, load_task_from_json, remove_from_retry_queue, save_retry_queue};
 use crate::message;
 use crate::plugin::jsonrpc::JsonRpcPlugin;
@@ -39,6 +40,8 @@ const RETRY_PREFIX: &str = "retry:ethereum:l1_tx_log";
 const DEFAULT_RETRY_COUNT: u32 = 3;
 const RETRY_METHOD: &str = "retry_l1_tx_log";
 const DEFAULT_RETRY_ENDPOINT: &str = "http://0.0.0.0:9999";
+const ABI_FILE: &str = "abi/tx_enqueued.json";
+const EVENT: &str = "TransactionEnqueued";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct L1TxLogRetryJob {
@@ -47,6 +50,8 @@ struct L1TxLogRetryJob {
     queue_index: u64,
     retry_count: u32,
 }
+
+type LogKeyValue = HashMap<String, String>;
 
 impl RetryJob for L1TxLogRetryJob {
     fn get_retry_id(&self) -> String { self.retry_id.clone() }
@@ -141,16 +146,30 @@ impl L1TxLogPlugin {
 
     fn is_matched_log(log_value: &Value, queue_index: u64) -> Result<bool, ExpectedError> {
         let log_map = opt_to_result(log_value.as_object())?;
-        let topics = get_array(log_map, "topics")?;
-        if topics.len() >= 4 {
-            let raw_index = opt_to_result(topics.get(3))?;
-            let hex_index = opt_to_result(raw_index.as_str())?;
-            let decimal_index = libs::convert::hex_to_decimal(hex_index.to_string())?;
-            let log_queue_index = u64::from_str(decimal_index.as_str())?;
-            Ok(log_queue_index == queue_index)
-        } else {
-            Ok(false)
+        let data = get_str(log_map, "data")?;
+        let log_kv = Self::log_parser(ABI_FILE, EVENT, data)?;
+        let log_queue_idx = opt_to_result(log_kv.get("_queueIndex"))?;
+        Ok(log_queue_idx.clone() == queue_index.to_string())
+    }
+
+    fn log_parser(abi_file: &str, event_name: &str, data: &str) -> Result<LogKeyValue, ExpectedError> {
+        let contract = Contract::load(File::open(abi_file)?)?;
+        let event = contract.event(event_name)?;
+        let topic_hash = event.signature();
+        let prefix_removed_data = data.trim_start_matches("0x");
+        let raw_log = RawLog {
+            topics: vec![topic_hash],
+            data: hex::decode(prefix_removed_data)?,
+        };
+        let parsed_log = event.parse_log(raw_log)?;
+        let log_params = parsed_log.params;
+        let mut log_map = HashMap::new();
+        for log_param in log_params {
+            let name = log_param.name;
+            let value = log_param.value;
+            log_map.insert(name, value.to_string());
         }
+        Ok(log_map)
     }
 
     async fn log_syncer(block_number: u64, queue_index: u64, sub_event: &SubscribeEvent, pg_sender: &Sender) -> Result<(), ExpectedError> {

@@ -23,6 +23,7 @@ pub enum ExpectedError {
     RocksDBError(String),
     JsonRpcError(String),
     RetryFailError(String),
+    EthAbiError(String),
 }
 
 impl From<smtp::Error> for ExpectedError {
@@ -106,6 +107,12 @@ impl From<jsonrpc_core::Error> for ExpectedError {
     }
 }
 
+impl From<ethabi::Error> for ExpectedError {
+    fn from(err: ethabi::Error) -> Self {
+        ExpectedError::EthAbiError(err.to_string())
+    }
+}
+
 impl Display for ExpectedError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -123,6 +130,7 @@ impl Display for ExpectedError {
             ExpectedError::RocksDBError(err) => write!(f, "{}", err),
             ExpectedError::JsonRpcError(err) => write!(f, "{}", err),
             ExpectedError::RetryFailError(err) => write!(f, "{}", err),
+            ExpectedError::EthAbiError(err) => write!(f, "{}", err),
         }
     }
 }

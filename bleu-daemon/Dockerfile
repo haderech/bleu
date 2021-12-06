@@ -18,6 +18,8 @@ WORKDIR bleu-daemon
 
 COPY --from=builder /bleu-daemon/target/release/bleu-daemon .
 
+COPY --from=builder /bleu-daemon/abi ./abi
+
 ENV RUST_LOG INFO
 
 ENTRYPOINT ["./bleu-daemon", "--config-dir", "."]
