@@ -167,6 +167,119 @@ These values can also be entered in the form of `--jsonrpc-host 0.0.0.0` at run 
 The path of `config.toml` is located in `~/.config/bleu-damon/config`, but the path has been modified so that the project root path can be used in the following executable statements and docker.
 When building and executing images with docker, be careful because `config.docker.toml` in the root path is used.
 
+### config values
+- jsonrpc
+bleu-daemon includes jsonrpc server for controlling tasks status and retrying task.
+```toml
+[jsonrpc] 
+host="0.0.0.0"
+port=9999
+```
+or
+```shell
+--jsonrpc-host 0.0.0.0 --jsonrpc-port 9999
+```
+
+- postgres
+```toml
+[postgres]
+host="localhost"
+port="5432"
+dbname="postgres"
+user="root"
+password="postgresql"
+```
+or
+```shell
+--postgres-host localhost --postgres-port 5432 --postgres-dbname postgres --postgres-user root --postgres-password postgresql
+```
+
+- slack
+```toml
+[slack]
+activate=false
+info="https://hooks.slack.com/services/"
+warn="https://hooks.slack.com/services/"
+error="https://hooks.slack.com/services/"
+```
+or
+```shell
+--slack-activate false --slack-info https://hooks.slack.com/services/ --slack-warn https://hooks.slack.com/services/ --slack-error https://hooks.slack.com/services/ 
+```
+
+- l2blocktx
+```toml
+[l2blocktx]
+poll-interval=100
+```
+or
+```shell
+--l2blocktx-poll-interval 100
+```
+
+- l2txbatch
+```toml
+[l2txbatch]
+poll-interval=1000
+```
+or
+```shell
+--l2txbatch-poll-interval 1000
+```
+
+- l2statebatch
+```toml
+[l2statebatch]
+poll-interval=1000
+```
+or
+```shell
+--l2statebatch-poll-interval 1000
+```
+
+- l2enqueue
+```toml
+[l2enqueue]
+poll-interval=100
+```
+or
+```shell
+--l2enqueue-poll-interval 100
+```
+
+- l1txlog
+```toml
+[l1txlog]
+retry-count=3
+retry-endpoint="http://0.0.0.0:9999"
+```
+or
+```shell
+--l1txlog-retry-count 3 --l1txlog-retry-endpoint http://0.0.0.0:9999
+```
+
+- l2txreceipt
+```toml
+[l2txreceipt]
+retry-count=3
+retry-endpoint="http://0.0.0.0:9999"
+```
+or
+```shell
+--l2txreceipt-retry-count 3 --l2txreceipt-retry-endpoint http://0.0.0.0:9999
+```
+
+- app
+```toml
+[app]
+plugin=[]
+channel-capacity=1024
+```
+or
+```shell
+--app-channel-capacity 1024
+```
+
 ## Run
 ```shell
 RUST_LOG=INFO && cargo run --package bleu-daemon --bin bleu-daemon -- --config-dir .
@@ -187,5 +300,5 @@ docker run -d -p 9999:9999 \
 -v /absolute/host/path/schema:/bleu-daemon/schema \
 -v /absolute/host/path/config.docker.toml:/bleu-daemon/config.toml \
 --name bleu-daemon \
-bleu-daemon:latest
+--entrypoint ./bleu-daemon bleu-daemon --config-dir . #{from this adding config options like --jsonrpc-port 9999 ...}
 ```
