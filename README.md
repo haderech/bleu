@@ -4,10 +4,6 @@
 
 Bleu is a collection of tools for building blockchain explorer.
 
-## License
-
-[AGPL-3.0](https://github.com/turnpike/bleu/blob/main/LICENSE)
-
 ## Configurations
 
 ### bleu-app config
@@ -28,9 +24,11 @@ export const MainPageAutoRefresh = true;
 
 - See an example config at [`.env.example`](bleu-server/.env.example) copy into a .env file before running.
 
+- Enter the Postgres id and password.
+
 ```shell
 # POSTGRESQL DB
-POSTGRES_URL=postgres://root:postgresql@localhost:5432/postgres
+POSTGRES_URL=postgres://[ID:PASSWORD]@localhost:5432/postgres
 
 # BLEU SERVER CONFIG
 SERVER_HOST=0.0.0.0
@@ -71,3 +69,7 @@ SERVER_PORT=8888
 }
 
 ```
+
+## License
+
+[AGPL-3.0](https://github.com/turnpike/bleu/blob/main/LICENSE)
