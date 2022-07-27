@@ -17,7 +17,7 @@ pub fn convert_type(_type: String) -> Result<String, ExpectedError> {
   } else if _type == "boolean" {
     "boolean"
   } else if _type == "object" {
-    "json"
+    "jsonb"
   } else if _type == "array" {
     "varchar"
   } else {

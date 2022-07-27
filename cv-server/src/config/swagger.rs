@@ -7,8 +7,8 @@ pub struct SwaggerConfig {
 impl SwaggerConfig {
     pub fn load() -> Self {
         let mut spec = DefaultApiRaw::default();
-        spec.tags = SwaggerSpec::simple_tags(vec!["TxBatch", "StateRootBatch", "Tx", "L1ToL2", "TxLogs", "BoardSummary"]);
-        spec.info = SwaggerSpec::simple_info("0.1", "Bleu Server");
+        spec.tags = SwaggerSpec::simple_tags(vec!["Block", "Tx", "Proposal", "Validator"]);
+        spec.info = SwaggerSpec::simple_info("0.1", "Clairvoyance Server");
 
         Self {
             spec,

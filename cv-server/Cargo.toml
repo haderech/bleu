@@ -1,5 +1,5 @@
 [package]
-name = "bleu-server"
+name = "cv-server"
 version = "0.1.0"
 authors = ["jungyongum <ian.jungyong.um@gmail.com>"]
 edition = "2018"
@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 actix-web = "3.3.2"
-diesel = { version = "1.4.8", features = ["r2d2", "postgres"] }
+diesel = { version = "1.4.8", features = ["r2d2", "postgres", "serde_json"] }
 dotenv = "0.15.0"
 log = "0.4.14"
 r2d2 = "0.8.9"

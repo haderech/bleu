@@ -1,10 +1,9 @@
 use std::env;
 
 use diesel::PgConnection;
-use diesel::r2d2::{ConnectionManager, PooledConnection};
+use diesel::r2d2::ConnectionManager;
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
-pub type PgConn = PooledConnection<ConnectionManager<PgConnection>>;
 
 #[derive(Clone)]
 pub struct PostgresConfig {
@@ -15,7 +14,7 @@ impl PostgresConfig {
     pub fn load() -> Self {
         let postgres_url = env::var("POSTGRES_URL").expect("POSTGRES_URL does not exist!");
         let manager = ConnectionManager::<PgConnection>::new(postgres_url);
-        let pool = r2d2::Pool::builder().build(manager).unwrap();
+        let pool = Pool::builder().build(manager).unwrap();
         Self {
             pool
         }

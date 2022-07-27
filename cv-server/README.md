@@ -1,5 +1,5 @@
-# Bleu Server
-Bleu Server is a backend that provides the data collected by the Bleu Daemon in the form required by the user.
+# Clairvoyance Server
+Clairvoyance Server is a backend that provides the data collected by the Clairvoyance Daemon in the form required by the user.
 It was developed based on `rust`, `actix-web`, and `diesel`, and supports Swagger using `paperclip`.
 
 ## Actix Web
@@ -19,7 +19,7 @@ SERVER_PORT=8888
 ## Diesel
 - [diesel](https://diesel.rs/)
 - Diesel is an ORM that helps the server interact with the database.
-  Bleu uses PostgreSQL as its data store, and Bleu Server accesses PostgreSQL DB through Diesel.
+  Clairvoyance uses PostgreSQL as its data store, and Clairvoyance Server accesses PostgreSQL DB through Diesel.
   Internally, the connection pool of r2d2 is used, and if you want to use a customized setting value other than the default setting value, you can change the setting value when initializing the pool in `PostgresConfig`.
 
 ### PostgreSQL Configuration
@@ -44,13 +44,13 @@ Files composing Swagger UI exist in root's swagger-ui path.
 The URL to access the Swagger UI is `{server_url}/swagger`.
 
 ## Environment Parameters
-Bleu Server requires you to enter a few environment variables before running and you can simply use `.env` to handle it.
+Clairvoyance Server requires you to enter a few environment variables before running and you can simply use `.env` to handle it.
 The `.env` contains the values needed to run the server and the PostgreSQL access endpoint.
 If `.env` is not included in the root path, you can refer to `.env.example` and be careful because docker uses `.env.docker`.
 
 ## Run
 ```shell
-RUST_LOG=INFO && cargo run --package bleu-server --bin bleu-server
+RUST_LOG=INFO && cargo run --package cv-server --bin cv-server
 ```
 
 ## Docker
@@ -58,15 +58,15 @@ RUST_LOG=INFO && cargo run --package bleu-server --bin bleu-server
 When creating a docker image, `.env.docker` and `swagger-ui` in the project folder are used in the docker image. You can add and edit files as needed and then build the image.
 
 ```shell
-docker build --tag bleu-server .
+docker build --tag cv-server .
 ```
 
 ### Run Docker
 ```shell
 docker run -d -p 8888:8888 \
--v /absolute/host/path/.env.docker:/bleu-server/.env \
---name bleu-server \
-bleu-server:latest
+-v /absolute/host/path/.env.docker:/cv-server/.env \
+--name cv-server \
+cv-server:latest
 ```
 or
 ```shell
@@ -74,6 +74,6 @@ docker run -d -p 8888:8888 \
 -e POSTGRES_URL=postgres://root:postgresql@host.docker.internal:5432/postgres \
 -e SERVER_HOST=0.0.0.0 \
 -e SERVER_PORT=8888 \
---name bleu-server \
-bleu-server:latest
+--name cv-server \
+cv-server:latest
 ```

@@ -1,25 +1,25 @@
 version: '3'
 services:
-  bleu-daemon:
-    container_name: bleu-daemon
-    build: ./bleu-daemon
+  cv-daemon:
+    container_name: cv-daemon
+    build: ./cv-daemon
     ports:
       - "9999:9999"
     depends_on:
       - postgres
     volumes:
-      - /absolute/host/path/task:/bleu-daemon/task
-      - /absolute/host/path/schema:/bleu-daemon/schema
-      - /absolute/host/path/config.docker.toml:/bleu-daemon/config.toml
-  bleu-server:
-    container_name: bleu-server
-    build: ./bleu-server
+      - /absolute/host/path/task:/cv-daemon/task
+      - /absolute/host/path/schema:/cv-daemon/schema
+      - /absolute/host/path/config.docker.toml:/cv-daemon/config.toml
+  cv-server:
+    container_name: cv-server
+    build: ./cv-server
     ports:
       - "8888:8888"
     depends_on:
       - postgres
     volumes:
-      - /absolute/host/path/.env.docker:/bleu-server/.env
+      - /absolute/host/path/.env.docker:/cv-server/.env
   postgres:
     image: postgres
     container_name: postgres
