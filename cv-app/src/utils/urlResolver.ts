@@ -17,5 +17,5 @@ export function l1Explorer(path: string, key?: string, params?: string | object)
 }
 
 export function api(path: string, key?: string, params?: string | object) {
-  return consts.BleuServerEndpoint + '/api/v1/optimism' + path + (key ? '/' + key : '') + paramsToString(params);
+  return consts.CvServerEndpoint + '/api/v1/cosmos' + path + (key ? '/' + key : '') + paramsToString(params);
 }

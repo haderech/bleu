@@ -12,9 +12,7 @@ import MainPage from './pages/MainPage';
 import AccountPage from './pages/AccountPage';
 import BlockDetailsPage from './pages/BlockDetailsPage/BlockDetailsPage';
 import BlocksPage from './pages/BlocksPage';
-import L1L2TransactionsPage from './pages/L1L2TransactionsPage';
 import TransactionDetailsPage from './pages/TransactionDetailsPage';
-import TransactionsPage from './pages/TransactionsPage';
 
 const root: Readonly<any> = {
   display: 'flex',
@@ -39,17 +37,8 @@ function App() {
             <Header />
             <Router>
               <Switch>
-                <Route path='/txs'>
-                  <TransactionsPage />
-                </Route>
                 <Route path='/blocks'>
                   <BlocksPage />
-                </Route>
-                <Route path={'/l1l2txs'}>
-                  <L1L2TransactionsPage />
-                </Route>
-                <Route path='/account/:address'>
-                  <AccountPage />
                 </Route>
                 <Route path={'/block/:blockNumber'}>
                   <BlockDetailsPage />
