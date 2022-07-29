@@ -71,7 +71,7 @@ impl BlockSync {
   }
 
   async fn sync(sync_state: &SyncState, senders: &MultiSender) -> Result<(), ExpectedError> {
-    let sync_block_api = format!("cosmos/base/tendermint/v1beta1/blocks/{}", sync_state.sync_idx);
+    let sync_block_api = format!("blocks/{}", sync_state.sync_idx);
     let block_req = libs::sync_helper::create_req_url(sync_state.active_node(), sync_block_api);
     let mut block_res = request::get_block_async(block_req.as_str()).await?;
     if !filter(&block_res, sync_state.get_filter())? {

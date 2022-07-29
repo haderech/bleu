@@ -10,7 +10,6 @@ import {
 } from '@mui/material';
 import {options} from './state';
 import Overview from './Overview';
-import Logs from './Logs';
 
 const cardHeaderC1: Readonly<any> = {
   borderBottom: 1,
@@ -74,15 +73,11 @@ function TransactionDetails(props: any) {
       <Box sx={cardHeaderC1}>
         <Tabs value={opts.index} onChange={handleChange} aria-label='transaction-details-tabs'>
           <Tab label='Overview' {...a11yProps(0)} />
-          <Tab label='Logs' {...a11yProps(1)} />
           <Tab label='Comments' {...a11yProps(2)} />
         </Tabs>
       </Box>
       <TabPanel value={opts.index} index={0}>
         <Overview />
-      </TabPanel>
-      <TabPanel value={opts.index} index={1}>
-        <Logs />
       </TabPanel>
     </InfoCard>
   );

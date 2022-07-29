@@ -119,7 +119,7 @@ export default function Footer() {
               <Box sx={logoBox}>
                 <Logo /><Typography sx={{paddingLeft: '10px'}}>Powered by Turnpike</Typography>
               </Box>
-              <Typography sx={logoBoxText}>BLEU is a set of tools to build a blockchain explorer for any protocols.</Typography>
+              <Typography sx={logoBoxText}>Clairvoyance is a set of tools to build a blockchain explorer for any protocols.</Typography>
             </Box>
             <Box sx={innerItem}>
               <Typography>Column 1</Typography>
@@ -141,7 +141,7 @@ export default function Footer() {
           </Box>
           <Divider variant='middle' light={true} sx={divider} />
           <Box sx={copyright}>
-            <Typography sx={{fontSize: '0.9rem'}}>BLEU &copy; 2021 Turnpike</Typography>
+            <Typography sx={{fontSize: '0.9rem'}}>Clairvoyance &copy; 2022 Haderech</Typography>
             <a href='https://github.com/turnpike/bleu' target='_blank'>
               <Box sx={buttonBg}>
                 <GitHub sx={button} />

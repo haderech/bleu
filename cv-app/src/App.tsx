@@ -9,10 +9,10 @@ import './i18n';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import MainPage from './pages/MainPage';
-import AccountPage from './pages/AccountPage';
 import BlockDetailsPage from './pages/BlockDetailsPage/BlockDetailsPage';
 import BlocksPage from './pages/BlocksPage';
 import TransactionDetailsPage from './pages/TransactionDetailsPage';
+import TransactionsPage from './pages/TransactionsPage/TransactionsPage';
 
 const root: Readonly<any> = {
   display: 'flex',
@@ -40,10 +40,16 @@ function App() {
                 <Route path='/blocks'>
                   <BlocksPage />
                 </Route>
-                <Route path={'/block/:blockNumber'}>
+                <Route path={'/block/height/:height'}>
                   <BlockDetailsPage />
                 </Route>
-                <Route path={'/tx/:txHash'}>
+                <Route path={'/txs/height/:height'}>
+                  <TransactionsPage />
+                </Route>
+                <Route exact path={'/txs'}>
+                  <TransactionsPage />
+                </Route>
+                <Route path={'/tx/hash/:txHash'}>
                   <TransactionDetailsPage />
                 </Route>
                 <Route path='/'>

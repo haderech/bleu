@@ -4,10 +4,10 @@ import BlockDetails from './components/BlockDetails';
 import ContentBody from '../../components/ContentBody';
 
 function BlockDetailsPage() {
-  const {blockNumber}: any = useParams();
+  const {height}: any = useParams();
   return (
     <ContentBody>
-      <BlockDetails blockNumber={blockNumber} />
+      <BlockDetails height={height} />
     </ContentBody>
   );
 }

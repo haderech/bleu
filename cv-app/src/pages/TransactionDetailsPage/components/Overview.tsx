@@ -1,18 +1,10 @@
 import React from 'react';
-import {
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  TextareaAutosize,
-  Typography,
-} from '@mui/material';
+import {Table, TableBody, TableCell, TableHead, TableRow, Typography,} from '@mui/material';
 import {useRecoilValueLoadable} from 'recoil';
 import {state} from './Overview/state';
-import {L2AddressLink} from '../../../components/Link';
-import {timeSince} from '../../../utils/time';
-import {toEther, txFee} from '../../../utils/ethUtils';
+import {BlockLink} from '../../../components/Link';
+import ReactJson from 'react-json-view';
+import {timeSince} from "../../../utils/time";
 
 function parseInputData(input: string): string {
   if (input.length < 10) {
@@ -36,89 +28,38 @@ function Overview() {
     <React.Fragment>
       {
         stateLoadable.state === 'hasValue' && stateLoadable.contents
-        ? (<Table>
+          ? (<Table>
             <TableBody>
               <TableRow>
                 <TableCell>
-                  <Typography>Transaction Hash</Typography>
+                  <Typography>Tx Hash</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{stateLoadable.contents.tx_ext.tx.hash}</Typography>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Typography>Status</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>{+stateLoadable.contents.tx_ext.state ? 'Success' : 'Failed'}</Typography>
+                  <Typography>{stateLoadable.contents.txhash}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Transaction Index</Typography>
+                  <Typography>Height</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{stateLoadable.contents.tx_ext.tx.index}</Typography>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Typography>Timestamp</Typography>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{display:'flex', gap:'8px'}}>
-                    <Typography>{timeSince(stateLoadable.contents.tx_ext.tx.l1_timestamp)}</Typography>
-                    <Typography>({new Date(+stateLoadable.contents.tx_ext.tx.l1_timestamp * 1000).toLocaleString()})</Typography>
-                  </Box>
+                  <BlockLink height={stateLoadable.contents.height}/>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>From</Typography>
+                  <Typography>Result</Typography>
                 </TableCell>
                 <TableCell>
-                  <L2AddressLink address={stateLoadable.contents.tx_ext.tx.from_address} />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Typography>To</Typography>
-                </TableCell>
-                <TableCell>
-                  {
-                    stateLoadable.contents.tx_ext.tx.to_address
-                    ? <L2AddressLink address={stateLoadable.contents.tx_ext.tx.to_address} />
-                    : (<React.Fragment>
-                        [Contract <L2AddressLink address={stateLoadable.contents.tx_ext.contract_address} /> Created]
-                      </React.Fragment>)
-                  }
+                  <Typography>{stateLoadable.contents.code == 0 ? 'success' : 'fail'}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Value</Typography>
+                  <Typography>Fee</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{toEther(stateLoadable.contents.tx_ext.tx.value)} Ether</Typography>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Typography>Transaction Fee</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>{txFee(stateLoadable.contents.tx_ext.gas_used, stateLoadable.contents.tx_ext.tx.gas_price)} Ether</Typography>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Typography>Gas Price</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography>
-                    {(+stateLoadable.contents.tx_ext.tx.gas_price).toLocaleString()} Wei
-                  </Typography>
+                  <Typography>{stateLoadable.contents.fee.length > 0 ? `${stateLoadable.contents.fee[0]['amount']}${stateLoadable.contents.fee[0]['denom']}` : '0uatom'}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -126,32 +67,74 @@ function Overview() {
                   <Typography>Gas Used</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{(+stateLoadable.contents.tx_ext.gas_used).toLocaleString()}</Typography>
+                  <Typography>{stateLoadable.contents.gas_used}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Nonce</Typography>
+                  <Typography>Gas Used</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{stateLoadable.contents.tx_ext.tx.nonce}</Typography>
+                  <Typography>{stateLoadable.contents.gas_wanted}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{borderBottom:'none'}}>
-                  <Typography>Input Data</Typography>
+                <TableCell>
+                  <Typography>Memo</Typography>
                 </TableCell>
-                <TableCell sx={{borderBottom:'none'}}>
-                  <TextareaAutosize style={{width:'100%', resize:'vertical', backgroundColor:'#f5f5f5', color:'#74838e'}}
-                    aria-label='transaction-details-input-data'
-                    readOnly
-                    defaultValue={stateLoadable.contents.tx_ext.tx.to_address ? parseInputData(stateLoadable.contents.tx_ext.tx.tx_input) : stateLoadable.contents.tx_ext.tx.tx_input}
-                  />
+                <TableCell>
+                  <Typography>{stateLoadable.contents.memo}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Timestamp</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{`${timeSince(stateLoadable.contents.timestamp)} (${stateLoadable.contents.timestamp})`}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Messages</Typography>
+                </TableCell>
+                <TableCell>
+                  {stateLoadable.contents.messages.length > 0 ? stateLoadable.contents.messages.map((message: any, index: number) => {
+                    return (<Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell colSpan={2}>
+                            Message#{index + 1}
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>{
+                        Object.entries(message).map((kv: any) => {
+                          return (
+                            <TableRow>
+                              <TableCell>
+                                {kv[0].startsWith('@') ? kv[0].slice(1) : kv[0]}
+                              </TableCell>
+                              <TableCell>
+                                {(typeof kv[1] == 'object') ? <ReactJson src={kv[1]} collapsed/> : kv[1]}
+                              </TableCell>
+                            </TableRow>);
+                        })
+                      }</TableBody></Table>);
+                  }) : null}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Raw Log</Typography>
+                </TableCell>
+                <TableCell>
+                  <ReactJson src={JSON.parse(stateLoadable.contents.raw_log)} collapsed/>
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>)
-      : null
+          : null
       }
     </React.Fragment>
   );

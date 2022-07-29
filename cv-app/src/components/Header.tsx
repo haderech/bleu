@@ -90,10 +90,8 @@ function Header(props: any) {
           >Tokens</Button>*/}
           <Popover open={opts.index === 0} anchorEl={opts.anchorEl} anchorOrigin={{horizontal:'left',vertical:'bottom'}} onMouseMove={outMenu} sx={{cursor:'pointer'}}>
             <Box sx={menuPopup} onMouseMove={onMenu} onMouseLeave={outMenu}>
+              <MenuItem href='/blocks'>Blocks</MenuItem>
               <MenuItem href='/txs'>Transactions</MenuItem>
-              <Divider sx={{my:'8px'}} />
-              <MenuItem href='/blocks'>Transaction Batches</MenuItem>
-              <MenuItem href='/blocks?isState=true'>State Batches</MenuItem>
             </Box>
           </Popover>
           <Popover open={opts.index === 1} anchorEl={opts.anchorEl} anchorOrigin={{horizontal:'left',vertical:'bottom'}} onMouseMove={outMenu} sx={{cursor:'pointer'}}>

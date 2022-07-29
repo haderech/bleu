@@ -1,8 +1,6 @@
-# Bleu
+# Clairvoyance
 
-**BLockchain Explorer sUite**
-
-Bleu is a collection of tools for building blockchain explorer.
+Clairvoyance is a collection of tools for building Cosmos blockchain explorer.
 
 ## License
 

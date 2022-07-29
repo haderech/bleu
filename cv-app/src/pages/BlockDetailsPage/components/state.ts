@@ -2,24 +2,29 @@ import {atom, selector} from 'recoil';
 import {api} from '../../../utils/urlResolver';
 
 export interface State {
-  optimism_tx_batches_id: number;
-  batch_index: string;
-  batch_timestamp: string;
-  batch_size: string;
-  l1_tx_hash: string;
-  l1_block_number: string;
-  batch_root: string;
-  previous_total_elements: string;
-  extra_data: string;
-  submitter: string;
+  app_hash: string;
+  chain_id: string;
+  consensus_hash: string;
+  data_hash: string;
+  evidence_hash: string;
+  hash: string;
+  height: string;
+  last_block_id: string;
+  last_commit_hash: string;
+  last_results_hash: string;
+  next_validators_hash: string;
+  num_txs: number;
+  proposer_address: string;
+  time: string;
+  validators_hash: string;
+  version: string;
 }
 
 export const options = atom({
   key: 'BlockPageOptions',
   default: {
     index: 0,
-    blockNumber: 0,
-    isState: false,
+    height: 0,
   },
 });
 
@@ -27,15 +32,10 @@ export const state = selector<State>({
   key: 'BlockPageState',
   get: async ({get}) => {
     const opts = get(options);
-    if (opts.blockNumber === 0) {
+    if (opts.height === 0) {
       return;
     }
-    if (!opts.isState) {
-      const res = await fetch(api('/tx-batch/index', opts.blockNumber.toString()));
-      return await res.json();
-    } else {
-      const res = await fetch(api('/stateroot-batch/index', opts.blockNumber.toString()));
-      return await res.json();
-    }
+    const res = await fetch(api('/block/height', opts.height.toString()));
+    return await res.json();
   },
 });

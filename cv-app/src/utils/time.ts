@@ -8,7 +8,7 @@ const intervals = [
 ];
 
 function timeSince(date :any) {
-  date = parseInt(date) * 1000;
+  date = new Date(date);
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   const interval = intervals.find(i => i.seconds < seconds);
   if (interval === undefined) {

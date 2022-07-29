@@ -1,8 +1,6 @@
 import React, {useEffect} from 'react';
 import InfoCard from '../../../components/InfoCard';
-import {timeSince} from '../../../utils/time';
 import {
-  Link,
   Table,
   TableBody,
   TableCell,
@@ -14,9 +12,9 @@ import {
 } from '@mui/material';
 import {useRecoilState} from 'recoil';
 import {options, state as _state} from './state';
-import {L1TransactionLink, L2BlockLink} from '../../../components/Link';
 import {useTranslation} from 'react-i18next';
 import {api} from '../../../utils/urlResolver';
+import {BlockLink, TxsLink} from '../../../components/Link';
 
 function BlockList() {
   const {t} = useTranslation('', {useSuspense: false});
@@ -51,12 +49,11 @@ function BlockList() {
       <Table size='small'>
         <TableHead sx={{bgcolor: 'background.default'}}>
           <TableRow>
-            <TableCell>{t('Tx Batch')}</TableCell>
-            <TableCell>
-            </TableCell>
-            <TableCell>{t('Batch Size')}</TableCell>
-            <TableCell>{t('L1 Tx Hash')}</TableCell>
-            <TableCell>{t('Prev Total Elements')}</TableCell>
+            <TableCell>{t('Height')}</TableCell>
+            <TableCell>{t('Block Hash')}</TableCell>
+            <TableCell>{t('Proposer')}</TableCell>
+            <TableCell>{t('Txs')}</TableCell>
+            <TableCell>{t('Time')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -64,17 +61,16 @@ function BlockList() {
             state.records
               ? state.records.map((row, index) => (
                 <TableRow key={index}>
-                  <TableCell><L2BlockLink blockNumber={row.batch_index} isState={isState}/></TableCell>
                   <TableCell>
-                    <Typography noWrap={true}>
-                      {opts.datetime ? new Date(+row.batch_timestamp * 1000).toLocaleString() : timeSince(row.batch_timestamp)}
-                    </Typography>
+                    <BlockLink height={row.height}/>
                   </TableCell>
-                  <TableCell>{row.batch_size}</TableCell>
+                  <TableCell>{row.hash}</TableCell>
+                  <TableCell>{row.proposer_address}</TableCell>
                   <TableCell>
-                    <L1TransactionLink hash={row.l1_tx_hash}/>
+                    {row.num_txs > 0 ? (<TxsLink height={row.height} num_txs={row.num_txs}/>) : (
+                      <Typography>{row.num_txs}</Typography>)}
                   </TableCell>
-                  <TableCell>{row.previous_total_elements}</TableCell>
+                  <TableCell>{row.time}</TableCell>
                 </TableRow>
               ))
               : null

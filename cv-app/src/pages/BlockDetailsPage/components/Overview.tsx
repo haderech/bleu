@@ -1,19 +1,9 @@
 import React from 'react';
-import {
-  Box,
-  IconButton,
-  Link,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  Typography,
-} from '@mui/material';
+import {Table, TableBody, TableCell, TableRow, Typography,} from '@mui/material';
 import {useRecoilValueLoadable} from 'recoil';
 import {state} from './state';
-import {L1TransactionLink} from '../../../components/Link';
-import {timeSince} from '../../../utils/time';
-import {ArrowLeft, ArrowRight} from '@mui/icons-material';
+import {TxsLink} from '../../../components/Link';
+import {timeSince} from "../../../utils/time";
 
 function Overview(props: any) {
   const block = useRecoilValueLoadable(state);
@@ -22,75 +12,131 @@ function Overview(props: any) {
     <React.Fragment>
       {
         block.state === 'hasValue' && block.contents
-        ? (<Table>
+          ? (<Table>
             <TableBody>
               <TableRow>
                 <TableCell>
-                  <Typography>Batch Index</Typography>
+                  <Typography>Height</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{block.contents.batch_index}</Typography>
+                  <Typography>{block.contents.height}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>L1 Timestamp</Typography>
+                  <Typography>Hash</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{timeSince(block.contents.batch_timestamp)} ({new Date(+block.contents.batch_timestamp * 1000).toLocaleString()})</Typography>
+                  <Typography>{block.contents.hash}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Batch Size</Typography>
+                  <Typography>Proposal Address</Typography>
                 </TableCell>
                 <TableCell>
-                  <Link underline='none' href={`/txs?blockNum=${block.contents.batch_index}&isState=${props.isState}`}>{block.contents.batch_size}</Link>
+                  <Typography>{block.contents.proposer_address}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>L1 Transaction Hash</Typography>
+                  <Typography>Num Txs</Typography>
                 </TableCell>
                 <TableCell>
-                  <L1TransactionLink hash={block.contents.l1_tx_hash} />
+                  <TxsLink height={block.contents.height} num_txs={block.contents.num_txs}></TxsLink>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>L1 Block Number</Typography>
+                  <Typography>Proposal Address</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{block.contents.l1_block_number}</Typography>
+                  <Typography>{block.contents.proposer_address}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Batch root</Typography>
+                  <Typography>Time</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{block.contents.batch_root}</Typography>
+                  <Typography>{`${timeSince(block.contents.time)} (${block.contents.time})`}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Previous Total Elements</Typography>
+                  <Typography>App Hash</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{block.contents.previous_total_elements}</Typography>
+                  <Typography>{block.contents.app_hash}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{borderBottom:'none'}}>
-                  <Typography>Extra data</Typography>
+                <TableCell>
+                  <Typography>Consensus Hash</Typography>
                 </TableCell>
-                <TableCell sx={{borderBottom:'none'}}>
-                  <Typography>{Buffer.from(block.contents.extra_data, 'hex').toString()}</Typography>
+                <TableCell>
+                  <Typography>{block.contents.consensus_hash}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Data Hash</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{block.contents.data_hash}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Evidence Hash</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{block.contents.evidence_hash}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Last Block ID</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{block.contents.last_block_id}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Last Commit Hash</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{block.contents.last_commit_hash}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Last Results Hash</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{block.contents.last_results_hash}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Next Validator Hash</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{block.contents.next_validators_hash}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{borderBottom: 'none'}}>
+                  <Typography>Validators Hash</Typography>
+                </TableCell>
+                <TableCell sx={{borderBottom: 'none'}}>
+                  <Typography>{block.contents.validators_hash}</Typography>
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>)
-      : null
+          : null
       }
     </React.Fragment>
   );

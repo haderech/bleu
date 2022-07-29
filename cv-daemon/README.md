@@ -162,14 +162,14 @@ activate=true
 ```
 
 ## config.toml
-Various configuration values required to run the Bleu Daemon are managed in `config.toml`.
+Various configuration values required to run the Clairvoyance Daemon are managed in `config.toml`.
 These values can also be entered in the form of `--jsonrpc-host 0.0.0.0` at run time.
-The path of `config.toml` is located in `~/.config/bleu-damon/config`, but the path has been modified so that the project root path can be used in the following executable statements and docker.
+The path of `config.toml` is located in `~/.config/cv-damon/config`, but the path has been modified so that the project root path can be used in the following executable statements and docker.
 When building and executing images with docker, be careful because `config.docker.toml` in the root path is used.
 
 ## Run
 ```shell
-RUST_LOG=INFO && cargo run --package bleu-daemon --bin bleu-daemon -- --config-dir .
+RUST_LOG=INFO && cargo run --package cv-daemon --bin cv-daemon -- --config-dir .
 ```
 
 ## Docker
@@ -177,15 +177,15 @@ RUST_LOG=INFO && cargo run --package bleu-daemon --bin bleu-daemon -- --config-d
 When creating a docker image, `config.docker.toml`, `schema`, `abi`, and `task` in the project folder are used in the docker image. You can add and edit files as needed and then build the image.
 
 ```shell
-docker build -t bleu-daemon .
+docker build -t cv-daemon .
 ```
 
 ### Run Docker
 ```shell
 docker run -d -p 9999:9999 \
--v /absolute/host/path/task:/bleu-daemon/task \
--v /absolute/host/path/schema:/bleu-daemon/schema \
--v /absolute/host/path/config.docker.toml:/bleu-daemon/config.toml \
---name bleu-daemon \
-bleu-daemon:latest
+-v /absolute/host/path/task:/cv-daemon/task \
+-v /absolute/host/path/schema:/cv-daemon/schema \
+-v /absolute/host/path/config.docker.toml:/cv-daemon/config.toml \
+--name cv-daemon \
+cv-daemon:latest
 ```

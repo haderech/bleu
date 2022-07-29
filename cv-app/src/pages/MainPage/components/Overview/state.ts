@@ -1,29 +1,78 @@
 import {selector} from 'recoil';
-import {ethers} from 'ethers';
-import {L2JsonRpcEndpoint} from '../../../../utils/consts';
-import {api} from '../../../../utils/urlResolver';
-import erc20ABI from './erc20.abi.json';
+import {api, nodeApi} from '../../../../utils/urlResolver';
 
-const provider = new ethers.providers.JsonRpcProvider(L2JsonRpcEndpoint);
-const erc20 = new ethers.Contract('0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000', erc20ABI, provider);
+interface Block {
+  app_hash: string;
+  consensus_hash: string;
+  data_hash: string;
+  evidence_hash: string;
+  hash: string;
+  height: string;
+  last_block_id: string;
+  last_commit_hash: number;
+  last_results_hash: string;
+  next_validators_hash: string;
+  num_txs: number;
+  proposer_address: string;
+  time: string;
+  validators_hash: string;
+  version: string;
+}
 
-export const wrappedEth = selector({
-  key: 'MainPageL2WrappedEther',
+export const latestBlock = selector<Block>({
+  key: 'LatestBlock',
   get: async () => {
-    return await erc20.totalSupply();
+    const res = await fetch(api('/block/height/latest'));
+    return await res.json();
   },
 });
 
-interface Summary {
-  latest_state_batch_index: string;
-  latest_tx_batch_index: string;
-  tx_count: number;
+interface Inflation {
+  inflation: string;
 }
 
-export const summary = selector<Summary>({
-  key: 'MainPageSummary',
+export const inflation = selector<Inflation>({
+  key: 'Inflation',
   get: async () => {
-    const res = await fetch(api('/board/summary'));
+    const res = await fetch(api('/dashboard/inflation'));
+    return await res.json();
+  }
+});
+
+interface StakingPool {
+  bonded_tokens : string;
+  not_bonded_tokens : string;
+}
+
+export const stakingPool = selector<StakingPool>({
+  key: 'StakingPool',
+  get: async () => {
+    const res = await fetch(api('/dashboard/staking/pool'));
+    return await res.json();
+  }
+});
+
+interface CommunityPool {
+  denom : string;
+  amount : string;
+}
+
+export const communityPool = selector<CommunityPool>({
+  key: 'CommunityPool',
+  get: async () => {
+    const res = await fetch(api('/dashboard/community/pool'));
+    return await res.json();
+  }
+});
+
+interface NumOfVotingProposals {
+  num_of_voting_proposals : number;
+}
+
+export const numOfVotingProposals = selector<NumOfVotingProposals>({
+  key: 'NumOfVotingProposals',
+  get: async () => {
+    const res = await fetch(api('/dashboard/voting/proposal'));
     return await res.json();
   }
 });

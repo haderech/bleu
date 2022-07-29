@@ -1,15 +1,7 @@
 import React from 'react';
-import {
-  Box,
-  Card,
-  Divider,
-  Grid,
-  Link,
-  Typography
-} from '@mui/material';
-import {wrappedEth, summary} from './Overview/state';
-import {useRecoilState, useRecoilValueLoadable} from 'recoil';
-import {toEther} from '../../../utils/ethUtils';
+import {Box, Card, Divider, Grid, Link, Typography} from '@mui/material';
+import {communityPool, inflation, latestBlock, numOfVotingProposals, stakingPool} from './Overview/state';
+import {useRecoilValueLoadable} from 'recoil';
 
 const outer = {
   borderRightColor: '#e0e0e0 !important',
@@ -33,55 +25,62 @@ const outer1 = {
 
 function TitledContent(props: any) {
   return (
-    <Box sx={{display:'flex',flexDirection:'column',alignItems:'start',padding:1}}>
-      <Typography variant='h6' sx={{fontSize:'0.8rem', color:'rgb(135,150,170)'}}>
+    <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 1}}>
+      <Typography variant='h6' sx={{fontSize: '0.8rem', color: 'rgb(135,150,170)'}}>
         {props.title}
       </Typography>
       {
         props.content
-        ? <Box sx={{display:'flex',gap:'4px'}}>
-            { props.href
+          ? <Box sx={{display: 'flex', gap: '4px'}}>
+            {props.href
               ? <Link variant='h6' underline='none' sx={{fontSize: '1rem'}} href={props.href}>
-                  {props.content || 'N/A'}
-                </Link>
+                {props.content || 'N/A'}
+              </Link>
               : <Typography variant='h6'>{props.content}</Typography>
             }
             <Typography variant='h6'>
               {props.suffix}
             </Typography>
           </Box>
-        : null
+          : null
       }
     </Box>
   );
 }
 
 function Overview() {
-  const weth = useRecoilValueLoadable(wrappedEth);
-  const sum = useRecoilValueLoadable(summary);
+  const inf = useRecoilValueLoadable(inflation);
+  const block = useRecoilValueLoadable(latestBlock);
+  const staking = useRecoilValueLoadable(stakingPool);
+  const community = useRecoilValueLoadable(communityPool);
+  const proposal = useRecoilValueLoadable(numOfVotingProposals);
 
   return (
     <Card>
       <Grid container sx={{padding: '8px 0px 8px 0px'}}>
         <Grid item lg={4} md={4} sm={6} xs={12}>
           <Box sx={outer0}>
-            <TitledContent title={'WRAPPED ETHER'} content={toEther(weth.contents)} suffix='ETH' />
-            <Divider />
-            <TitledContent title={'TRANSACTIONS'} content={sum.contents.tx_count} suffix='TXs' href={'/txs'} />
-            <Divider sx={{display:{xs:'block', sm:'none'}}} />
+            <TitledContent title={'HEIGHT'} content={parseInt(block.contents.height).toLocaleString()}/>
+            <Divider/>
+            <TitledContent title={'INFLATION'} content={(parseFloat(inf.contents.inflation) * 100).toPrecision(4)}
+                           suffix={'%'}/>
           </Box>
         </Grid>
         <Grid item lg={4} md={4} sm={6} xs={12}>
           <Box sx={outer1}>
-            <TitledContent title={'LATEST TRANSACTION BATCH INDEX'} content={sum.contents.latest_tx_batch_index} href={'/blocks'} />
-            <Divider />
-            <TitledContent title={'LATEST STATE BATCH INDEX'} content={sum.contents.latest_state_batch_index} href={'/blocks?isState=true'} />
+            <TitledContent title={'BONDED TOKENS'} content={parseInt(staking.contents.bonded_tokens).toLocaleString()}/>
+            <Divider/>
+            <TitledContent title={'UNBONDED TOKENS'}
+                           content={parseInt(staking.contents.not_bonded_tokens).toLocaleString()}/>
           </Box>
         </Grid>
-        <Grid item lg={4} md={4} sm={12} xs={12}>
+        <Grid item lg={4} md={4} sm={6} xs={12}>
           <Box sx={outer}>
-            <Divider sx={{display:{sm:'block', md:'none'}, paddingTop: {xs:0, sm:1}}} />
-            <TitledContent title={'RESERVED AREA'} content={undefined} />
+            <TitledContent title={'COMMUNITY POOL'} content={parseInt(community.contents.amount).toLocaleString()}
+                           suffix={community.contents.denom}/>
+            <Divider/>
+            <TitledContent title={'NUMBER OF VOTING PROPOSALS'}
+                           content={parseInt(proposal.contents.num_of_voting_proposals).toLocaleString()}/>
           </Box>
         </Grid>
       </Grid>

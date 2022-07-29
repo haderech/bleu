@@ -53,17 +53,14 @@ function a11yProps(index: number) {
 }
 
 function BlockDetails(props: any) {
-  const {blockNumber}: any = useParams();
+  const {height}: any = useParams();
   const [opts, setOpts] = useRecoilState(options);
-  const {search} = useLocation();
-  const isState = new URLSearchParams(search).get('isState') === 'true';
 
   useEffect(() => {
-    if (opts.blockNumber !== blockNumber) {
+    if (opts.height !== height) {
       setOpts({
         ...opts,
-        blockNumber: blockNumber,
-        isState: isState,
+        height: height,
       });
     }
   });
@@ -76,14 +73,14 @@ function BlockDetails(props: any) {
   };
 
   return (
-    <InfoCard title={!isState ? 'Transaction Batches' : 'State Batches'} subtitle={`#${blockNumber}`} contentProps={{m:0}}>
+    <InfoCard title='Block Detail'  subtitle={`#${height}`} contentProps={{m:0}}>
       <Box sx={cardHeaderC1}>
         <Tabs value={opts.index} onChange={handleChange} aria-label='block-details-tabs'>
           <Tab label='Overview' {...a11yProps(0)} />
         </Tabs>
       </Box>
       <TabPanel value={opts.index} index={0}>
-        <Overview isState={isState} />
+        <Overview/>
       </TabPanel>
     </InfoCard>
   );

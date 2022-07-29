@@ -8,16 +8,21 @@ export interface State {
     total_page: number;
   },
   records: {
-    batch_index: string;
-    batch_root: string;
-    batch_size: string;
-    batch_timestamp: string;
-    extra_data: string;
-    l1_block_number: string;
-    l1_tx_hash: string;
-    optimism_tx_batches_id: number;
-    previous_total_elements: string;
-    submitter: string;
+    app_hash: string;
+    consensus_hash: string;
+    data_hash: string;
+    evidence_hash: string;
+    hash: string;
+    height: string;
+    last_block_id: string;
+    last_commit_hash: number;
+    last_results_hash: string;
+    next_validators_hash: string;
+    num_txs: number;
+    proposer_address: string;
+    time: string;
+    validators_hash: string;
+    version: string;
   }[];
 }
 

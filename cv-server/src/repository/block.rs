@@ -8,8 +8,9 @@ pub mod cosmos_block {
   use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
   use crate::schema::block::cosmos_block;
   use crate::schema::block::cosmos_block::columns::*;
+  use crate::web::Data;
 
-  pub async fn find_block_by_page_and_count(pool: web::Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<CosmosBlock>, ExpectedError> {
+  pub async fn find_block_by_page_and_count(pool: Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<CosmosBlock>, ExpectedError> {
     let conn = pool.get()?;
     let paginated_block = web::block(move || {
       cosmos_block::table.into_boxed()
@@ -19,12 +20,31 @@ pub mod cosmos_block {
     Ok(paginated_block)
   }
 
-  pub async fn find_block_by_height(pool: web::Data<Pool>, block_height: i64) -> Result<CosmosBlock, ExpectedError> {
+  pub async fn find_block_by_height(pool: Data<Pool>, block_height: i64) -> Result<CosmosBlock, ExpectedError> {
     let conn = pool.get()?;
     let block = web::block(move || {
       cosmos_block::table.filter(height.eq(block_height.to_string()))
         .first::<CosmosBlock>(&conn)
     }).await?;
     Ok(block)
+  }
+
+  pub async fn find_latest_block(pool: Data<Pool>) -> Result<CosmosBlock, ExpectedError> {
+    let conn = pool.get()?;
+    let block = web::block(move || {
+      cosmos_block::table.order(cosmos_block_id.desc())
+        .first::<CosmosBlock>(&conn)
+    }).await?;
+    Ok(block)
+  }
+
+  pub async fn find_block_summary(pool: Data<Pool>) -> Result<Vec<CosmosBlock>, ExpectedError> {
+    let conn = pool.get()?;
+    let block_summary = web::block(move || {
+      cosmos_block::table.order(cosmos_block_id.desc())
+        .limit(10)
+        .load::<CosmosBlock>(&conn)
+    }).await?;
+    Ok(block_summary)
   }
 }

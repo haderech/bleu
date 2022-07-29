@@ -8,8 +8,9 @@ pub mod cosmos_tx {
   use crate::repository::pagination::{LoadPaginated, PaginatedRecord};
   use crate::schema::tx::cosmos_tx;
   use crate::schema::tx::cosmos_tx::columns::*;
+  use crate::web::Data;
 
-  pub async fn find_tx_by_page_and_count(pool: web::Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<CosmosTx>, ExpectedError> {
+  pub async fn find_tx_by_page_and_count(pool: Data<Pool>, page: i64, count: i64) -> Result<PaginatedRecord<CosmosTx>, ExpectedError> {
     let conn = pool.get()?;
     let paginated_tx = web::block(move || {
       cosmos_tx::table.into_boxed()
@@ -19,7 +20,7 @@ pub mod cosmos_tx {
     Ok(paginated_tx)
   }
 
-  pub async fn find_tx_by_height_and_page_and_count(pool: web::Data<Pool>, block_height: i64, page: i64, count: i64) -> Result<PaginatedRecord<CosmosTx>, ExpectedError> {
+  pub async fn find_tx_by_height_and_page_and_count(pool: Data<Pool>, block_height: i64, page: i64, count: i64) -> Result<PaginatedRecord<CosmosTx>, ExpectedError> {
     let conn = pool.get()?;
     let paginated_tx = web::block(move || {
       cosmos_tx::table.into_boxed()
@@ -29,12 +30,22 @@ pub mod cosmos_tx {
     Ok(paginated_tx)
   }
 
-  pub async fn find_tx_by_hash(pool: web::Data<Pool>, hash: String) -> Result<CosmosTx, ExpectedError> {
+  pub async fn find_tx_by_hash(pool: Data<Pool>, hash: String) -> Result<CosmosTx, ExpectedError> {
     let conn = pool.get()?;
     let tx = web::block(move || {
       cosmos_tx::table.filter(txhash.eq(hash))
         .first::<CosmosTx>(&conn)
     }).await?;
     Ok(tx)
+  }
+
+  pub async fn find_tx_summary(pool: Data<Pool>) -> Result<Vec<CosmosTx>, ExpectedError> {
+    let conn = pool.get()?;
+    let tx_summary = web::block(move || {
+      cosmos_tx::table.order(cosmos_tx_id.desc())
+        .limit(10)
+        .load::<CosmosTx>(&conn)
+    }).await?;
+    Ok(tx_summary)
   }
 }

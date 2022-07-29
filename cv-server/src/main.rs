@@ -6,10 +6,11 @@ use actix_files as fs;
 use actix_web::{App, HttpServer};
 use paperclip::actix::{OpenApiExt, web};
 
+use crate::config::node::NodeConfig;
 use crate::config::postgres::PostgresConfig;
 use crate::config::server::ServerConfig;
 use crate::config::swagger::SwaggerConfig;
-use crate::service::{block, swagger, tx};
+use crate::service::{block, dashboard, swagger, tx};
 
 mod service;
 mod repository;
@@ -25,6 +26,7 @@ async fn main() -> std::io::Result<()> {
 
   let server_config = ServerConfig::load();
   let postgres_config = PostgresConfig::load();
+  let _ = NodeConfig::load();
   HttpServer::new(move || {
     let swagger_config = SwaggerConfig::load();
 
@@ -38,9 +40,15 @@ async fn main() -> std::io::Result<()> {
         web::scope("/api/v1")
           .service(web::resource("/cosmos/block").route(web::get().to(block::get_block_by_page_and_count)))
           .service(web::resource("/cosmos/block/height/{height}").route(web::get().to(block::get_block_by_height)))
+          .service(web::resource("/cosmos/block/summary").route(web::get().to(block::get_block_summary)))
           .service(web::resource("/cosmos/tx").route(web::get().to(tx::get_tx_by_page_and_count)))
           .service(web::resource("/cosmos/tx/height/{height}").route(web::get().to(tx::get_tx_by_height_and_page_and_count)))
           .service(web::resource("/cosmos/tx/hash/{hash}").route(web::get().to(tx::get_tx_by_hash)))
+          .service(web::resource("/cosmos/tx/summary").route(web::get().to(tx::get_tx_summary)))
+          .service(web::resource("/cosmos/dashboard/inflation").route(web::get().to(dashboard::get_inflation)))
+          .service(web::resource("/cosmos/dashboard/staking/pool").route(web::get().to(dashboard::get_staking_pool)))
+          .service(web::resource("/cosmos/dashboard/community/pool").route(web::get().to(dashboard::get_community_pool)))
+          .service(web::resource("/cosmos/dashboard/voting/proposal").route(web::get().to(dashboard::get_num_of_voting_proposals)))
       )
       .with_json_spec_at("/api/spec")
       .build()

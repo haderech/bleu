@@ -4,7 +4,7 @@
   "chain_name": "cosmos",
   "chain_id": "cosmoshub-4",
   "from_idx": 0,
-  "sync_idx": 7,
+  "sync_idx": 2980,
   "endpoints": [
     "https://cosmoshub-4--lcd--archive.datahub.figment.io/apikey/cdc1bb9811bd04e3f3cda2fbccc07e7b"
   ],
