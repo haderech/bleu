@@ -15,6 +15,7 @@ import {options, state as _state} from './state';
 import {useTranslation} from 'react-i18next';
 import {api} from '../../../utils/urlResolver';
 import {BlockLink, TxsLink} from '../../../components/Link';
+import {timeSince} from '../../../utils/time';
 
 function BlockList() {
   const {t} = useTranslation('', {useSuspense: false});
@@ -70,7 +71,7 @@ function BlockList() {
                     {row.num_txs > 0 ? (<TxsLink height={row.height} num_txs={row.num_txs}/>) : (
                       <Typography>{row.num_txs}</Typography>)}
                   </TableCell>
-                  <TableCell>{row.time}</TableCell>
+                  <TableCell>{timeSince(row.time)}</TableCell>
                 </TableRow>
               ))
               : null

@@ -4,7 +4,7 @@ import {useRecoilValueLoadable} from 'recoil';
 import {state} from './Overview/state';
 import {BlockLink} from '../../../components/Link';
 import ReactJson from 'react-json-view';
-import {timeSince} from "../../../utils/time";
+import {timeSince} from '../../../utils/time';
 
 function parseInputData(input: string): string {
   if (input.length < 10) {

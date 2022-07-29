@@ -3,7 +3,7 @@ import {Table, TableBody, TableCell, TableRow, Typography,} from '@mui/material'
 import {useRecoilValueLoadable} from 'recoil';
 import {state} from './state';
 import {TxsLink} from '../../../components/Link';
-import {timeSince} from "../../../utils/time";
+import {timeSince} from '../../../utils/time';
 
 function Overview(props: any) {
   const block = useRecoilValueLoadable(state);

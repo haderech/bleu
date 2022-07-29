@@ -17,6 +17,7 @@ import {BlockLink, TxLink} from '../../../components/Link';
 import {options, state as _state} from './state';
 import {api} from '../../../utils/urlResolver';
 import {getTypeSummary} from '../../../utils/message';
+import {timeSince} from '../../../utils/time';
 
 function TransactionsList(props: any) {
   const {t} = useTranslation('', {useSuspense: false});
@@ -105,7 +106,7 @@ function TransactionsList(props: any) {
                     <BlockLink height={row.height}/>
                   </TableCell>
                   <TableCell>
-                    <Typography>{row.timestamp}</Typography>
+                    <Typography>{timeSince(row.timestamp)}</Typography>
                   </TableCell>
                 </TableRow>
               ))
