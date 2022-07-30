@@ -21,6 +21,15 @@ function parseInputData(input: string): string {
   return ret;
 }
 
+function convertToJson(raw_log: string) {
+  try {
+    const json_log = JSON.parse(raw_log);
+    return (<ReactJson src={json_log} collapsed/>)
+  } catch (e) {
+    return (<Typography>{raw_log}</Typography>)
+  }
+}
+
 function Overview() {
   const stateLoadable = useRecoilValueLoadable(state);
 
@@ -129,9 +138,7 @@ function Overview() {
                   <Typography>Raw Log</Typography>
                 </TableCell>
                 <TableCell>
-                  {typeof stateLoadable.contents.raw_log == 'object' ?
-                    (<ReactJson src={JSON.parse(stateLoadable.contents.raw_log)} collapsed/>) :
-                    <Typography>{stateLoadable.contents.raw_log}</Typography>}
+                  {convertToJson(stateLoadable.contents.raw_log)}
                 </TableCell>
               </TableRow>
             </TableBody>
