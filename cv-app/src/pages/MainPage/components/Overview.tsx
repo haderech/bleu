@@ -62,7 +62,7 @@ function Overview() {
           <Box sx={outer0}>
             <TitledContent title={'HEIGHT'} content={parseInt(block.contents.height).toLocaleString()}/>
             <Divider/>
-            <TitledContent title={'INFLATION'} content={(parseFloat(inf.contents.inflation) * 100).toPrecision(4)}
+            <TitledContent title={'INFLATION'} content={(parseFloat(inf.contents.inflation) * 100).toFixed(2)}
                            suffix={'%'}/>
           </Box>
         </Grid>

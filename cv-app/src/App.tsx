@@ -13,6 +13,10 @@ import BlockDetailsPage from './pages/BlockDetailsPage/BlockDetailsPage';
 import BlocksPage from './pages/BlocksPage';
 import TransactionDetailsPage from './pages/TransactionDetailsPage';
 import TransactionsPage from './pages/TransactionsPage/TransactionsPage';
+import ProposalsPage from './pages/ProposalsPage/ProposalsPage';
+import ProposalDetailsPage from './pages/ProposalDetailsPage/ProposalDetailsPage';
+import ValidatorsPage from './pages/ValidatorsPage/ValidatorsPage';
+import ValidatorDetailsPage from './pages/ValidatorDetailsPage/ValidatorDetailsPage';
 
 const root: Readonly<any> = {
   display: 'flex',
@@ -34,31 +38,43 @@ function App() {
       <ThemeProvider theme={theme()}>
         <Box sx={root}>
           <Box sx={main}>
-            <Header />
+            <Header/>
             <Router>
               <Switch>
                 <Route path='/blocks'>
-                  <BlocksPage />
+                  <BlocksPage/>
                 </Route>
                 <Route path={'/block/height/:height'}>
-                  <BlockDetailsPage />
+                  <BlockDetailsPage/>
                 </Route>
                 <Route path={'/txs/height/:height'}>
-                  <TransactionsPage />
+                  <TransactionsPage/>
                 </Route>
                 <Route exact path={'/txs'}>
-                  <TransactionsPage />
+                  <TransactionsPage/>
                 </Route>
                 <Route path={'/tx/hash/:txHash'}>
-                  <TransactionDetailsPage />
+                  <TransactionDetailsPage/>
+                </Route>
+                <Route path='/proposals'>
+                  <ProposalsPage/>
+                </Route>
+                <Route path='/proposal/id/:id'>
+                  <ProposalDetailsPage/>
+                </Route>
+                <Route path='/validators'>
+                  <ValidatorsPage/>
+                </Route>
+                <Route path='/validator/address/:address'>
+                  <ValidatorDetailsPage/>
                 </Route>
                 <Route path='/'>
-                  <MainPage />
+                  <MainPage/>
                 </Route>
               </Switch>
             </Router>
           </Box>
-          <Footer />
+          <Footer/>
         </Box>
       </ThemeProvider>
     </RecoilRoot>

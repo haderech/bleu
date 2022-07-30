@@ -100,7 +100,7 @@ function TransactionsList(props: any) {
                     <Typography>{row.code == 0 ? 'success' : 'fail'}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography>{row.fee.length > 0 ? `${row.fee[0]['amount']}${row.fee[0]['denom']}` : '0uatom'}</Typography>
+                    <Typography>{row.fee.length > 0 ? `${row.fee[0]['amount']} ${row.fee[0]['denom']}` : '0 uatom'}</Typography>
                   </TableCell>
                   <TableCell>
                     <BlockLink height={row.height}/>
