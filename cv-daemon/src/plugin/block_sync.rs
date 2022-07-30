@@ -63,7 +63,7 @@ impl BlockSync {
         }
       }
       if !app.is_quitting() {
-        let poll_interval = libs::opt::get_value::<u64>("block::poll-interval").unwrap_or(5000);
+        let poll_interval = libs::opt::get_value::<u64>("block::poll-interval").unwrap_or(1000);
         tokio::time::sleep(tokio::time::Duration::from_millis(poll_interval)).await;
         Self::process(receiver, sync_state, senders, app);
       }

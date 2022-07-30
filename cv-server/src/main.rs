@@ -10,7 +10,7 @@ use crate::config::node::NodeConfig;
 use crate::config::postgres::PostgresConfig;
 use crate::config::server::ServerConfig;
 use crate::config::swagger::SwaggerConfig;
-use crate::service::{block, dashboard, swagger, tx};
+use crate::service::{block, dashboard, proposal, swagger, tx, validator};
 
 mod service;
 mod repository;
@@ -49,6 +49,10 @@ async fn main() -> std::io::Result<()> {
           .service(web::resource("/cosmos/dashboard/staking/pool").route(web::get().to(dashboard::get_staking_pool)))
           .service(web::resource("/cosmos/dashboard/community/pool").route(web::get().to(dashboard::get_community_pool)))
           .service(web::resource("/cosmos/dashboard/voting/proposal").route(web::get().to(dashboard::get_num_of_voting_proposals)))
+          .service(web::resource("/cosmos/proposal").route(web::get().to(proposal::get_proposal_by_page_count)))
+          .service(web::resource("/cosmos/proposal/id/{id}").route(web::get().to(proposal::get_proposal_by_id)))
+          .service(web::resource("/cosmos/validator").route(web::get().to(validator::get_validator_by_page_count)))
+          .service(web::resource("/cosmos/validator/address/{id}").route(web::get().to(validator::get_validator_by_address)))
       )
       .with_json_spec_at("/api/spec")
       .build()
