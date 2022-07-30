@@ -129,7 +129,9 @@ function Overview() {
                   <Typography>Raw Log</Typography>
                 </TableCell>
                 <TableCell>
-                  <ReactJson src={JSON.parse(stateLoadable.contents.raw_log)} collapsed/>
+                  {typeof stateLoadable.contents.raw_log == 'object' ?
+                    (<ReactJson src={JSON.parse(stateLoadable.contents.raw_log)} collapsed/>) :
+                    <Typography>{stateLoadable.contents.raw_log}</Typography>}
                 </TableCell>
               </TableRow>
             </TableBody>
