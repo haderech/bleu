@@ -1,48 +1,88 @@
 {
-  "ethereum_tx_logs": {
+  "ethereum_blocks": {
     "attributes": {
-      "address": {
+      "author": {
         "type": [ "string", "null" ],
-        "description": "address"
+        "description": "author"
       },
-      "topics": {
+      "base_fee_per_gas": {
         "type": [ "string", "null" ],
-        "description": "topics"
+        "description": "baseFeePerGas"
       },
-      "data": {
+      "difficulty": {
         "type": [ "string", "null" ],
-        "description": "data"
+        "description": "difficulty"
+      },
+      "extra_data": {
+        "type": [ "string", "null" ],
+        "description": "extraData"
+      },
+      "gas_limit": {
+        "type": [ "string", "null" ],
+        "description": "gasLimit"
+      },
+      "gas_used": {
+        "type": [ "string", "null" ],
+        "description": "gasUsed"
+      },
+      "hash": {
+        "type": [ "string", "null" ],
+        "description": "hash"
+      },
+      "logsBloom": {
+        "type": [ "string", "null" ],
+        "description": "logs_bloom"
+      },
+      "miner": {
+        "type": [ "string", "null" ],
+        "description": "miner"
+      },
+      "nonce": {
+        "type": [ "string", "null" ],
+        "description": "nonce"
       },
       "block_number": {
         "type": [ "string", "null" ],
-        "description": "blockNumber"
+        "description": "number"
       },
-      "tx_hash": {
+      "parentHash": {
         "type": [ "string", "null" ],
-        "description": "transactionHash"
+        "description": "parent_hash"
       },
-      "tx_index": {
+      "receipts_root": {
         "type": [ "string", "null" ],
-        "description": "transactionIndex"
+        "description": "receiptsRoot"
       },
-      "block_hash": {
+      "sha3_uncles": {
         "type": [ "string", "null" ],
-        "description": "blockHash"
+        "description": "sha3Uncles"
       },
-      "log_index": {
+      "size": {
         "type": [ "string", "null" ],
-        "description": "logIndex"
+        "description": "size"
       },
-      "removed": {
-        "type": [ "boolean", "null" ],
-        "description": "removed"
-      },
-      "queue_index": {
+      "state_root": {
         "type": [ "string", "null" ],
-        "description": "queue_index"
+        "description": "stateRoot"
+      },
+      "timestamp": {
+        "type": [ "string", "null" ],
+        "description": "timestamp"
+      },
+      "total_difficulty": {
+        "type": [ "string", "null" ],
+        "description": "totalDifficulty"
+      },
+      "transactions_root": {
+        "type": [ "string", "null" ],
+        "description": "transactionsRoot"
+      },
+      "uncles": {
+        "type": [ "string", "null" ],
+        "description": "uncles"
       }
     },
-    "indexes": [ [ "address" ], [ "block_number" ], [ "tx_hash" ], [ "block_hash" ], [ "queue_index" ] ],
-    "uniques": [ [ "tx_hash", "log_index" ] ]
+    "indexes": [ ],
+    "uniques": [ [ "hash" ], [ "block_number" ] ]
   }
 }

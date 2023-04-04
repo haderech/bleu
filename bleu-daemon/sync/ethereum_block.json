@@ -1,0 +1,12 @@
+{
+  "ethereum_block": {
+    "sync_type": "ethereum_block",
+    "chain_name": "ethereum",
+    "chain_id": "42",
+    "from_idx": 0,
+    "endpoints": [
+      "http://localhost:9933"
+    ],
+    "filter": ""
+  }
+}

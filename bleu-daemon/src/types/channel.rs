@@ -1,26 +1,24 @@
-use std::collections::HashMap;
 use appbase::prelude::*;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct MultiSender {
-    sender_map: HashMap<String, Sender>,
+	sender_map: HashMap<String, Sender>,
 }
 
 impl MultiSender {
-    pub fn new(senders: Vec<&str>) -> Self {
-        let mut sender_map = HashMap::new();
-        for sender in senders.into_iter() {
-            sender_map.insert(String::from(sender), APP.channels.get(sender));
-        }
-        MultiSender {
-            sender_map: sender_map.to_owned(),
-        }
-    }
+	pub fn new(senders: Vec<&str>) -> Self {
+		let mut sender_map = HashMap::new();
+		for sender in senders.into_iter() {
+			sender_map.insert(String::from(sender), APP.channels.get(sender));
+		}
+		MultiSender { sender_map: sender_map.to_owned() }
+	}
 
-    pub fn get(&self, name: &str) -> Sender {
-        match self.sender_map.get(name) {
-            None => APP.channels.get(name),
-            Some(sender) => sender.clone()
-        }
-    }
+	pub fn get(&self, name: &str) -> Sender {
+		match self.sender_map.get(name) {
+			None => APP.channels.get(name),
+			Some(sender) => sender.clone(),
+		}
+	}
 }

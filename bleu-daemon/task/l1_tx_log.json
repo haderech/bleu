@@ -1,9 +1,0 @@
-{
-  "l1_tx_log": {
-    "start_idx": 0,
-    "end_points": [
-      "http://localhost:9545"
-    ],
-    "filter": ""
-  }
-}

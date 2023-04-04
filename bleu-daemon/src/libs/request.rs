@@ -1,54 +1,36 @@
+use super::serde::get_string;
+use crate::error::error::ExpectedError;
 use serde_json::{Map, Value};
 
-use crate::error::error::ExpectedError;
-use crate::libs::serde::get_string;
+// pub async fn get(url: &str) -> Result<Map<String, Value>, ExpectedError> {
+// 	let res = reqwest::get(url).await?;
+// 	let status = res.status().clone();
+// 	let body = res.text().await?;
+// 	let parsed_body: Map<String, Value> = serde_json::from_str(body.as_str())?;
 
-pub async fn get_async(url: &str) -> Result<Map<String, Value>, ExpectedError> {
-    let res = reqwest::get(url).await?;
-    let status = res.status().clone();
-    let body = res.text().await?;
-    let parsed_body: Map<String, Value> = serde_json::from_str(body.as_str())?;
+// 	if !status.is_success() {
+// 		let error = get_string(&parsed_body, "error")?;
+// 		return Err(ExpectedError::RequestError(error.to_string()))
+// 	}
+// 	Ok(parsed_body)
+// }
 
-    if !status.is_success() {
-        let error = get_string(&parsed_body, "error")?;
-        return Err(ExpectedError::RequestError(error));
-    }
-    Ok(parsed_body)
-}
+pub async fn post(url: &str, req_body: &str) -> Result<Map<String, Value>, ExpectedError> {
+	let req = String::from(req_body);
+	let client = reqwest::Client::new();
+	let res = client
+		.post(url)
+		.body(req)
+		.header("Content-Type", "application/json")
+		.send()
+		.await?;
+	let status = res.status().clone();
+	let body = res.text().await?;
+	let parsed_body: Map<String, Value> = serde_json::from_str(body.as_str())?;
 
-pub async fn post_async(url: &str, req_body: &str) -> Result<Map<String, Value>, ExpectedError> {
-    let req = String::from(req_body);
-    let client = reqwest::Client::new();
-    let res = client.post(url).body(req).header("Content-Type", "application/json").send().await?;
-    let status = res.status().clone();
-    let body = res.text().await?;
-    let parsed_body: Map<String, Value> = serde_json::from_str(body.as_str())?;
-
-    if !status.is_success() {
-        let error = get_string(&parsed_body, "error")?;
-        return Err(ExpectedError::RequestError(error));
-    }
-    Ok(parsed_body)
-}
-
-pub fn adjust_url(url: String) -> String {
-    let mut tmp_url = url.clone();
-    if !tmp_url.ends_with("/") {
-        tmp_url += "/";
-    }
-    tmp_url.to_owned()
-}
-
-#[cfg(test)]
-mod request {
-    use crate::libs::request::adjust_url;
-
-    #[test]
-    fn adjust_url_test() {
-        let example_url = adjust_url(String::from("https://example.com"));
-        assert_eq!("https://example.com/", example_url);
-
-        let example_url2 = adjust_url(String::from("https://example2.com/"));
-        assert_eq!("https://example2.com/", example_url2);
-    }
+	if !status.is_success() {
+		let error = get_string(&parsed_body, "error")?;
+		return Err(ExpectedError::RequestError(error.to_string()))
+	}
+	Ok(parsed_body)
 }

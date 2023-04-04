@@ -22,26 +22,6 @@ info="https://hooks.slack.com/services/"
 warn="https://hooks.slack.com/services/"
 error="https://hooks.slack.com/services/"
 
-[l2blocktx]
-poll-interval=100
-
-[l2txbatch]
-poll-interval=1000
-
-[l2statebatch]
-poll-interval=1000
-
-[l2enqueue]
-poll-interval=100
-
-[l1txlog]
-retry-count=3
-retry-endpoint="http://0.0.0.0:9999"
-
-[l2txreceipt]
-retry-count=3
-retry-endpoint="http://0.0.0.0:9999"
-
 [app]
 plugin=[]
 channel-capacity=1024

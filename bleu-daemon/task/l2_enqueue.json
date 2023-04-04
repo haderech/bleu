@@ -1,9 +1,0 @@
-{
-  "l2_enqueue": {
-    "start_idx": 0,
-    "end_points": [
-      "http://localhost:7878/enqueue/index/"
-    ],
-    "filter": ""
-  }
-}
