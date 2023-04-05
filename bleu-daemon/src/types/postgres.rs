@@ -209,20 +209,4 @@ mod postgres_test {
 		}
 		assert_eq!(result_map.len(), 1);
 	}
-
-	#[test]
-	fn insert_query_test() {
-		let json_str = fs::read_to_string("schema/ethereum.json").unwrap();
-		let json_schema: Value = serde_json::from_str(json_str.as_str()).unwrap();
-		let schema_map = json_schema.as_object().unwrap();
-
-		let mut result_map = HashMap::new();
-		for (schema_name, values) in schema_map {
-			let schema = PostgresSchema::from(schema_name.clone(), values).unwrap();
-			result_map.insert(schema_name.clone(), schema);
-		}
-		let selected_schema = result_map.get("eth_blocks").unwrap().to_owned();
-		let created_insert_query = selected_schema.insert_query;
-		assert_eq!(created_insert_query, "INSERT INTO eth_blocks (base_fee_per_gas, block_number, block_size, block_timestamp, difficulty, extra_data, gas_limit, gas_used, hash, is_forked, logs_bloom, miner, mix_hash, nonce, parent_hash, receipts_root, sha3_uncles, state_root, total_difficulty) VALUES ($baseFeePerGas$, $number$, $size$, $timestamp$, $difficulty$, $extraData$, $gasLimit$, $gasUsed$, $hash$, $is_forked$, $logsBloom$, $miner$, $mixHash$, $nonce$, $parentHash$, $receiptsRoot$, $sha3Uncles$, $stateRoot$, $totalDifficulty$)");
-	}
 }

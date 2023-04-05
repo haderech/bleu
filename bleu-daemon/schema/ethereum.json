@@ -29,9 +29,9 @@
         "type": [ "string", "null" ],
         "description": "hash"
       },
-      "logsBloom": {
+      "logs_bloom": {
         "type": [ "string", "null" ],
-        "description": "logs_bloom"
+        "description": "logsBloom"
       },
       "miner": {
         "type": [ "string", "null" ],
@@ -45,9 +45,9 @@
         "type": [ "string", "null" ],
         "description": "number"
       },
-      "parentHash": {
+      "parent_hash": {
         "type": [ "string", "null" ],
-        "description": "parent_hash"
+        "description": "parentHash"
       },
       "receipts_root": {
         "type": [ "string", "null" ],

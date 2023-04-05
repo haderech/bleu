@@ -12,21 +12,24 @@ use std::fs;
 
 pub fn load_state(sync_type: &str) -> Result<SyncState, ExpectedError> {
 	log::debug!("load_sync_state; sync_type={}", sync_type);
-	let state_res = fs::read_to_string(format!("state/{}", sync_type));
-	if state_res.is_ok() {
-		let json_value: Value = serde_json::from_str(state_res.unwrap().as_str())?;
-		let sync_state = json_value
-			.as_object()
-			.ok_or(ExpectedError::ParsingError("sync state is not object.".to_string()))?;
-		Ok(SyncState::from(sync_state))
-	} else {
-		log::error!("{}", state_res.err().unwrap());
-		let new_sync = fs::read_to_string(format!("sync/{}", sync_type))?;
-		let json_value: Value = serde_json::from_str(new_sync.as_str())?;
-		let sync_state = json_value
-			.as_object()
-			.ok_or(ExpectedError::ParsingError("sync state is not object.".to_string()))?;
-		Ok(SyncState::new(sync_state))
+	match fs::read_to_string(format!("state/{}.json", sync_type)) {
+		Ok(state) => {
+			let json_value: Value = serde_json::from_str(&state)?;
+			let sync_state = json_value
+				.as_object()
+				.ok_or(ExpectedError::ParsingError("sync state is not object.".to_string()))?;
+			Ok(SyncState::from(sync_state))
+		},
+		Err(e) => {
+			log::error!("{}", e.to_string());
+			let new_sync = fs::read_to_string(format!("sync/{}.json", sync_type))?;
+			let json_value: Value = serde_json::from_str(new_sync.as_str())?;
+			println!("{}", json_value.to_string());
+			let sync_state = json_value
+				.as_object()
+				.ok_or(ExpectedError::ParsingError("sync state is not object.".to_string()))?;
+			Ok(SyncState::new(sync_state))
+		},
 	}
 }
 
