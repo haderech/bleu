@@ -57,7 +57,7 @@
         "type": [ "string", "null" ],
         "description": "sha3Uncles"
       },
-      "size": {
+      "block_size": {
         "type": [ "string", "null" ],
         "description": "size"
       },
@@ -65,7 +65,7 @@
         "type": [ "string", "null" ],
         "description": "stateRoot"
       },
-      "timestamp": {
+      "block_timestamp": {
         "type": [ "string", "null" ],
         "description": "timestamp"
       },
@@ -84,5 +84,95 @@
     },
     "indexes": [ ],
     "uniques": [ [ "hash" ], [ "block_number" ] ]
+  },
+  "ethereum_transactions": {
+    "attributes": {
+      "hash": {
+        "type": [ "string", "null" ],
+        "description": "hash"
+      },
+      "nonce": {
+        "type": [ "string", "null" ],
+        "description": "nonce"
+      },
+      "block_hash": {
+        "type": [ "string", "null" ],
+        "description": "blockHash"
+      },
+      "block_number": {
+        "type": [ "string", "null" ],
+        "description": "blockNumber"
+      },
+      "transaction_index": {
+        "type": [ "string", "null" ],
+        "description": "transactionIndex"
+      },
+      "tx_from": {
+        "type": [ "string", "null" ],
+        "description": "from"
+      },
+      "tx_to": {
+        "type": [ "string", "null" ],
+        "description": "to"
+      },
+      "tx_value": {
+        "type": [ "string", "null" ],
+        "description": "value"
+      },
+      "gas_price": {
+        "type": [ "string", "null" ],
+        "description": "gasPrice"
+      },
+      "max_fee_per_gas": {
+        "type": [ "string", "null" ],
+        "description": "maxFeePerGas"
+      },
+      "gas": {
+        "type": [ "string", "null" ],
+        "description": "gas"
+      },
+      "tx_input": {
+        "type": [ "string", "null" ],
+        "description": "input"
+      },
+      "creates": {
+        "type": [ "string", "null" ],
+        "description": "creates"
+      },
+      "public_key": {
+        "type": [ "string", "null" ],
+        "description": "publicKey"
+      },
+      "chain_id": {
+        "type": [ "string", "null" ],
+        "description": "chainId"
+      },
+      "standard_v": {
+        "type": [ "string", "null" ],
+        "description": "standardV"
+      },
+      "v": {
+        "type": [ "string", "null" ],
+        "description": "v"
+      },
+      "r": {
+        "type": [ "string", "null" ],
+        "description": "r"
+      },
+      "s": {
+        "type": [ "string", "null" ],
+        "description": "s"
+      },
+      "access_list": {
+        "type": [ "string", "null" ],
+        "description": "accessList"
+      },
+      "tx_type": {
+        "type": [ "string", "null" ],
+        "description": "type"
+      }
+    },
+    "indexes": [ ],
+    "uniques": [ ]
   }
 }
