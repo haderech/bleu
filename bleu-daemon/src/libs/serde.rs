@@ -60,28 +60,28 @@ pub fn get_u64(values: &Map<String, Value>, name: &str) -> Result<u64, ExpectedE
 	Ok(value)
 }
 
-pub fn find_value(values: &Map<String, Value>, target_name: &str) -> Value {
-	if values.get(target_name).is_some() {
-		values.get(target_name).unwrap().clone()
+pub fn find_value(values: &Map<String, Value>, name: &str) -> Value {
+	if values.get(name).is_some() {
+		values.get(name).unwrap().clone()
 	} else {
 		for (_, value) in values.iter() {
 			match value {
-				Value::Object(value_obj) => {
-					let ret_value = find_value(value_obj, target_name);
-					if ret_value.is_null() {
+				Value::Object(object) => {
+					let value = find_value(object, name);
+					if value.is_null() {
 						continue
 					} else {
-						return ret_value
+						return value
 					}
 				},
-				Value::Array(value_vec) =>
-					for element in value_vec {
+				Value::Array(vector) =>
+					for element in vector {
 						if element.is_object() {
-							let ret_value = find_value(element.as_object().unwrap(), target_name);
-							if ret_value.is_null() {
+							let value = find_value(element.as_object().unwrap(), name);
+							if value.is_null() {
 								continue
 							} else {
-								return ret_value
+								return value
 							}
 						}
 					},
@@ -144,16 +144,16 @@ pub fn filter(values: &Map<String, Value>, filter: String) -> Result<bool, Expec
 	if filter.trim().is_empty() {
 		return Ok(true)
 	}
-	let mut calc_vec: Vec<String> = Vec::new();
+	let mut calc_vector: Vec<String> = Vec::new();
 	let mut key_value = String::new();
 	let filter_chars = filter.chars();
 	for c in filter_chars {
 		if c == '&' || c == '|' || c == '(' || c == ')' {
 			if !key_value.trim().is_empty() {
 				let calc_result = filter_value(values, &key_value)?;
-				calc_vec.push(calc_result.to_string());
+				calc_vector.push(calc_result.to_string());
 			}
-			calc_vec.push(String::from(c));
+			calc_vector.push(String::from(c));
 			key_value = String::new();
 		} else {
 			key_value.push(c);
@@ -161,12 +161,12 @@ pub fn filter(values: &Map<String, Value>, filter: String) -> Result<bool, Expec
 	}
 	if !key_value.trim().is_empty() {
 		let calc_result = filter_value(values, &key_value)?;
-		calc_vec.push(calc_result.to_string());
+		calc_vector.push(calc_result.to_string());
 	}
 
 	let mut bool_stack: Vec<bool> = Vec::new();
 	let mut calc_stack: Vec<String> = Vec::new();
-	for vec_item in calc_vec {
+	for vec_item in calc_vector {
 		if vec_item == ")" {
 			while calc_stack.last().is_some() && calc_stack.last().unwrap() != "(" {
 				if bool_stack.len() < 2 {

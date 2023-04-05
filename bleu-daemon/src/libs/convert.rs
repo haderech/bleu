@@ -12,7 +12,7 @@ pub fn hex_to_decimal(hex_str: String) -> Result<String, ExpectedError> {
 			}
 		},
 		false => Err(ExpectedError::InvalidError(format!(
-			"input value is not hex string! input={}",
+			"input value is not hex string. input={}",
 			hex_str
 		))),
 	}
