@@ -5,8 +5,6 @@ use crate::{
 };
 use appbase::prelude::*;
 use lettre::{transport::smtp::authentication::Credentials, Message, SmtpTransport, Transport};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 
 #[appbase_plugin]
 pub struct EmailPlugin {

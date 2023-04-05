@@ -24,7 +24,6 @@ pub fn load_state(sync_type: &str) -> Result<SyncState, ExpectedError> {
 			log::error!("{}", e.to_string());
 			let new_sync = fs::read_to_string(format!("sync/{}.json", sync_type))?;
 			let json_value: Value = serde_json::from_str(new_sync.as_str())?;
-			println!("{}", json_value.to_string());
 			let sync_state = json_value
 				.as_object()
 				.ok_or(ExpectedError::ParsingError("sync state is not object.".to_string()))?;
@@ -45,7 +44,7 @@ pub fn error_handler(err: ExpectedError, sync_state: &mut SyncState, senders: &M
 		_ => {
 			log::error!("{}", err.to_string());
 			sync_state.handle_error(err.to_string());
-			let _ = libs::error::error_handler(senders.get("slack"), err);
+			let _ = libs::error::error(senders.get("slack"), err);
 		},
 	};
 }

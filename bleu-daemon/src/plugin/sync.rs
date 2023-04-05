@@ -17,7 +17,7 @@ pub struct SyncRpcPlugin {
 	senders: Option<MultiSender>,
 }
 
-enumeration!(SyncType; {BlockSync: "block_sync"});
+enumeration!(SyncType; {EthereumBlock: "ethereum_block"});
 message!(SyncManageMsg; {method: String});
 
 impl Plugin for SyncRpcPlugin {
@@ -26,7 +26,7 @@ impl Plugin for SyncRpcPlugin {
 	}
 
 	fn init(&mut self) {
-		self.senders = Some(MultiSender::new(vec!["block_sync"]));
+		self.senders = Some(MultiSender::new(vec!["ethereum_block"]));
 		self.add_methods();
 	}
 

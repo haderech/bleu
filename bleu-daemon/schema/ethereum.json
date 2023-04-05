@@ -174,5 +174,105 @@
     },
     "indexes": [ [ "block_number" ], [ "block_hash" ], [ "tx_from" ], [ "tx_to" ] ],
     "uniques": [ [ "hash" ] ]
+  },
+  "ethereum_tx_receipts": {
+    "attributes": {
+      "block_hash": {
+        "type": [ "string", "null" ],
+        "description": "blockHash"
+      },
+      "block_number": {
+        "type": [ "string", "null" ],
+        "description": "blockNumber"
+      },
+      "contract_address": {
+        "type": [ "string", "null" ],
+        "description": "contractAddress"
+      },
+      "cumulative_gas_used": {
+        "type": [ "string", "null" ],
+        "description": "cumulativeGasUsed"
+      },
+      "effective_gas_price": {
+        "type": [ "string", "null" ],
+        "description": "effectiveGasPrice"
+      },
+      "tx_from": {
+        "type": [ "string", "null" ],
+        "description": "from"
+      },
+      "gas_used": {
+        "type": [ "string", "null" ],
+        "description": "gasUsed"
+      },
+      "logs_bloom": {
+        "type": [ "string", "null" ],
+        "description": "logsBloom"
+      },
+      "status": {
+        "type": [ "string", "null" ],
+        "description": "status"
+      },
+      "tx_to": {
+        "type": [ "string", "null" ],
+        "description": "to"
+      },
+      "transaction_hash": {
+        "type": [ "string", "null" ],
+        "description": "transactionHash"
+      },
+      "transaction_index": {
+        "type": [ "string", "null" ],
+        "description": "transactionIndex"
+      },
+      "tx_type": {
+        "type": [ "string", "null" ],
+        "description": "type"
+      }
+    },
+    "indexes": [ [ "block_hash" ], [ "block_number" ], [ "tx_from" ], [ "tx_to" ], [ "transaction_hash" ] ],
+    "uniques": [ ]
+  },
+  "ethereum_logs": {
+    "attributes": {
+      "address": {
+        "type": [ "string", "null" ],
+        "description": "address"
+      },
+      "topics": {
+        "type": [ "string", "null" ],
+        "description": "topics"
+      },
+      "log_data": {
+        "type": [ "string", "null" ],
+        "description": "data"
+      },
+      "block_number": {
+        "type": [ "string", "null" ],
+        "description": "blockNumber"
+      },
+      "transaction_hash": {
+        "type": [ "string", "null" ],
+        "description": "transactionHash"
+      },
+      "transaction_index": {
+        "type": [ "string", "null" ],
+        "description": "transactionIndex"
+      },
+      "block_hash": {
+        "type": [ "string", "null" ],
+        "description": "blockHash"
+      },
+      "log_index": {
+        "type": [ "string", "null" ],
+        "description": "logIndex"
+      },
+      "removed": {
+        "type": [ "boolean", "null" ],
+        "description": "removed"
+      }
+    },
+    "indexes": [ [ "address" ], [ "block_number" ], [ "transaction_hash" ], [ "block_hash" ] ],
+    "uniques": [ ]
   }
 }

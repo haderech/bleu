@@ -1,0 +1,10 @@
+{
+  "sync_type": "ethereum_tx_receipts",
+  "chain_name": "ethereum",
+  "chain_id": "42",
+  "from_idx": 0,
+  "endpoints": [
+    "http://localhost:9933"
+  ],
+  "filter": ""
+}

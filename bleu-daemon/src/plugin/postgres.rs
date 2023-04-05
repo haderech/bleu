@@ -1,9 +1,7 @@
-use std::{collections::HashMap, fs, thread, time::Duration};
-
 use appbase::prelude::*;
 use r2d2_postgres::{postgres::NoTls, r2d2, PostgresConnectionManager};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
+use std::{collections::HashMap, fs, thread, time::Duration};
 
 use crate::{
 	error::error::ExpectedError,
@@ -101,7 +99,7 @@ impl PostgresPlugin {
 		let mut schema_map = HashMap::new();
 		for schema_file in schema_files.iter() {
 			let json_str = fs::read_to_string(schema_file)?;
-			let json_schema = serde_json::from_str::<Value>(json_str.as_str())?;
+			let json_schema = serde_json::from_str::<serde_json::Value>(json_str.as_str())?;
 			let json_schema = json_schema
 				.as_object()
 				.ok_or(ExpectedError::ParsingError("schema is not object.".to_string()))?;
