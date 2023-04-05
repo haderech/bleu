@@ -82,8 +82,8 @@
         "description": "uncles"
       }
     },
-    "indexes": [ ],
-    "uniques": [ [ "hash" ], [ "block_number" ] ]
+    "indexes": [ [ "block_number" ] ],
+    "uniques": [ [ "hash" ] ]
   },
   "ethereum_transactions": {
     "attributes": {
@@ -172,7 +172,7 @@
         "description": "type"
       }
     },
-    "indexes": [ ],
-    "uniques": [ ]
+    "indexes": [ [ "block_number" ], [ "block_hash" ], [ "tx_from" ], [ "tx_to" ] ],
+    "uniques": [ [ "hash" ] ]
   }
 }
