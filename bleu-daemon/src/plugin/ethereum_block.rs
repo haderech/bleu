@@ -7,7 +7,6 @@ use crate::{
 		serde::{filter, get_array, get_object},
 		sync::load_state,
 	},
-	message,
 	plugin::{
 		postgres::{PostgresMsg, PostgresPlugin},
 		slack::SlackPlugin,
@@ -15,7 +14,6 @@ use crate::{
 	types::{channel::MultiSender, sync::SyncState},
 };
 use appbase::prelude::*;
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 #[appbase_plugin(PostgresPlugin, SlackPlugin)]
@@ -24,8 +22,6 @@ pub struct EthereumBlockPlugin {
 	senders: Option<MultiSender>,
 	receiver: Option<Receiver>,
 }
-
-message!(L2BlockTxMsg; {method: String});
 
 impl Plugin for EthereumBlockPlugin {
 	fn new() -> Self {
