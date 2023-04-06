@@ -36,8 +36,8 @@ export function TransactionLink(props: any) {
 
 export function BlockLink(props: any) {
   return (
-    <Link variant='mono' underline='none' noWrap={true} href={`/block/${props.blockNumber}`} sx={props.sx}>
-      {props.blockNumber}
+    <Link variant='mono' underline='none' noWrap={true} href={`/block/${props.param}`} sx={props.sx}>
+      {props.param}
     </Link>
   );
 }

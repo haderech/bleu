@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import InfoCard from '../../../components/InfoCard';
 import { timeSince } from '../../../utils/time';
 import {
@@ -23,7 +22,6 @@ function BlockList() {
   const { t } = useTranslation('', { useSuspense: false });
   const [state, setState] = useRecoilState(_state);
   const [opts, setOpts] = useRecoilState(options);
-  const { search } = useLocation();
 
   const reload = (count: number, page: number) => {
     (async () => {
@@ -76,14 +74,14 @@ function BlockList() {
             state.records
               ? state.records.map((row, index) => (
                 <TableRow key={index}>
-                  <TableCell><BlockLink blockNumber={row.block_number} /></TableCell>
+                  <TableCell><BlockLink param={row.block_number} /></TableCell>
                   <TableCell>
                     <Typography noWrap={true}>
                       {opts.datetime ? new Date(+row.block_timestamp * 1000).toLocaleString() : timeSince(row.block_timestamp)}
                     </Typography>
                   </TableCell>
-                  <TableCell>{row.txn ? <BlockTxnLink blockNumber={row.block_number} txn={row.txn}/> : row.txn}</TableCell>
-                  <TableCell>{row.hash}</TableCell>
+                  <TableCell>{row.txn ? <BlockTxnLink blockNumber={row.block_number} txn={row.txn} /> : row.txn}</TableCell>
+                  <TableCell><BlockLink param={row.hash} /></TableCell>
                   <TableCell>{row.gas_used}</TableCell>
                   <TableCell>{row.gas_limit}</TableCell>
                 </TableRow>

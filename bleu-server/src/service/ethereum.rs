@@ -3,7 +3,8 @@ use crate::{
 	error::error::ExpectedError,
 	model::{ethereum::*, pagination::RequestPage},
 	repository::ethereum::{
-		find_block_by_number, find_blocks_by_page_count, find_logs_by_hash, find_tx_by_hash,
+		count_total_transaction, find_block_by_hash, find_block_by_number,
+		find_blocks_by_page_count, find_latest_block, find_logs_by_hash, find_tx_by_hash,
 		find_txs_by_page_count,
 	},
 };
@@ -26,6 +27,15 @@ pub async fn get_block_by_number(
 ) -> Result<Json<EthereumBlock>, ExpectedError> {
 	let number = number.into_inner();
 	Ok(Json(find_block_by_number(pool, number).await?))
+}
+
+#[api_v2_operation(tags(EthereumBlock))]
+pub async fn get_block_by_hash(
+	pool: web::Data<Pool>,
+	hash: web::Path<String>,
+) -> Result<Json<EthereumBlock>, ExpectedError> {
+	let hash = hash.into_inner();
+	Ok(Json(find_block_by_hash(pool, hash).await?))
 }
 
 #[api_v2_operation(tags(EthereumTransaction))]
@@ -58,4 +68,33 @@ pub async fn get_logs_by_hash(
 		.map(|log| EthereumReceiptLog::from(log.clone()))
 		.collect::<Vec<EthereumReceiptLog>>();
 	Ok(Json(logs))
+}
+
+#[api_v2_operation(tags(BoardSummary))]
+pub async fn get_board_summary(pool: web::Data<Pool>) -> Result<Json<BoardSummary>, ExpectedError> {
+	let latest_block = find_latest_block(pool.clone()).await?;
+	let total_transaction_count = count_total_transaction(pool).await?;
+	let summary = BoardSummary::new(latest_block, total_transaction_count);
+	Ok(Json(summary))
+}
+
+#[api_v2_operation(tags(EthereumBlock))]
+pub async fn get_latest_blocks(
+	pool: web::Data<Pool>,
+) -> Result<Json<Vec<EthereumBlock>>, ExpectedError> {
+	Ok(Json(find_blocks_by_page_count(pool, 1, 10).await?.records))
+}
+
+#[api_v2_operation(tags(EthereumTransaction))]
+pub async fn get_latest_txs(
+	pool: web::Data<Pool>,
+) -> Result<Json<Vec<EthereumTransaction>>, ExpectedError> {
+	Ok(Json(
+		find_txs_by_page_count(
+			pool,
+			RequestTxsQuery { number: None, address: None, page: 1, count: 10 },
+		)
+		.await?
+		.records,
+	))
 }

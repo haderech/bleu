@@ -1,8 +1,8 @@
-import {atom, selector} from 'recoil';
-import {api} from '../../../utils/urlResolver';
+import { atom, selector } from 'recoil';
+import { api } from '../../../utils/urlResolver';
 
 export interface State {
-  ethereum_blocks_id: number;
+	ethereum_blocks_id: number;
 	author: string;
 	base_fee_per_gas: string;
 	block_number: string;
@@ -27,22 +27,31 @@ export interface State {
 }
 
 export const options = atom({
-  key: 'BlockPageOptions',
-  default: {
-    index: 0,
-    blockNumber: 0,
-    isState: false,
-  },
+	key: 'BlockPageOptions',
+	default: {
+		index: 0,
+		param: '',
+		isState: false,
+	},
 });
 
 export const state = selector<State>({
-  key: 'BlockPageState',
-  get: async ({get}) => {
-    const opts = get(options);
-    if (opts.blockNumber === 0) {
-      return;
-    }
-    const res = await fetch(api('/block', opts.blockNumber.toString()));
-    return await res.json();
-  },
+	key: 'BlockPageState',
+	get: async ({ get }) => {
+		const opts = get(options);
+		if (opts.param === '') {
+			return;
+		}
+		if (opts.param.startsWith('0x')) {
+			const res = await fetch(api('/block/hash', opts.param));
+			if (res.ok) {
+				return await res.json();
+			} else {
+				return;
+			}
+		} else {
+			const res = await fetch(api('/block/number', opts.param));
+			return await res.json();
+		}
+	},
 });

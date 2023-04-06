@@ -1,8 +1,11 @@
 import React from 'react';
 import {
-  Box,
+  Box, Grid,
 } from '@mui/material';
 import SearchBar from './components/SearchBar';
+import Overview from './components/Overview';
+import LatestBlocks from './components/LatestBlocks';
+import LatestTransactions from './components/LatestTransactions';
 
 const root: Readonly<any> = {
   display: 'flex',
@@ -45,6 +48,17 @@ function MainPage() {
         <Box sx={placeholder}>
           <SearchBar />
         </Box>
+        <Grid container spacing={2} sx={body}>
+          <Grid item lg={12} md={12} sm={12} xs={12}>
+            <Overview />
+          </Grid>
+          <Grid item lg={6} md={6} sm={12} xs={12}>
+            <LatestBlocks />
+          </Grid>
+          <Grid item lg={6} md={6} sm={12} xs={12}>
+            <LatestTransactions />
+          </Grid>
+        </Grid>
       </Box>
     </Box>
   );

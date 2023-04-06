@@ -102,7 +102,7 @@ function TransactionsList() {
                     {row.tx_input ? row.tx_input.slice(0, 10) : null}
                   </TableCell>
                   <TableCell>
-                    <BlockLink blockNumber={row.block_number} />
+                    <BlockLink param={row.block_number} />
                   </TableCell>
                   <TableCell>
                     <Typography noWrap={true}>

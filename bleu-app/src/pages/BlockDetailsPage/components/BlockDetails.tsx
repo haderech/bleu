@@ -51,14 +51,14 @@ function a11yProps(index: number) {
 }
 
 function BlockDetails(props: any) {
-  const { blockNumber }: any = useParams();
+  const { param }: any = useParams();
   const [opts, setOpts] = useRecoilState(options);
 
   useEffect(() => {
-    if (opts.blockNumber !== blockNumber) {
+    if (opts.param !== param) {
       setOpts({
         ...opts,
-        blockNumber: blockNumber,
+        param: param,
       });
     }
   });
@@ -71,7 +71,7 @@ function BlockDetails(props: any) {
   };
 
   return (
-    <InfoCard title='Block' subtitle={`#${blockNumber}`} contentProps={{ m: 0 }}>
+    <InfoCard title='Block' subtitle={`#${param}`} contentProps={{ m: 0 }}>
       <Box sx={cardHeaderC1}>
         <Tabs value={opts.index} onChange={handleChange} aria-label='block-details-tabs'>
           <Tab label='Overview' {...a11yProps(0)} />

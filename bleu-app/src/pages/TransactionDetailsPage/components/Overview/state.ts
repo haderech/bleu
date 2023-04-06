@@ -32,7 +32,7 @@ export const state = selector<Transaction>({
     if (opts.txHash.length === 0) {
       return;
     }
-    const res = await fetch(api('/logs', opts.txHash));
+    const res = await fetch(api('/tx', opts.txHash));
     return await res.json();
   },
 });

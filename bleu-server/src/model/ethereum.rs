@@ -147,7 +147,7 @@ pub struct EthereumReceiptLog {
 
 impl EthereumReceiptLog {
 	pub fn from(log: EthereumLog) -> Self {
-		return Self {
+		Self {
 			address: log.address,
 			block_hash: log.block_hash,
 			block_number: log.block_number,
@@ -171,4 +171,30 @@ pub struct RequestTxsQuery {
 	pub address: Option<String>,
 	pub page: i64,
 	pub count: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Apiv2Schema)]
+pub struct BoardSummary {
+	pub latest_block_number: Option<String>,
+	pub latest_block_gas_used: Option<String>,
+	pub latest_block_gas_limit: Option<String>,
+	pub total_transaction_count: i64,
+}
+
+impl BoardSummary {
+	pub fn new(latest_block: EthereumBlock, total_transaction_count: i64) -> Self {
+		Self {
+			latest_block_number: latest_block.block_number,
+			latest_block_gas_used: latest_block.gas_used,
+			latest_block_gas_limit: latest_block.gas_limit,
+			total_transaction_count,
+		}
+	}
+}
+
+
+#[derive(Debug, Clone, Serialize, Deserialize, Apiv2Schema)]
+pub struct RequestBlockQuery {
+	pub number: Option<u64>,
+	pub hash: Option<String>,
 }

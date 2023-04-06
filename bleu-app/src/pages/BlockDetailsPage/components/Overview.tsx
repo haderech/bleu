@@ -1,8 +1,5 @@
 import React from 'react';
 import {
-  Box,
-  IconButton,
-  Link,
   Table,
   TableBody,
   TableCell,
@@ -11,9 +8,8 @@ import {
 } from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
 import { state } from './state';
-import { BlockTxnLink, TransactionLink } from '../../../components/Link';
+import { BlockLink, BlockTxnLink } from '../../../components/Link';
 import { timeSince } from '../../../utils/time';
-import { ArrowLeft, ArrowRight } from '@mui/icons-material';
 
 function Overview(props: any) {
   const block = useRecoilValueLoadable(state);
@@ -99,7 +95,7 @@ function Overview(props: any) {
                   <Typography>Parent Hash</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{block.contents.parent_hash}</Typography>
+                  <BlockLink param={block.contents.parent_hash} />
                 </TableCell>
               </TableRow>
               <TableRow>

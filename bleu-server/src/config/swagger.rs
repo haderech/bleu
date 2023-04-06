@@ -2,7 +2,7 @@ use paperclip::v2::models::{DefaultApiRaw, Info, Tag};
 
 pub fn load() -> DefaultApiRaw {
 	let mut spec = DefaultApiRaw::default();
-	spec.tags = simple_tags(vec!["EthereumBlock", "EthereumTransaction", "EthereumLog"]);
+	spec.tags = simple_tags(vec!["EthereumBlock", "EthereumTransaction", "EthereumLog", "BoardSummary"]);
 	spec.info = simple_info("0.1", "Ethereum Explorer");
 	spec
 }
