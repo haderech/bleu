@@ -70,7 +70,7 @@ function LatestBlocks() {
                     <Grid container spacing={1}>
                       <Grid item lg={6} md={6} sm={12} xs={12} sx={content}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <Avatar variant='rounded'>Ba</Avatar>
+                          <Avatar variant='rounded'>Bk</Avatar>
                           <Grid container>
                             <Grid item lg={12} md={12} sm={2} xs={2}>
                               <BlockLink param={row.block_number} />

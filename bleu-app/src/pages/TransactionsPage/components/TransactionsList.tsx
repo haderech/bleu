@@ -13,6 +13,7 @@ import {
   TableRow,
   TableCell,
   Typography,
+  Tooltip,
 } from '@mui/material';
 import InfoCard from '../../../components/InfoCard';
 import { AddressLink, BlockLink, TransactionLink } from '../../../components/Link';
@@ -116,10 +117,18 @@ function TransactionsList() {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', minWidth: '150px' }}>
-                      <AddressLink sx={{ width: 0, flexGrow: 1, flexBasis: 0 }} address={row.tx_to} />
+                      {
+                        row.tx_to
+                          ? <AddressLink sx={{ width: 0, flexGrow: 1, flexBasis: 0 }} address={row.tx_to} />
+                          : <Tooltip title={row.contract_address}>
+                            <Link underline='none' href={`/account/${row.contract_address}`}>
+                              Contract Creation
+                            </Link>
+                          </Tooltip>
+                      }
                     </Box>
                   </TableCell>
-                  <TableCell>{toEther(row.tx_value)} Unit</TableCell>
+                  <TableCell>{toEther(row.tx_value)}</TableCell>
                   <TableCell><Typography variant='body2'>{txFee(row.gas_used, row.gas_price)}</Typography></TableCell>
                 </TableRow>
               ))

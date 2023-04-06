@@ -9,6 +9,7 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { Loadable, selector, useRecoilValueLoadable } from 'recoil';
@@ -19,6 +20,7 @@ interface Transaction {
   hash: string;
   tx_from: string;
   tx_to: string;
+  contract_address: string;
   tx_value: string;
   block_timestamp: string;
 };
@@ -70,7 +72,7 @@ function LatestTransactions() {
                       <Avatar>Tx</Avatar>
                       <Box sx={{ flexGrow: 1, flexBasis: 0, width: 0 }}>
                         <Box sx={{ display: 'flex', flexGrow: 1, gap: '8px' }}>
-                          <Typography>Tx#</Typography>
+                          <Typography>Tx</Typography>
                           <TransactionLink sx={{ width: 0, flexGrow: 1, flexBasis: 0 }} hash={row.hash} />
                         </Box>
                         <Box sx={{ display: 'flex' }}>
@@ -80,11 +82,19 @@ function LatestTransactions() {
                           </Box>
                           <Box sx={{ display: 'flex', flexGrow: 1, gap: '8px' }}>
                             <Typography>To</Typography>
-                            <AddressLink sx={{ width: 0, flexGrow: 1, flexBasis: 0 }} address={row.tx_to} />
+                            {
+                              row.tx_to
+                                ? <AddressLink sx={{ width: 0, flexGrow: 1, flexBasis: 0 }} address={row.tx_to} />
+                                : <Tooltip title={row.contract_address}>
+                                  <Link underline='none' href={`/account/${row.contract_address}`}>
+                                    Contract Creation
+                                  </Link>
+                                </Tooltip>
+                            }
                           </Box>
                         </Box>
                         <Box sx={{ display: 'flex', gap: '10px' }}>
-                          <Typography variant='body2'>{+row.tx_value / Math.pow(10, 18)} Unit &gt;</Typography>
+                          <Typography variant='body2'>{+row.tx_value / Math.pow(10, 18)}</Typography>
                           <Typography variant='body2' color='text.secondary'>{timeSince(row.block_timestamp)}</Typography>
                         </Box>
                       </Box>

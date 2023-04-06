@@ -95,7 +95,7 @@ function Account(props: any) {
                     </Grid>
                     <Grid item lg={8} md={8} sm={12} xs={12}>
                       {
-                        balance.state === 'hasValue' ? <Typography>{toEther(balance.contents)} Unit</Typography> : null
+                        balance.state === 'hasValue' ? <Typography>{toEther(balance.contents)}</Typography> : null
                       }
                     </Grid>
                   </Grid>

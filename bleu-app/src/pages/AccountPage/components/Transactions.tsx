@@ -128,7 +128,7 @@ function Transactions(props: any) {
                       }
                     </Box>
                   </TableCell>
-                  <TableCell>{toEther(row.tx_value)} Unit</TableCell>
+                  <TableCell>{toEther(row.tx_value)}</TableCell>
                   <TableCell><Typography variant='body2'>{txFee(row.gas_used, row.gas_price)}</Typography></TableCell>
                 </TableRow>
               ))

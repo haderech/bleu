@@ -68,8 +68,7 @@ function Overview() {
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: '8px' }}>
-                    <Typography>{timeSince(stateLoadable.contents.block_timestamp)}</Typography>
-                    <Typography>({new Date(+stateLoadable.contents.block_timestamp).toLocaleString()})</Typography>
+                    <Typography>{timeSince(stateLoadable.contents.block_timestamp)} ({new Date(+stateLoadable.contents.block_timestamp * 1000).toLocaleString()})</Typography>
                   </Box>
                 </TableCell>
               </TableRow>
@@ -100,7 +99,7 @@ function Overview() {
                   <Typography>Value</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{toEther(stateLoadable.contents.tx_value)} Unit</Typography>
+                  <Typography>{toEther(stateLoadable.contents.tx_value)}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -108,7 +107,7 @@ function Overview() {
                   <Typography>Transaction Fee</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{txFee(stateLoadable.contents.gas_used, stateLoadable.contents.gas_price)} Unit</Typography>
+                  <Typography>{txFee(stateLoadable.contents.gas_used, stateLoadable.contents.gas_price)}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -117,7 +116,7 @@ function Overview() {
                 </TableCell>
                 <TableCell>
                   <Typography>
-                    {(+stateLoadable.contents.gas_price).toLocaleString()} Wei
+                    {(+stateLoadable.contents.gas_price).toLocaleString()}
                   </Typography>
                 </TableCell>
               </TableRow>
