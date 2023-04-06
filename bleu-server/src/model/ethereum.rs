@@ -182,16 +182,24 @@ pub struct BoardSummary {
 }
 
 impl BoardSummary {
-	pub fn new(latest_block: EthereumBlock, total_transaction_count: i64) -> Self {
-		Self {
-			latest_block_number: latest_block.block_number,
-			latest_block_gas_used: latest_block.gas_used,
-			latest_block_gas_limit: latest_block.gas_limit,
-			total_transaction_count,
+	pub fn new(latest_block: Option<EthereumBlock>, total_transaction_count: i64) -> Self {
+		if let Some(latest_block) = latest_block {
+			Self {
+				latest_block_number: latest_block.block_number,
+				latest_block_gas_used: latest_block.gas_used,
+				latest_block_gas_limit: latest_block.gas_limit,
+				total_transaction_count,
+			}
+		} else {
+			Self {
+				latest_block_number: None,
+				latest_block_gas_used: None,
+				latest_block_gas_limit: None,
+				total_transaction_count,
+			}
 		}
 	}
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize, Apiv2Schema)]
 pub struct RequestBlockQuery {

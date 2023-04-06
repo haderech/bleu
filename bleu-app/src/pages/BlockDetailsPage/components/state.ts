@@ -44,11 +44,7 @@ export const state = selector<State>({
 		}
 		if (opts.param.startsWith('0x')) {
 			const res = await fetch(api('/block/hash', opts.param));
-			if (res.ok) {
-				return await res.json();
-			} else {
-				return;
-			}
+			return await res.json();
 		} else {
 			const res = await fetch(api('/block/number', opts.param));
 			return await res.json();

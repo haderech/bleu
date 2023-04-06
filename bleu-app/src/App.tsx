@@ -47,7 +47,7 @@ function App() {
                 <Route path='/account/:address'>
                   <AccountPage />
                 </Route>
-                <Route path={'/block/:query'}>
+                <Route path={'/block/:param'}>
                   <BlockDetailsPage />
                 </Route>
                 <Route path={'/tx/:txHash'}>

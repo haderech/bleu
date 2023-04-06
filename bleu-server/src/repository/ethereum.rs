@@ -28,12 +28,13 @@ pub async fn find_blocks_by_page_count(
 pub async fn find_block_by_number(
 	pool: web::Data<Pool>,
 	number: u64,
-) -> Result<EthereumBlock, ExpectedError> {
+) -> Result<Option<EthereumBlock>, ExpectedError> {
 	let conn = pool.get()?;
 	let block = web::block(move || {
 		ethereum_blocks::table
 			.filter(ethereum_blocks::columns::block_number.eq(number.to_string()))
 			.get_result::<EthereumBlock>(&conn)
+			.optional()
 	})
 	.await?;
 	Ok(block)
@@ -42,12 +43,13 @@ pub async fn find_block_by_number(
 pub async fn find_block_by_hash(
 	pool: web::Data<Pool>,
 	hash: String,
-) -> Result<EthereumBlock, ExpectedError> {
+) -> Result<Option<EthereumBlock>, ExpectedError> {
 	let conn = pool.get()?;
 	let block = web::block(move || {
 		ethereum_blocks::table
 			.filter(ethereum_blocks::columns::hash.eq(hash))
 			.get_result::<EthereumBlock>(&conn)
+			.optional()
 	})
 	.await?;
 	Ok(block)
@@ -116,7 +118,7 @@ pub async fn find_txs_by_page_count(
 pub async fn find_tx_by_hash(
 	pool: web::Data<Pool>,
 	hash: String,
-) -> Result<EthereumTransaction, ExpectedError> {
+) -> Result<Option<EthereumTransaction>, ExpectedError> {
 	let conn = pool.get()?;
 	let transaction =
 		web::block(move || {
@@ -153,6 +155,7 @@ pub async fn find_tx_by_hash(
 				))
 				.filter(ethereum_transactions::columns::hash.eq(hash))
 				.get_result::<EthereumTransaction>(&conn)
+				.optional()
 		})
 		.await?;
 	Ok(transaction)
@@ -172,12 +175,13 @@ pub async fn find_logs_by_hash(
 	Ok(logs)
 }
 
-pub async fn find_latest_block(pool: web::Data<Pool>) -> Result<EthereumBlock, ExpectedError> {
+pub async fn find_latest_block(pool: web::Data<Pool>) -> Result<Option<EthereumBlock>, ExpectedError> {
 	let conn = pool.get()?;
 	let logs = web::block(move || {
 		ethereum_blocks::table
 			.order(ethereum_blocks::columns::ethereum_blocks_id.desc())
 			.first(&conn)
+			.optional()
 	})
 	.await?;
 	Ok(logs)

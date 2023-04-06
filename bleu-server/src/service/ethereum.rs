@@ -24,7 +24,7 @@ pub async fn get_blocks_by_page_count(
 pub async fn get_block_by_number(
 	pool: web::Data<Pool>,
 	number: web::Path<u64>,
-) -> Result<Json<EthereumBlock>, ExpectedError> {
+) -> Result<Json<Option<EthereumBlock>>, ExpectedError> {
 	let number = number.into_inner();
 	Ok(Json(find_block_by_number(pool, number).await?))
 }
@@ -33,7 +33,7 @@ pub async fn get_block_by_number(
 pub async fn get_block_by_hash(
 	pool: web::Data<Pool>,
 	hash: web::Path<String>,
-) -> Result<Json<EthereumBlock>, ExpectedError> {
+) -> Result<Json<Option<EthereumBlock>>, ExpectedError> {
 	let hash = hash.into_inner();
 	Ok(Json(find_block_by_hash(pool, hash).await?))
 }
@@ -51,7 +51,7 @@ pub async fn get_txs_by_page_count(
 pub async fn get_tx_by_hash(
 	pool: web::Data<Pool>,
 	hash: web::Path<String>,
-) -> Result<Json<EthereumTransaction>, ExpectedError> {
+) -> Result<Json<Option<EthereumTransaction>>, ExpectedError> {
 	let hash = hash.into_inner();
 	Ok(Json(find_tx_by_hash(pool, hash).await?))
 }
