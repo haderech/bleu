@@ -80,20 +80,10 @@ function Header(props: any) {
             onMouseEnter={openMenu(0)}
             endIcon={<KeyboardArrowDownIcon sx={{marginLeft: '-6px'}} />}
           >Blockchain</Button>
-          {/*
-          <Button
-            sx={opts.index === 1 ? menuButtonActive : menuButton}
-            size='small'
-            href='#'
-            onMouseEnter={openMenu(1)}
-            endIcon={<KeyboardArrowDownIcon sx={{marginLeft: '-6px'}} />}
-          >Tokens</Button>*/}
           <Popover open={opts.index === 0} anchorEl={opts.anchorEl} anchorOrigin={{horizontal:'left',vertical:'bottom'}} onMouseMove={outMenu} sx={{cursor:'pointer'}}>
             <Box sx={menuPopup} onMouseMove={onMenu} onMouseLeave={outMenu}>
+              <MenuItem href='/blocks'>Blocks</MenuItem>
               <MenuItem href='/txs'>Transactions</MenuItem>
-              <Divider sx={{my:'8px'}} />
-              <MenuItem href='/blocks'>Transaction Batches</MenuItem>
-              <MenuItem href='/blocks?isState=true'>State Batches</MenuItem>
             </Box>
           </Popover>
           <Popover open={opts.index === 1} anchorEl={opts.anchorEl} anchorOrigin={{horizontal:'left',vertical:'bottom'}} onMouseMove={outMenu} sx={{cursor:'pointer'}}>
@@ -108,9 +98,8 @@ function Header(props: any) {
       </Box>
       <Drawer open={opts.index === 99} onClose={closeMenu} anchor='top' PaperProps={{sx:{position:'absolute',top:headerEl?.current?.offsetHeight}}}>
         <Box>
+          <MenuItem sx={{width:'100%-56px',height:'40px'}} href='/blocks'>Blocks</MenuItem>
           <MenuItem sx={{width:'100%-56px',height:'40px'}} href='/txs'>Transactions</MenuItem>
-          <MenuItem sx={{width:'100%-56px',height:'40px'}} href='/blocks'>Transaction Batches</MenuItem>
-          <MenuItem sx={{width:'100%-56px',height:'40px'}} href='/blocks?isState=true'>State Batches</MenuItem>
         </Box>
       </Drawer>
     </ContentBody>

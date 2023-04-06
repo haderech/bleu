@@ -1,8 +1,8 @@
 import React from 'react';
-import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
-import {RecoilRoot} from 'recoil';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
 import Box from '@mui/material/Box';
-import {ThemeProvider} from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import theme from './styles/theme';
 import './App.css';
 import './i18n';
@@ -12,7 +12,6 @@ import MainPage from './pages/MainPage';
 import AccountPage from './pages/AccountPage';
 import BlockDetailsPage from './pages/BlockDetailsPage/BlockDetailsPage';
 import BlocksPage from './pages/BlocksPage';
-import L1L2TransactionsPage from './pages/L1L2TransactionsPage';
 import TransactionDetailsPage from './pages/TransactionDetailsPage';
 import TransactionsPage from './pages/TransactionsPage';
 
@@ -44,9 +43,6 @@ function App() {
                 </Route>
                 <Route path='/blocks'>
                   <BlocksPage />
-                </Route>
-                <Route path={'/l1l2txs'}>
-                  <L1L2TransactionsPage />
                 </Route>
                 <Route path='/account/:address'>
                   <AccountPage />

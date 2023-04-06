@@ -18,26 +18,25 @@ pub fn hex_to_decimal(hex_str: String) -> Result<String, ExpectedError> {
 	}
 }
 
-pub fn hex_to_decimal_converter(
-	origin: &Map<String, Value>,
+pub fn convert_hex_to_decimal(
+	origin: &mut Map<String, Value>,
 	keys: Vec<&str>,
-) -> Result<Map<String, Value>, ExpectedError> {
-	let mut cloned = origin.clone();
+) -> Result<(), ExpectedError> {
 	for key in keys.into_iter() {
-		if let true = cloned.contains_key(key) {
-			let value = cloned
+		if let true = origin.contains_key(key) {
+			let value = origin
 				.get(key)
 				.ok_or(ExpectedError::ParsingError(format!("{} does not exist.", key)))?;
 			if value.is_string() {
 				let str = value.as_str().unwrap().to_string();
 				if is_hex_string(&str) {
 					let converted = hex_to_decimal(str)?;
-					cloned.insert(key.to_owned(), Value::String(converted));
+					origin.insert(key.to_owned(), Value::String(converted));
 				}
 			}
 		}
 	}
-	Ok(cloned)
+	Ok(())
 }
 
 fn is_hex_string(hex_str: &str) -> bool {
@@ -67,7 +66,7 @@ fn is_hex_string(hex_str: &str) -> bool {
 mod number {
 	use serde_json::{Map, Value};
 
-	use crate::libs::convert::{hex_to_decimal, hex_to_decimal_converter};
+	use crate::libs::convert::{convert_hex_to_decimal, hex_to_decimal};
 
 	#[test]
 	fn hex_to_decimal_test() {
@@ -95,12 +94,11 @@ mod number {
 		test_map.insert(String::from("key3"), Value::String(String::from("bleu-daemon")));
 		test_map.insert(String::from("key4"), Value::Null);
 
-		let converted_map =
-			hex_to_decimal_converter(&test_map, vec!["key1", "key3", "key4"]).unwrap();
-		assert_eq!(converted_map.get("key1").unwrap(), "17");
-		assert_eq!(converted_map.get("key2").unwrap(), "0x22");
-		assert_eq!(converted_map.get("key3").unwrap(), "bleu-daemon");
-		assert_eq!(converted_map.get("key4").unwrap().clone(), Value::Null);
+		convert_hex_to_decimal(&mut test_map, vec!["key1", "key3", "key4"]).unwrap();
+		assert_eq!(test_map.get("key1").unwrap(), "17");
+		assert_eq!(test_map.get("key2").unwrap(), "0x22");
+		assert_eq!(test_map.get("key3").unwrap(), "bleu-daemon");
+		assert_eq!(test_map.get("key4").unwrap().clone(), Value::Null);
 	}
 
 	// #[test]

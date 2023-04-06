@@ -8,11 +8,11 @@ import {
   TextareaAutosize,
   Typography,
 } from '@mui/material';
-import {useRecoilValueLoadable} from 'recoil';
-import {state} from './Overview/state';
-import {L2AddressLink} from '../../../components/Link';
-import {timeSince} from '../../../utils/time';
-import {toEther, txFee} from '../../../utils/ethUtils';
+import { useRecoilValueLoadable } from 'recoil';
+import { state } from './Overview/state';
+import { AddressLink } from '../../../components/Link';
+import { timeSince } from '../../../utils/time';
+import { toEther, txFee } from '../../../utils/ethUtils';
 
 function parseInputData(input: string): string {
   if (input.length < 10) {
@@ -36,14 +36,14 @@ function Overview() {
     <React.Fragment>
       {
         stateLoadable.state === 'hasValue' && stateLoadable.contents
-        ? (<Table>
+          ? (<Table>
             <TableBody>
               <TableRow>
                 <TableCell>
                   <Typography>Transaction Hash</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{stateLoadable.contents.tx_ext.tx.hash}</Typography>
+                  <Typography>{stateLoadable.contents.hash}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -51,15 +51,15 @@ function Overview() {
                   <Typography>Status</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{+stateLoadable.contents.tx_ext.state ? 'Success' : 'Failed'}</Typography>
+                  <Typography>{+stateLoadable.contents.status ? 'Success' : 'Failed'}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Transaction Index</Typography>
+                  <Typography>Block</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{stateLoadable.contents.tx_ext.tx.index}</Typography>
+                  <Typography>{stateLoadable.contents.block_number}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -67,9 +67,9 @@ function Overview() {
                   <Typography>Timestamp</Typography>
                 </TableCell>
                 <TableCell>
-                  <Box sx={{display:'flex', gap:'8px'}}>
-                    <Typography>{timeSince(stateLoadable.contents.tx_ext.tx.l1_timestamp)}</Typography>
-                    <Typography>({new Date(+stateLoadable.contents.tx_ext.tx.l1_timestamp * 1000).toLocaleString()})</Typography>
+                  <Box sx={{ display: 'flex', gap: '8px' }}>
+                    <Typography>{timeSince(stateLoadable.contents.block_timestamp)}</Typography>
+                    <Typography>({new Date(+stateLoadable.contents.block_timestamp).toLocaleString()})</Typography>
                   </Box>
                 </TableCell>
               </TableRow>
@@ -78,7 +78,7 @@ function Overview() {
                   <Typography>From</Typography>
                 </TableCell>
                 <TableCell>
-                  <L2AddressLink address={stateLoadable.contents.tx_ext.tx.from_address} />
+                  <AddressLink address={stateLoadable.contents.tx_from} />
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -87,10 +87,10 @@ function Overview() {
                 </TableCell>
                 <TableCell>
                   {
-                    stateLoadable.contents.tx_ext.tx.to_address
-                    ? <L2AddressLink address={stateLoadable.contents.tx_ext.tx.to_address} />
-                    : (<React.Fragment>
-                        [Contract <L2AddressLink address={stateLoadable.contents.tx_ext.contract_address} /> Created]
+                    stateLoadable.contents.tx_to
+                      ? <AddressLink address={stateLoadable.contents.tx_to} />
+                      : (<React.Fragment>
+                        [Contract <AddressLink address={stateLoadable.contents.contract_address} /> Created]
                       </React.Fragment>)
                   }
                 </TableCell>
@@ -100,7 +100,7 @@ function Overview() {
                   <Typography>Value</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{toEther(stateLoadable.contents.tx_ext.tx.value)} Ether</Typography>
+                  <Typography>{toEther(stateLoadable.contents.tx_value)} Unit</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -108,7 +108,7 @@ function Overview() {
                   <Typography>Transaction Fee</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{txFee(stateLoadable.contents.tx_ext.gas_used, stateLoadable.contents.tx_ext.tx.gas_price)} Ether</Typography>
+                  <Typography>{txFee(stateLoadable.contents.gas_used, stateLoadable.contents.gas_price)} Unit</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -117,7 +117,7 @@ function Overview() {
                 </TableCell>
                 <TableCell>
                   <Typography>
-                    {(+stateLoadable.contents.tx_ext.tx.gas_price).toLocaleString()} Wei
+                    {(+stateLoadable.contents.gas_price).toLocaleString()} Wei
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -126,7 +126,7 @@ function Overview() {
                   <Typography>Gas Used</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{(+stateLoadable.contents.tx_ext.gas_used).toLocaleString()}</Typography>
+                  <Typography>{(+stateLoadable.contents.gas_used).toLocaleString()}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -134,24 +134,24 @@ function Overview() {
                   <Typography>Nonce</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{stateLoadable.contents.tx_ext.tx.nonce}</Typography>
+                  <Typography>{stateLoadable.contents.nonce}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{borderBottom:'none'}}>
+                <TableCell sx={{ borderBottom: 'none' }}>
                   <Typography>Input Data</Typography>
                 </TableCell>
-                <TableCell sx={{borderBottom:'none'}}>
-                  <TextareaAutosize style={{width:'100%', resize:'vertical', backgroundColor:'#f5f5f5', color:'#74838e'}}
+                <TableCell sx={{ borderBottom: 'none' }}>
+                  <TextareaAutosize style={{ width: '100%', resize: 'vertical', backgroundColor: '#f5f5f5', color: '#74838e' }}
                     aria-label='transaction-details-input-data'
                     readOnly
-                    defaultValue={stateLoadable.contents.tx_ext.tx.to_address ? parseInputData(stateLoadable.contents.tx_ext.tx.tx_input) : stateLoadable.contents.tx_ext.tx.tx_input}
+                    defaultValue={stateLoadable.contents.tx_to ? parseInputData(stateLoadable.contents.tx_input) : stateLoadable.contents.tx_input}
                   />
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>)
-      : null
+          : null
       }
     </React.Fragment>
   );

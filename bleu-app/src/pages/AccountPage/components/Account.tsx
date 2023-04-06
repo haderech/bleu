@@ -1,7 +1,7 @@
-import React, {useEffect} from 'react';
-import {useParams} from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import {useRecoilState, useRecoilValueLoadable} from 'recoil';
+import { useRecoilState, useRecoilValueLoadable } from 'recoil';
 import InfoCard from '../../../components/InfoCard';
 import {
   Box,
@@ -15,8 +15,8 @@ import {
   Tabs,
   Typography
 } from '@mui/material';
-import {options, balance as _balance, tabIndex as _tabIndex} from './state';
-import {toEther} from '../../../utils/ethUtils';
+import { options, balance as _balance, tabIndex as _tabIndex } from './state';
+import { toEther } from '../../../utils/ethUtils';
 import Transactions from './Transactions';
 
 const cardHeader: Readonly<any> = {
@@ -65,7 +65,7 @@ function a11yProps(index: number) {
 }
 
 function Account(props: any) {
-  const {address}: any = useParams();
+  const { address }: any = useParams();
   const [opts, setOpts] = useRecoilState(options);
   const [tabIndex, setTabIndex] = useRecoilState(_tabIndex);
   const balance = useRecoilValueLoadable(_balance);
@@ -84,18 +84,18 @@ function Account(props: any) {
   return (
     <Grid container spacing={2}>
       <Grid item lg={6} md={6} sm={12} xs={12}>
-        <InfoCard title={`Address ${address}`} sx={{height:'100%'}} contentProps={{mt:0,mb:0}}>
+        <InfoCard title={`Address ${address}`} sx={{ height: '100%' }} contentProps={{ mt: 0, mb: 0 }}>
           <Table>
             <TableBody>
               <TableRow>
-                <TableCell sx={{borderBottom:'none'}}>
+                <TableCell sx={{ borderBottom: 'none' }}>
                   <Grid container>
                     <Grid item lg={4} md={4} sm={12} xs={12}>
                       <Typography variant='body1'>Balance:</Typography>
                     </Grid>
                     <Grid item lg={8} md={8} sm={12} xs={12}>
                       {
-                        balance.state === 'hasValue' ? <Typography>{toEther(balance.contents)} Ether</Typography> : null
+                        balance.state === 'hasValue' ? <Typography>{toEther(balance.contents)} Unit</Typography> : null
                       }
                     </Grid>
                   </Grid>

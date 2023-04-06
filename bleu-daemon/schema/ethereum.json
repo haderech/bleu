@@ -80,6 +80,10 @@
       "uncles": {
         "type": [ "string", "null" ],
         "description": "uncles"
+      },
+      "txn": {
+        "type": "integer",
+        "description": "txn"
       }
     },
     "indexes": [ [ "block_number" ] ],

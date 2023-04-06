@@ -9,11 +9,11 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import {useRecoilValueLoadable} from 'recoil';
-import {state} from './state';
-import {L1TransactionLink} from '../../../components/Link';
-import {timeSince} from '../../../utils/time';
-import {ArrowLeft, ArrowRight} from '@mui/icons-material';
+import { useRecoilValueLoadable } from 'recoil';
+import { state } from './state';
+import { BlockTxnLink, TransactionLink } from '../../../components/Link';
+import { timeSince } from '../../../utils/time';
+import { ArrowLeft, ArrowRight } from '@mui/icons-material';
 
 function Overview(props: any) {
   const block = useRecoilValueLoadable(state);
@@ -22,75 +22,105 @@ function Overview(props: any) {
     <React.Fragment>
       {
         block.state === 'hasValue' && block.contents
-        ? (<Table>
+          ? (<Table>
             <TableBody>
               <TableRow>
                 <TableCell>
-                  <Typography>Batch Index</Typography>
+                  <Typography>Block Height</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{block.contents.batch_index}</Typography>
+                  <Typography>{block.contents.block_number}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>L1 Timestamp</Typography>
+                  <Typography>Timestamp</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{timeSince(block.contents.batch_timestamp)} ({new Date(+block.contents.batch_timestamp * 1000).toLocaleString()})</Typography>
+                  <Typography>{timeSince(block.contents.block_timestamp)} ({new Date(+block.contents.block_timestamp * 1000).toLocaleString()})</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Batch Size</Typography>
+                  <Typography>Transactions</Typography>
                 </TableCell>
                 <TableCell>
-                  <Link underline='none' href={`/txs?blockNum=${block.contents.batch_index}&isState=${props.isState}`}>{block.contents.batch_size}</Link>
+                  {block.contents.txn ? <BlockTxnLink blockNumber={block.contents.block_number} txn={block.contents.txn} /> : block.contents.txn}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>L1 Transaction Hash</Typography>
+                  <Typography>Difficulty</Typography>
+                </TableCell>
+                <TableCell>{block.contents.difficulty}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Size</Typography>
                 </TableCell>
                 <TableCell>
-                  <L1TransactionLink hash={block.contents.l1_tx_hash} />
+                  <Typography>{block.contents.block_size}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>L1 Block Number</Typography>
+                  <Typography>Gas Used</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{block.contents.l1_block_number}</Typography>
+                  <Typography>{block.contents.gas_used}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Batch root</Typography>
+                  <Typography>Gas Limit</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{block.contents.batch_root}</Typography>
+                  <Typography>{block.contents.gas_limit}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>
-                  <Typography>Previous Total Elements</Typography>
+                  <Typography>Base Fee Per Gas</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography>{block.contents.previous_total_elements}</Typography>
+                  <Typography>{block.contents.base_fee_per_gas}</Typography>
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{borderBottom:'none'}}>
+                <TableCell>
+                  <Typography>Hash</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{block.contents.hash}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Parent Hash</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{block.contents.parent_hash}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Typography>Nonce</Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography>{block.contents.nonce}</Typography>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ borderBottom: 'none' }}>
                   <Typography>Extra data</Typography>
                 </TableCell>
-                <TableCell sx={{borderBottom:'none'}}>
+                <TableCell sx={{ borderBottom: 'none' }}>
                   <Typography>{Buffer.from(block.contents.extra_data, 'hex').toString()}</Typography>
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>)
-      : null
+          : null
       }
     </React.Fragment>
   );

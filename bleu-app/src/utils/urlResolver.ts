@@ -12,10 +12,6 @@ function paramsToString(params?: string | object): string {
   return params || '';
 }
 
-export function l1Explorer(path: string, key?: string, params?: string | object) {
-  return consts.L1ExplorerEndpoint + path + (key ? '/' + key : '') + paramsToString(params);
-}
-
 export function api(path: string, key?: string, params?: string | object) {
-  return consts.BleuServerEndpoint + '/api/v1/optimism' + path + (key ? '/' + key : '') + paramsToString(params);
+  return consts.BleuServerEndpoint + '/api/v1/ethereum' + path + (key ? '/' + key : '') + paramsToString(params);
 }

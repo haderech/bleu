@@ -1,4 +1,4 @@
-import {atom, selector} from 'recoil';
+import { atom, selector } from 'recoil';
 
 export const options = atom({
   key: 'AccountPageTransactionsOptions',
@@ -17,30 +17,26 @@ interface State {
     total_page: number;
   };
   records: {
-    contract_address: string;
-    gas_used: string;
-    tx: {
-      block_hash: string;
-      block_number: string;
-      from_address: string;
-      gas: string;
-      gas_price: string;
-      hash: string;
-      index: string;
-      l1_block_number: string;
-      l1_timestamp: string;
-      l1_tx_origin: string;
-      nonce: string;
-      optimism_block_txs_id: number;
-      queue_index: string;
-      queue_origin: string;
-      raw_tx: string;
-      to_address: string;
-      tx_index: string;
-      tx_input: string;
-      tx_type: string;
-      value: string;
-    }
+    block_hash: string,
+    block_number: string,
+    chain_id: string,
+    gas: string,
+    gas_price: string,
+    hash: string,
+    max_fee_per_gas: string,
+    nonce: string,
+    public_key: string,
+    tx_from: string,
+    tx_input: string,
+    tx_to: string,
+    tx_type: string,
+    tx_value: string,
+    block_timestamp: string,
+    contract_address: string,
+    cumulative_gas_used: string,
+    effective_gas_price: string,
+    gas_used: string,
+    status: string,
   }[];
 }
 

@@ -1,4 +1,4 @@
-import {atom} from 'recoil';
+import { atom } from 'recoil';
 
 export interface State {
   page_info: {
@@ -8,16 +8,28 @@ export interface State {
     total_page: number;
   },
   records: {
-    batch_index: string;
-    batch_root: string;
-    batch_size: string;
-    batch_timestamp: string;
-    extra_data: string;
-    l1_block_number: string;
-    l1_tx_hash: string;
     optimism_tx_batches_id: number;
-    previous_total_elements: string;
-    submitter: string;
+    author: string;
+    base_fee_per_gas: string;
+    block_number: string;
+    block_size: string;
+    block_timestamp: string;
+    difficulty: string;
+    extra_data: string;
+    gas_limit: string;
+    gas_used: string;
+    hash: string;
+    logs_bloom: string;
+    miner: string;
+    nonce: string;
+    parent_hash: string;
+    receipt_root: string;
+    sha3_uncles: string;
+    state_root: string;
+    total_difficulty: string;
+    transaction_root: string;
+    uncles: string;
+    txn: number;
   }[];
 }
 

@@ -24,9 +24,9 @@ function search() {
       return `/account/${keyword}`;
     }
   } else {
-    const blockNum = parseInt(keyword);
-    if (blockNum) {
-      return `/block/${blockNum}`;
+    const blockNumber = parseInt(keyword);
+    if (blockNumber) {
+      return `/block/${blockNumber}`;
     }
   }
   return '';

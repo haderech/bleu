@@ -1,17 +1,15 @@
-import React, {useEffect} from 'react';
-import {useParams, useLocation} from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import {useRecoilState} from 'recoil';
+import { useRecoilState } from 'recoil';
 import {
   Box,
-  Divider,
   Tab,
   Tabs,
-  Typography,
 } from '@mui/material';
 import InfoCard from '../../../components/InfoCard';
 import Overview from './Overview';
-import {options} from './state';
+import { options } from './state';
 
 const cardHeaderC1: Readonly<any> = {
   borderBottom: 1,
@@ -28,7 +26,7 @@ function TabPanel(props: any) {
       id={`block-details-tabpanel-${index}`}
       aria-labelledby={`block-details-tab-${index}`}
       {...other}
-      sx={{px:'12px', pb:'12px'}}
+      sx={{ px: '12px', pb: '12px' }}
     >
       {value === index && (
         <React.Fragment>
@@ -53,17 +51,14 @@ function a11yProps(index: number) {
 }
 
 function BlockDetails(props: any) {
-  const {blockNumber}: any = useParams();
+  const { blockNumber }: any = useParams();
   const [opts, setOpts] = useRecoilState(options);
-  const {search} = useLocation();
-  const isState = new URLSearchParams(search).get('isState') === 'true';
 
   useEffect(() => {
     if (opts.blockNumber !== blockNumber) {
       setOpts({
         ...opts,
         blockNumber: blockNumber,
-        isState: isState,
       });
     }
   });
@@ -76,14 +71,14 @@ function BlockDetails(props: any) {
   };
 
   return (
-    <InfoCard title={!isState ? 'Transaction Batches' : 'State Batches'} subtitle={`#${blockNumber}`} contentProps={{m:0}}>
+    <InfoCard title='Block' subtitle={`#${blockNumber}`} contentProps={{ m: 0 }}>
       <Box sx={cardHeaderC1}>
         <Tabs value={opts.index} onChange={handleChange} aria-label='block-details-tabs'>
           <Tab label='Overview' {...a11yProps(0)} />
         </Tabs>
       </Box>
       <TabPanel value={opts.index} index={0}>
-        <Overview isState={isState} />
+        <Overview />
       </TabPanel>
     </InfoCard>
   );

@@ -3,7 +3,7 @@ use crate::{
 	error::error::ExpectedError,
 	libs::{
 		self,
-		convert::hex_to_decimal_converter,
+		convert::convert_hex_to_decimal,
 		request,
 		serde::{get_array, get_object},
 		sync::load_state,
@@ -84,9 +84,10 @@ impl EthereumTxReceiptPlugin {
 			"id": 1
 		});
 		let response = request::post(&req_url, &req_body.to_string()).await?;
-		let receipt = get_object(&response, "result")?;
-		let receipt = hex_to_decimal_converter(
-			receipt,
+		let mut receipt = get_object(&response, "result")?.clone();
+
+		convert_hex_to_decimal(
+			&mut receipt,
 			vec!["blockNumber", "cumulativeGasUsed", "gasUsed", "status", "transactionIndex"],
 		)?;
 		let pg_sender = senders.get("postgres");
@@ -94,13 +95,12 @@ impl EthereumTxReceiptPlugin {
 			String::from("ethereum_tx_receipts"),
 			serde_json::Value::Object(receipt.to_owned()),
 		))?;
-		let logs = get_array(&receipt, "logs")?;
-		for log in logs.iter() {
+		let mut logs = get_array(&receipt, "logs")?.clone();
+		for log in logs.iter_mut() {
 			let log = log
-				.as_object()
+				.as_object_mut()
 				.ok_or(ExpectedError::ParsingError("log is not object.".to_string()))?;
-			let log =
-				hex_to_decimal_converter(log, vec!["blockNumber", "transactionIndex", "logIndex"])?;
+			convert_hex_to_decimal(log, vec!["blockNumber", "transactionIndex", "logIndex"])?;
 			let _ = pg_sender.send(PostgresMsg::new(
 				String::from("ethereum_logs"),
 				serde_json::Value::Object(log.to_owned()),

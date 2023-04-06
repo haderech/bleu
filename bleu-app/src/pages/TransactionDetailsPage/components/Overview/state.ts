@@ -3,38 +3,26 @@ import {api} from '../../../../utils/urlResolver';
 import {options} from '../state';
 
 export interface Transaction {
-  l1_origin_tx_hash: string;
-  tx_ext: {
-    contract_address: string;
-    gas_used: string;
-    l1_state_batch_index: string;
-    l1_state_root_submission_tx_hash: string;
-    l1_submission_tx_hash: string;
-    l1_tx_batch_index: string;
-    tx: {
-      block_hash: string;
-      block_number: string;
-      from_address: string;
-      gas: string;
-      gas_price: string;
-      hash: string;
-      index: string;
-      l1_block_number: string;
-      l1_timestamp: string;
-      l1_tx_origin: string;
-      nonce: string;
-      optimism_block_txs_id: number;
-      queue_index: string;
-      queue_origin: string;
-      raw_tx: string;
-      to_address: string;
-      tx_index: string;
-      tx_input: string;
-      tx_type: string;
-      value: string;
-    };
-    state: string;
-  }
+  block_hash: string,
+  block_number: string,
+  chain_id: string,
+  gas: string,
+  gas_price: string,
+  hash: string,
+  max_fee_per_gas: string,
+  nonce: string,
+  public_key: string,
+  tx_from: string,
+  tx_input: string,
+  tx_to: string,
+  tx_type: string,
+  tx_value: string,
+  block_timestamp: string,
+  contract_address: string,
+  cumulative_gas_used: string,
+  effective_gas_price: string,
+  gas_used: string,
+  status: string,
 }
 
 export const state = selector<Transaction>({
@@ -44,13 +32,8 @@ export const state = selector<Transaction>({
     if (opts.txHash.length === 0) {
       return;
     }
-    if (opts.txHash.startsWith('0x')) {
-      const res = await fetch(api('/tx/hash', opts.txHash));
-      return await res.json();
-    } else {
-      const res = await fetch(api('/tx/index', opts.txHash));
-      return await res.json();
-    }
+    const res = await fetch(api('/logs', opts.txHash));
+    return await res.json();
   },
 });
 

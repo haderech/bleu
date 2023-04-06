@@ -3,15 +3,15 @@ import {api} from '../../../../utils/urlResolver';
 import {options} from '../state';
 
 export interface Log {
-  address: string;
-  block_hash: string;
-  block_number: string;
-  data: string;
-  log_index: string;
-  removed: boolean;
-  topics: string[];
-  tx_hash: string;
-  tx_index: string;
+	address: string;
+	topics: string[];
+	log_data: string;
+	block_number: string;
+	transaction_hash: string;
+	transaction_index: string;
+	block_hash: string;
+	log_index: string;
+	removed: boolean;
 }
 
 export const state = selector<Log[]>({
@@ -22,7 +22,7 @@ export const state = selector<Log[]>({
       return;
     }
     if (opts.txHash.startsWith('0x')) {
-      const res = await fetch(api('/tx/logs/hash', opts.txHash));
+      const res = await fetch(api('/logs', opts.txHash));
       return await res.json();
     } else {
     }

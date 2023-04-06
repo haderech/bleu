@@ -1,6 +1,6 @@
 import {atom, selector} from 'recoil';
 import {api} from '../../../utils/urlResolver';
-import {L2JsonRpcEndpoint} from '../../../utils/consts';
+import { BleuServerEndpoint, NodeJsonRpcEndpoint } from '../../../utils/consts';
 
 export const options = atom({
   key: 'AccountPageOptions',
@@ -20,7 +20,7 @@ export const balance = selector({
     const opts = get(options);
     try {
       if (opts.address.length > 0) {
-        const res = await fetch(L2JsonRpcEndpoint, {
+        const res = await fetch(NodeJsonRpcEndpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

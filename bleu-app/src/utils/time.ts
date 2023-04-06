@@ -12,7 +12,7 @@ function timeSince(date :any) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   const interval = intervals.find(i => i.seconds < seconds);
   if (interval === undefined) {
-    return '';
+    return '0 second ago';
   }
   const count = Math.floor(seconds / interval.seconds);
   return `${count} ${interval.label}${count !== 1 ? 's' : ''} ago`;

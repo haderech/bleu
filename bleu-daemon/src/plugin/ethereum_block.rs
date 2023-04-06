@@ -3,7 +3,7 @@ use crate::{
 	error::error::ExpectedError,
 	libs::{
 		self,
-		convert::hex_to_decimal_converter,
+		convert::convert_hex_to_decimal,
 		request,
 		serde::{filter, get_array, get_object, get_string},
 		sync::load_state,
@@ -87,33 +87,37 @@ impl EthereumBlockPlugin {
 				state.sync_idx
 			)))
 		}
-		let block = get_object(&response, "result")?;
-		if let false = filter(block, state.get_filter())? {
+		let mut block = get_object(&response, "result")?.clone();
+		if let false = filter(&block, state.get_filter())? {
 			return Err(ExpectedError::FilterError("filtered.".to_string()))
 		}
-		let block = hex_to_decimal_converter(
-			block,
+		convert_hex_to_decimal(
+			&mut block,
 			vec!["number", "size", "timestamp", "gasLimit", "gasUsed"],
 		)?;
+		let mut txs = get_array(&block, "transactions")?.clone();
+		block.insert("txn".to_string(), txs.len().into());
+		
 		let pg_sender = senders.get("postgres");
 		let _ = pg_sender.send(PostgresMsg::new(
 			String::from("ethereum_blocks"),
 			Value::Object(block.clone()),
 		))?;
-		let txs = get_array(&block, "transactions")?;
-		for tx in txs.iter() {
+		for tx in txs.iter_mut() {
 			let tx = tx
-				.as_object()
-				.ok_or(ExpectedError::ParsingError("transaction is not object.".to_string()))?;
-			let tx = hex_to_decimal_converter(
+				.as_object_mut()
+				.ok_or(ExpectedError::ParsingError("tx is not object.".to_string()))?;
+			convert_hex_to_decimal(
 				tx,
 				vec!["blockNumber", "gas", "gasPrice", "nonce", "transactionIndex", "value"],
 			)?;
-			let tx_hash = get_string(&tx, "hash")?;
-			let _ = pg_sender
-				.send(PostgresMsg::new("ethereum_transactions".to_string(), Value::Object(tx)))?;
+			let tx_hash = get_string(tx, "hash")?;
+			let _ = pg_sender.send(PostgresMsg::new(
+				"ethereum_transactions".to_string(),
+				Value::Object(tx.to_owned()),
+			))?;
 			let receipt_sender = senders.get("ethereum_tx_receipt");
-			let _ = receipt_sender.send(EthereumTxReceiptMsg::new(tx_hash))?;
+			let _ = receipt_sender.send(EthereumTxReceiptMsg::new(tx_hash.to_string()))?;
 		}
 		libs::sync::save_state(&state)?;
 		Ok(())
