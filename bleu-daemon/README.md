@@ -78,12 +78,12 @@ For example, in the `l2_tx_block` that gets the tx data of L2 geth, there is a f
 `uniques` is a field for adding a unique constraint to a column. It has the same format as `indexes`, and you can also add multi-column unique conditions.
 ```json
 {
-  "ethereum_blocks": {
+  "ethereum_transactions": {
     "attributes": {
       ...
     },
-    "indexes": [ [ "address" ], [ "block_number" ], [ "tx_hash" ], [ "block_hash" ] ],
-    "uniques": [ [ "tx_hash", "log_index" ] ]
+    "indexes": [ [ "block_number" ], [ "block_hash" ], [ "tx_from" ], [ "tx_to" ] ],
+    "uniques": [ [ "hash" ] ]
   }
 }
 ```
