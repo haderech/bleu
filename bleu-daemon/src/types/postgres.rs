@@ -67,8 +67,10 @@ impl PostgresSchema {
 						return Err(ExpectedError::InvalidError(
 							"second value of types must be null.".to_string(),
 						))
+						(v_str.get(0).unwrap().clone(), true)
+					} else {
+						(v_str.get(0).unwrap().clone(), false)
 					}
-					(v_str.get(0).unwrap().clone(), true)
 				},
 				Value::String(v) => (v.clone(), false),
 				_ =>
