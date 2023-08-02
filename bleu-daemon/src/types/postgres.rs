@@ -62,11 +62,11 @@ impl PostgresSchema {
 						return Err(ExpectedError::InvalidError(
 							"type array size cannot be bigger than 2.".to_string(),
 						))
-					}
-					if v_str.len() > 1 && v_str.get(1).unwrap() != "null" {
+					} else if v_str.len() > 1 && v_str[1] != "null" {
 						return Err(ExpectedError::InvalidError(
 							"second value of types must be null.".to_string(),
 						))
+					} else if v_str.len() > 1 && v_str[1] == "null" {
 						(v_str.get(0).unwrap().clone(), true)
 					} else {
 						(v_str.get(0).unwrap().clone(), false)

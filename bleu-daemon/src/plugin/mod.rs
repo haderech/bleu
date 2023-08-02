@@ -5,3 +5,4 @@ pub mod jsonrpc;
 pub mod postgres;
 pub mod slack;
 pub mod sync;
+pub mod template;

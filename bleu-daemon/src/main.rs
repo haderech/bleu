@@ -1,7 +1,7 @@
 use appbase::prelude::*;
 use plugin::{
 	ethereum_block::EthereumBlockPlugin, ethereum_tx_receipt::EthereumTxReceiptPlugin,
-	sync::SyncRpcPlugin,
+	sync::SyncRpcPlugin
 };
 
 mod error;
