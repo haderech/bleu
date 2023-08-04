@@ -8,7 +8,7 @@ use crate::{
 		serde::{filter, get_array, get_object, get_string},
 		sync::load_state,
 	},
-	plugin::{
+	plugins::{
 		postgres::{PostgresMsg, PostgresPlugin},
 		slack::SlackPlugin,
 	},
@@ -97,7 +97,7 @@ impl EthereumBlockPlugin {
 		)?;
 		let mut txs = get_array(&block, "transactions")?.clone();
 		block.insert("txn".to_string(), txs.len().into());
-		
+
 		let pg_sender = senders.get("postgres");
 		let _ = pg_sender.send(PostgresMsg::new(
 			String::from("ethereum_blocks"),

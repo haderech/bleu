@@ -1,6 +1,6 @@
 use crate::{
 	error::error::ExpectedError,
-	plugin::slack::{SlackMsg, SlackMsgLevel},
+	plugins::slack::{SlackMsg, SlackMsgLevel},
 	types::enumeration::Enumeration,
 };
 use appbase::prelude::*;

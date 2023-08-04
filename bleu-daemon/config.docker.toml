@@ -1,27 +1,27 @@
 [jsonrpc]
-host="0.0.0.0"
-port=9999
+host = "0.0.0.0"
+port = 9999
 
 [email]
-smtp-username="smtp_username"
-smtp-password="smtp_password"
-smtp-relay="smtp.gmail.com"
-from="NoBody <nobody@domain.dev>"
-reply-to="NoBody <nobody@domain.dev>"
+smtp-username = "smtp_username"
+smtp-password = "smtp_password"
+smtp-relay = "smtp.gmail.com"
+from = "NoBody <nobody@domain.dev>"
+reply-to = "NoBody <nobody@domain.dev>"
 
 [postgres]
-host="host.docker.internal"
-port="5432"
-dbname="postgres"
-user="root"
-password="postgresql"
+host = "host.docker.internal"
+port = "5432"
+dbname = "postgres"
+user = "root"
+password = "postgresql"
 
 [slack]
-activate=false
-info="https://hooks.slack.com/services/"
-warn="https://hooks.slack.com/services/"
-error="https://hooks.slack.com/services/"
+activate = false
+info = "https://hooks.slack.com/services/"
+warn = "https://hooks.slack.com/services/"
+error = "https://hooks.slack.com/services/"
 
 [app]
-plugin=[]
-channel-capacity=1024
+plugin = []
+channel-capacity = 1024

@@ -1,10 +1,9 @@
 use crate::{
 	enumeration,
-	error::error::ExpectedError,
 	libs::serde::get_string,
 	message,
-	plugin::jsonrpc::JsonRpcPlugin,
-	types::{channel::MultiSender, enumeration::Enumeration, sync::SyncMethod},
+	plugins::jsonrpc::JsonRpcPlugin,
+	types::{channel::MultiSender, enumeration::Enumeration, sync::SyncMethod}, error::error::DaemonError,
 };
 use appbase::prelude::*;
 use jsonrpc_core::{serde_json::Map, Params};
@@ -74,7 +73,7 @@ impl SyncRpcPlugin {
 		method: SyncMethod,
 		params: Params,
 		senders: &MultiSender,
-	) -> Result<Value, ExpectedError> {
+	) -> Result<Value, DaemonError> {
 		let params: Map<String, Value> = params.parse().unwrap();
 		let sync_type = get_string(&params, "sync_type")?;
 		let sender = senders.get(&sync_type);
@@ -82,9 +81,9 @@ impl SyncRpcPlugin {
 		Ok(Value::String(format!("requested. sync_type={}, method={}", sync_type, method.value())))
 	}
 
-	fn get_sync(params: Params) -> Result<Value, ExpectedError> {
+	fn get_sync(params: Params) -> Result<Value, DaemonError> {
 		let params: Map<String, Value> = params.parse().unwrap();
-		let sync_type = get_string(&params, "sync_type")?;
+		let sync_type: <Result<String, _> as Try>::Output = get_string(&params, "sync_type")?;
 		let sync_state = fs::read_to_string(format!("state/{}.json", sync_type))?;
 		let state_json = serde_json::from_str(sync_state.as_str())?;
 		Ok(Value::Object(state_json))

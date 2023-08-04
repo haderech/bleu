@@ -9,7 +9,7 @@ use crate::{
 		sync::load_state,
 	},
 	message,
-	plugin::{postgres::PostgresPlugin, slack::SlackPlugin},
+	plugins::{postgres::PostgresPlugin, slack::SlackPlugin},
 	types::{channel::MultiSender, sync::SyncState},
 };
 use appbase::prelude::*;

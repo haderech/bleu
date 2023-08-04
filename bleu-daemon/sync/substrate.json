@@ -1,0 +1,9 @@
+{
+  "sync_type": "substrate",
+  "chain_name": "substrate",
+  "chain_id": "42",
+  "from_idx": 0,
+  "endpoints": [
+    "ws://127.0.0.1:9944"
+  ]
+}

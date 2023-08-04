@@ -11,7 +11,7 @@ use crate::{
 		serde::{get_object, get_string},
 	},
 	message,
-	plugin::slack::{SlackMsg, SlackMsgLevel, SlackPlugin},
+	plugins::slack::{SlackMsg, SlackMsgLevel, SlackPlugin},
 	types::{channel::MultiSender, enumeration::Enumeration, postgres::PostgresSchema},
 };
 
