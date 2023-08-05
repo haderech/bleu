@@ -22,6 +22,7 @@ pub enum ExpectedError {
 	PostgresError(String),
 	IoError(String),
 	JsonRpcError(String),
+	Connection(String),
 	// RetryFailError(String),
 }
 
@@ -115,6 +116,7 @@ impl Display for ExpectedError {
 			ExpectedError::PostgresError(err) => write!(f, "{}", err),
 			ExpectedError::IoError(err) => write!(f, "{}", err),
 			ExpectedError::JsonRpcError(err) => write!(f, "{}", err),
+			ExpectedError::Connection(err) => write!(f, "{}", err),
 			// ExpectedError::RetryFailError(err) => write!(f, "{}", err),
 		}
 	}
