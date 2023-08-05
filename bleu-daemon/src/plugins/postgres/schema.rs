@@ -7,9 +7,17 @@ use super::error::PostgresError;
 pub struct PostgresSchema {
 	pub schema_name: String,
 	pub attributes: Vec<Attribute>,
-	pub create_table_query: String,
-	pub create_index_queries: Vec<String>,
-	pub insert_query: String,
+	pub create_query: CreateQuery,
+	pub insert_quert: InsertQuery,
+}
+
+pub struct CreateQuery {
+	pub table: String,
+	pub indexes: Vec<String>,
+}
+
+pub struct InsertQuery {
+	pub query: String,
 	pub values: Vec<String>,
 }
 
@@ -58,11 +66,19 @@ impl PostgresSchema {
 			}
 		}).collect::<Vec<Attribute>>();
 
-		let uniques = get_array(map, "uniques")?;
-		let indexes = get_array(map, "indexes")?;
-		let create_table_query = Self::create_table(schema_name.clone(), &attributes, uniques);
+		let uniques = schema.get("uniques")
+			.expect(format!("not exist uniques: {}", name).as_str())
+			.as_array()
+			.expect(format!("invalid uniques type: {}", name).as_str());
+		let indexes = schema.get("indexes")
+			.expect(format!("not exist indexes: {}", name).as_str())
+			.as_array()
+			.expect(format!("invalid indexes type: {}", name).as_str());
+
+		let create_query = Self::create_query(name.clone(), &attributes, uniques, indexes);
 		let create_index_queries = Self::create_index(schema_name.clone(), indexes);
 		let insert_query = Self::insert_query(schema_name.clone(), &attributes);
+		let values =
 
 		Ok(PostgresSchema {
 			schema_name: schema_name.clone(),
@@ -70,19 +86,21 @@ impl PostgresSchema {
 			create_table_query,
 			create_index_queries,
 			insert_query,
+    	values: todo!(),
 		})
 		}
 
 
 	}
 
-	fn create_table(
-		schema_name: String,
+	fn create_query(
+		name: String,
 		attributes: &Vec<Attribute>,
 		uniques: &Vec<Value>,
-	) -> String {
+		indexes: &Vec<Value>,
+	) -> CreateQuery {
 		let mut query_line: Vec<String> = Vec::new();
-		query_line.push(format!("{}_id serial8", schema_name));
+		query_line.push(format!("{}_id serial8", name));
 		for attribute in attributes.iter() {
 			let converted_type = convert_type(attribute.type_.clone()).unwrap();
 			if attribute.max_length.is_none() {
@@ -103,8 +121,8 @@ impl PostgresSchema {
 			}
 		}
 		query_line.push(format!(
-			"CONSTRAINT {schema_name}_pk PRIMARY KEY ({schema_name}_id)",
-			schema_name = schema_name
+			"CONSTRAINT {name}_pk PRIMARY KEY ({name}_id)",
+			name = name
 		));
 
 		for raw_keys in uniques.iter() {
@@ -122,7 +140,7 @@ impl PostgresSchema {
 			));
 		}
 		let full_query = query_line.join(", ");
-		format!("CREATE TABLE {} ({})", schema_name, full_query)
+		format!("CREATE TABLE {} ({})", name, full_query)
 	}
 
 	fn create_index(schema_name: String, indexes: &Vec<Value>) -> Vec<String> {
