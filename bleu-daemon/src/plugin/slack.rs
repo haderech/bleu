@@ -37,7 +37,8 @@ impl Plugin for SlackPlugin {
 		let mut slack_hooks: SlackHooks = HashMap::new();
 		slack_hooks.insert(String::from("info"), opt::get_value::<String>("slack::info").unwrap());
 		slack_hooks.insert(String::from("warn"), opt::get_value::<String>("slack::warn").unwrap());
-		slack_hooks.insert(String::from("error"), opt::get_value::<String>("slack::error").unwrap());
+		slack_hooks
+			.insert(String::from("error"), opt::get_value::<String>("slack::error").unwrap());
 
 		self.slack_hooks = Some(slack_hooks);
 		self.monitor = Some(APP.channels.subscribe("slack"));

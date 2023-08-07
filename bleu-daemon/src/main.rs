@@ -1,7 +1,5 @@
 use appbase::prelude::*;
-use plugin::{
-	sync::SyncRpcPlugin, substrate::SubstratePlugin
-};
+use plugin::{substrate::SubstratePlugin, sync::SyncRpcPlugin};
 
 mod error;
 mod libs;

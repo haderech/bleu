@@ -32,12 +32,11 @@ impl Plugin for Template {
 impl Template {
 	fn recv(mut receiver: Receiver, senders: MultiSender, app: QuitHandle) {
 		APP.spawn(async move {
-			if let Ok(message) = receiver.try_recv() {
+			if let Ok(_message) = receiver.try_recv() {
 				// Handling message from other plugins.
 			}
 
 			// Execute routine job.
-
 
 			if !app.is_quitting() {
 				tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
