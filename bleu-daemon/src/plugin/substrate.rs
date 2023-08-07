@@ -96,8 +96,6 @@ impl SubstratePlugin {
 
 				println!("block_number: {block_number}");
 				println!("block_hash: {block_hash}");
-				println!("extrinsic_index: #{extrinsic_index}");
-				println!("extrinsic_bytes: {bytes_hex}");
 				println!("decoded_extrinsic: {decoded_extrinsic:?}");
 
 				for event in events.iter() {
@@ -109,10 +107,14 @@ impl SubstratePlugin {
 						.field_values()
 						.map_err(|e| ExpectedError::TypeError(e.to_string()))?;
 
+
 					if pallet_name == "Balances" && event_name == "Transfer" {
+						let transfer_event = event.as_event::<substrate_node::balances::events::Transfer>().unwrap().unwrap();
+
 						println!("pallet_name: {pallet_name}");
 						println!("event_name: {event_name}");
 						println!("event_values: {event_values}");
+						println!("transfer_event: {transfer_event:?}");
 					}
 				}
 			}
