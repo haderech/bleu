@@ -12,21 +12,6 @@ pub fn get_string(values: &Map<String, Value>, name: &str) -> Result<String, Exp
 	Ok(value)
 }
 
-pub fn get_string_vec(
-	params: &Map<String, Value>,
-	name: &str,
-) -> Result<Vec<String>, ExpectedError> {
-	let value = params
-		.get(name)
-		.ok_or(ExpectedError::ParsingError(format!("{} does not exist.", name)))?
-		.as_array()
-		.ok_or(ExpectedError::ParsingError(format!("{} is not vector.", name)))?
-		.iter()
-		.map(|item| item.as_str().unwrap().to_string())
-		.collect();
-	Ok(value)
-}
-
 pub fn get_object<'a>(
 	values: &'a Map<String, Value>,
 	name: &str,
@@ -51,15 +36,7 @@ pub fn get_array<'a>(
 	Ok(value)
 }
 
-pub fn get_u64(values: &Map<String, Value>, name: &str) -> Result<u64, ExpectedError> {
-	let value = values
-		.get(name)
-		.ok_or(ExpectedError::ParsingError(format!("{} does not exist.", name)))?
-		.as_u64()
-		.ok_or(ExpectedError::ParsingError(format!("{} is not u64.", name)))?;
-	Ok(value)
-}
-
+#[allow(dead_code)]
 pub fn find_value(values: &Map<String, Value>, name: &str) -> Value {
 	if values.get(name).is_some() {
 		values.get(name).unwrap().clone()
@@ -92,6 +69,7 @@ pub fn find_value(values: &Map<String, Value>, name: &str) -> Value {
 	}
 }
 
+#[allow(dead_code)]
 pub fn get_value_by_path<'a>(
 	params: &'a Map<String, Value>,
 	path: &'a str,
@@ -119,27 +97,7 @@ pub fn get_value_by_path<'a>(
 	Err(ExpectedError::NoneError(format!("value does not exist in the path. path={}", path)))
 }
 
-// pub fn get_type(value: &Value) -> String {
-// 	let types = match value {
-// 		Value::Null => "null",
-// 		Value::Bool(_) => "bool",
-// 		Value::Number(v) =>
-// 			if v.is_u64() {
-// 				"u64"
-// 			} else if v.is_i64() {
-// 				"i64"
-// 			} else if v.is_f64() {
-// 				"f64"
-// 			} else {
-// 				"number"
-// 			},
-// 		Value::String(_) => "string",
-// 		Value::Array(_) => "array",
-// 		Value::Object(_) => "object",
-// 	};
-// 	String::from(types)
-// }
-
+#[allow(dead_code)]
 pub fn filter(values: &Map<String, Value>, filter: String) -> Result<bool, ExpectedError> {
 	if filter.trim().is_empty() {
 		return Ok(true)
@@ -194,6 +152,7 @@ pub fn filter(values: &Map<String, Value>, filter: String) -> Result<bool, Expec
 	Ok(ret)
 }
 
+#[allow(dead_code)]
 fn filter_value(values: &Map<String, Value>, key_value: &String) -> Result<bool, ExpectedError> {
 	let mut split_kv = key_value.split("=");
 	if split_kv.clone().count() != 2 {
@@ -218,6 +177,7 @@ fn filter_value(values: &Map<String, Value>, key_value: &String) -> Result<bool,
 	Ok(value == found_val.as_str())
 }
 
+#[allow(dead_code)]
 fn filter_calc(
 	bool_stack: &mut Vec<bool>,
 	calc_stack: &mut Vec<String>,

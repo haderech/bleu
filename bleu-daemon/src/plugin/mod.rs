@@ -1,9 +1,7 @@
 pub mod email;
-pub mod ethereum_block;
-pub mod ethereum_tx_receipt;
 pub mod jsonrpc;
 pub mod postgres;
 pub mod slack;
 pub mod substrate;
-pub mod sync;
+pub mod syncrpc;
 pub mod template;

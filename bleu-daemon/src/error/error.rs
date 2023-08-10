@@ -17,13 +17,11 @@ pub enum ExpectedError {
 	RequestError(String),
 	ParsingError(String),
 	ChannelError(String),
-	FilterError(String),
-	BlockHeightError(String),
+	UnknownBlockError(String),
 	PostgresError(String),
 	IoError(String),
 	JsonRpcError(String),
 	ConnectionError(String),
-	// RetryFailError(String),
 }
 
 impl From<smtp::Error> for ExpectedError {
@@ -111,13 +109,11 @@ impl Display for ExpectedError {
 			ExpectedError::RequestError(err) => write!(f, "{}", err),
 			ExpectedError::ParsingError(err) => write!(f, "{}", err),
 			ExpectedError::ChannelError(err) => write!(f, "{}", err),
-			ExpectedError::FilterError(err) => write!(f, "{}", err),
-			ExpectedError::BlockHeightError(err) => write!(f, "{}", err),
+			ExpectedError::UnknownBlockError(err) => write!(f, "{}", err),
 			ExpectedError::PostgresError(err) => write!(f, "{}", err),
 			ExpectedError::IoError(err) => write!(f, "{}", err),
 			ExpectedError::JsonRpcError(err) => write!(f, "{}", err),
 			ExpectedError::ConnectionError(err) => write!(f, "{}", err),
-			// ExpectedError::RetryFailError(err) => write!(f, "{}", err),
 		}
 	}
 }
