@@ -1,6 +1,6 @@
 use crate::{
 	error::error::ExpectedError,
-	libs::sync::{control_state, error_state, init_state, load_state},
+	libs::sync::{control_state, error_state, init_state, load_state, save_state},
 	types::{
 		channel::MultiSender,
 		sync::{SyncState, SyncStatus},
@@ -22,7 +22,7 @@ impl Config for SubstrateNodeConfig {
 	type ExtrinsicParams = <SubstrateConfig as Config>::ExtrinsicParams;
 }
 
-#[subxt::subxt(runtime_metadata_path = "metadata/metadata.scale")]
+#[subxt::subxt(runtime_metadata_path = "metadata/horizon.metadata.scale")]
 pub mod substrate_node {}
 
 #[derive(Default)]
@@ -79,30 +79,48 @@ impl SubstratePlugin {
 
 			if state.status == SyncStatus::Working {
 				if let Err(e) = Self::execute(&state).await {
-					match e {
-						ExpectedError::UnknownBlockError(e) => {
-							if e.contains("UnknownBlock: State already discarded for") {
-								log::error!(
-									"this error will be ignored; {}; sync_type:{}, sync_idx: {}",
-									e.to_string(),
-									state.sync_type,
-									state.sync_idx
-								);
-								state.sync_idx += 1;
-							}
-						},
-						_ => {
+					if e.to_string().contains("UnknownBlock: State already discarded for") {
+						log::error!(
+							"this error will be ignored; {}; sync_type:{}, sync_idx: {}",
+							e.to_string(),
+							state.sync_type,
+							state.sync_idx
+						);
+						state.sync_idx += 1;
+						if let Err(e) = save_state(&state) {
 							log::error!(
-								"{}; sync_type:{}, sync_idx: {}",
+								"this error will be ignored; {}; sync_type:{}, sync_idx: {}",
 								e.to_string(),
 								state.sync_type,
 								state.sync_idx
 							);
-							let _ = error_state(e, &mut state);
-						},
+						}
+					} else if e.to_string().contains("block does not created") {
+						log::error!(
+							"this error will be ignored; {}; sync_type:{}, sync_idx: {}",
+							e.to_string(),
+							state.sync_type,
+							state.sync_idx
+						);
+					} else {
+						log::error!(
+							"{}; sync_type:{}, sync_idx: {}",
+							e.to_string(),
+							state.sync_type,
+							state.sync_idx
+						);
+						let _ = error_state(e, &mut state);
 					}
 				} else {
 					state.sync_idx += 1;
+					if let Err(e) = save_state(&state) {
+						log::error!(
+							"this error will be ignored; {}; sync_type:{}, sync_idx: {}",
+							e.to_string(),
+							state.sync_type,
+							state.sync_idx
+						);
+					}
 				}
 			}
 
@@ -155,9 +173,9 @@ impl SubstratePlugin {
 
 					let pallet_name = event.pallet_name();
 					let event_name = event.variant_name();
-					let event_values = event
-						.field_values()
-						.map_err(|e| ExpectedError::JsonRpcError(e.to_string()))?;
+					// let event_values = event
+					// .field_values()
+					// .map_err(|e| ExpectedError::JsonRpcError(e.to_string()))?;
 
 					if pallet_name == "Balances" && event_name == "Transfer" {
 						let transfer_event = event
@@ -165,10 +183,9 @@ impl SubstratePlugin {
 							.unwrap()
 							.unwrap();
 
-						log::debug!("pallet_name: {pallet_name}");
-						log::debug!("event_name: {event_name}");
-						log::debug!("event_values: {event_values}");
-						log::debug!("transfer_event: {transfer_event:?}");
+						log::debug!("from: {:?}", transfer_event.from.0 .0);
+						log::debug!("to: {:?}", transfer_event.to.0 .0);
+						log::debug!("amount: {:?}", transfer_event.amount.to_string());
 					}
 				}
 			}

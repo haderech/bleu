@@ -1,28 +1,24 @@
-use crate::{
-	enumeration, libs,
-	libs::{opt, serde::get_string},
-	message,
-	types::enumeration::Enumeration,
-};
 use appbase::prelude::*;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+type SlackHooks = HashMap<String, String>;
+
+#[derive(Clone, Debug)]
+pub struct SlackConfig {
+	active: bool,
+	hooks: SlackHooks,
+}
 
 #[appbase_plugin]
 pub struct SlackPlugin {
-	slack_hooks: Option<SlackHooks>,
-	monitor: Option<Receiver>,
+	receiver: Option<Receiver>,
+	config: Option<SlackConfig>,
 }
-
-pub type SlackHooks = HashMap<String, String>;
-
-message!(SlackMsg; {msg_level: String}, {msg: String});
-enumeration!(SlackMsgLevel; {Info: "info"}, {Warn: "warn"}, {Error: "error"});
 
 impl Plugin for SlackPlugin {
 	fn new() -> Self {
 		APP.options
-			.arg(clap::Arg::new("slack::activate").long("slack-activate").takes_value(true));
+			.arg(clap::Arg::new("slack::active").long("slack-active").takes_value(true));
 		APP.options
 			.arg(clap::Arg::new("slack::info").long("slack-info").takes_value(true));
 		APP.options
@@ -30,56 +26,60 @@ impl Plugin for SlackPlugin {
 		APP.options
 			.arg(clap::Arg::new("slack::error").long("slack-error").takes_value(true));
 
-		SlackPlugin { slack_hooks: None, monitor: None }
+		SlackPlugin { receiver: None, config: None }
 	}
 
 	fn init(&mut self) {
-		let mut slack_hooks: SlackHooks = HashMap::new();
-		slack_hooks.insert(String::from("info"), opt::get_value::<String>("slack::info").unwrap());
-		slack_hooks.insert(String::from("warn"), opt::get_value::<String>("slack::warn").unwrap());
-		slack_hooks
-			.insert(String::from("error"), opt::get_value::<String>("slack::error").unwrap());
+		let active = APP
+			.options
+			.value_of_t::<bool>("slack::active")
+			.expect("slack::active does not exist");
+		let info_hook = APP.options.value_of("slack::info").expect("slack::info does not exist");
+		let warn_hook = APP.options.value_of("slack::warn").expect("slack::warn does not exist");
+		let error_hook = APP.options.value_of("slack::error").expect("slack::error does not exist");
 
-		self.slack_hooks = Some(slack_hooks);
-		self.monitor = Some(APP.channels.subscribe("slack"));
+		let mut hooks = SlackHooks::new();
+		hooks.insert("info".to_string(), info_hook);
+		hooks.insert("warn".to_string(), warn_hook);
+		hooks.insert("error".to_string(), error_hook);
+		self.config = Some(SlackConfig { active, hooks });
+		self.receiver = Some(APP.channels.subscribe("slack"));
 	}
 
 	fn startup(&mut self) {
-		let slack_hooks = self.slack_hooks.take().unwrap();
-		let monitor = self.monitor.take().unwrap();
+		let config = self.config.take().unwrap();
+		let receiver = self.receiver.take().unwrap();
 		let app = APP.quit_handle().unwrap();
-		Self::recv(slack_hooks, monitor, app);
+		Self::recv(receiver, config, app);
 	}
 
 	fn shutdown(&mut self) {}
 }
 
 impl SlackPlugin {
-	fn recv(slack_hooks: SlackHooks, mut monitor: Receiver, app: QuitHandle) {
+	fn recv(mut receiver: Receiver, config: SlackConfig, app: QuitHandle) {
 		APP.spawn(async move {
-			if let Ok(msg) = monitor.try_recv() {
-				if libs::opt::get_value::<bool>("slack::activate").unwrap_or(false) {
-					let parsed_msg = msg.as_object().unwrap();
-					let msg_level =
-						SlackMsgLevel::find(get_string(parsed_msg, "msg_level").unwrap().as_str())
-							.unwrap();
-					let msg_level_value = msg_level.value();
-					let slack_hook = slack_hooks.get(&msg_level_value).unwrap();
-					let slack_msg = get_string(parsed_msg, "msg").unwrap();
+			if let Ok(received) = receiver.try_recv() {
+				let received = received.as_object().unwrap();
+				let level = received.get("level").unwrap().as_str().unwrap();
+				let message = received.get("message").unwrap().as_str().unwrap();
 
-					let mut text = HashMap::new();
-					text.insert("text", slack_msg);
-					let client = reqwest::Client::new();
-					let result = client.post(slack_hook).json(&text).send().await;
-
-					if let Err(err) = result {
-						log::error!("slack error! error={:?}", err);
+				let SlackConfig {active, hooks } = &config;
+				if *active {
+					if let Some(hook) = hooks.get(level) {
+						let mut body: HashMap<&str, String> = HashMap::new();
+						body.insert("text", message.to_string());
+						if let Err(e) = reqwest::Client::new().post(hook).json(&body).send().await {
+							log::error!("this error will be ignored; {}; level: {level}, message: {message}", e.to_string());
+						}
+					} else {
+						log::error!("this error will be ignored; unsupported level; level: {level}");
 					}
 				}
 			}
 			if !app.is_quitting() {
 				tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-				Self::recv(slack_hooks, monitor, app);
+				Self::recv(receiver, config, app);
 			}
 		});
 	}

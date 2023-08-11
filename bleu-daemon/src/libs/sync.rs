@@ -4,32 +4,36 @@ use crate::{
 	types::sync::{SyncState, SyncStatus},
 };
 
+pub fn save_state(state: &SyncState) -> Result<(), ExpectedError> {
+	filedb::write::<SyncState>("state", &state.sync_type, state)
+}
+
 pub fn load_state(sync_type: &str) -> Result<SyncState, ExpectedError> {
 	filedb::read::<SyncState>("state", sync_type)
 }
 
-pub fn init_state(sync_state: &SyncState) -> Result<(), ExpectedError> {
-	filedb::write::<SyncState>("state", &sync_state.sync_type, sync_state)
+pub fn init_state(state: &SyncState) -> Result<(), ExpectedError> {
+	filedb::write::<SyncState>("state", &state.sync_type, state)
 }
 
-pub fn error_state(e: ExpectedError, sync_state: &mut SyncState) -> Result<(), ExpectedError> {
-	sync_state.status = SyncStatus::Error;
-	sync_state.message = format!("{}", e);
-	filedb::write::<SyncState>("state", &sync_state.sync_type, sync_state)
+pub fn error_state(e: ExpectedError, state: &mut SyncState) -> Result<(), ExpectedError> {
+	state.status = SyncStatus::Error;
+	state.message = format!("{}", e);
+	filedb::write::<SyncState>("state", &state.sync_type, state)
 }
 
-pub fn control_state(method: &str, sync_state: &mut SyncState) -> Result<(), ExpectedError> {
+pub fn control_state(method: &str, state: &mut SyncState) -> Result<(), ExpectedError> {
 	match method {
 		"start_sync" => {
-			sync_state.status = SyncStatus::Working;
+			state.status = SyncStatus::Working;
 		},
 		"stop_sync" => {
-			sync_state.status = SyncStatus::Stopped;
+			state.status = SyncStatus::Stopped;
 		},
 		_ =>
 			return Err(ExpectedError::TypeError(
 				"unsupported method; [\"start_sync\", \"stop_sync\"]".to_string(),
 			)),
 	}
-	filedb::write::<SyncState>("state", &sync_state.sync_type, sync_state)
+	filedb::write::<SyncState>("state", &state.sync_type, state)
 }

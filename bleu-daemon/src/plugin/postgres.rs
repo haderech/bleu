@@ -11,8 +11,8 @@ use crate::{
 		serde::{get_object, get_string},
 	},
 	message,
-	plugin::slack::{SlackMsg, SlackMsgLevel, SlackPlugin},
-	types::{channel::MultiSender, enumeration::Enumeration, postgres::PostgresSchema},
+	plugin::slack::SlackPlugin,
+	types::{channel::MultiSender, postgres::PostgresSchema},
 };
 
 #[appbase_plugin(SlackPlugin)]
@@ -81,10 +81,8 @@ impl PostgresPlugin {
 				let schema_name = get_string(parsed_msg, "schema").unwrap();
 				let selected_schema = schema_map.get(&schema_name).unwrap();
 				let values = get_object(parsed_msg, "value").unwrap();
-				if let Err(error) = insert_value(pool.clone(), selected_schema, values) {
-					let _ = senders
-						.get("slack")
-						.send(SlackMsg::new(SlackMsgLevel::Warn.value(), error.to_string()));
+				if let Err(e) = insert_value(pool.clone(), selected_schema, values) {
+					log::error!("this error will be ignored; {}", e.to_string());
 				}
 			}
 			if !app.is_quitting() {
