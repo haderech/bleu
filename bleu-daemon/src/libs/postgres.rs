@@ -1,3 +1,4 @@
+use super::filedb;
 use crate::{
 	error::error::ExpectedError, libs::serde::find_value, plugin::postgres::Pool,
 	types::postgres::PostgresSchema,
@@ -96,11 +97,30 @@ pub fn get_query_value(values: &Map<String, Value>, target_name: &str) -> String
 	}
 }
 
+pub fn load_schema(
+	schema_files: Vec<&str>,
+) -> Result<HashMap<String, PostgresSchema>, ExpectedError> {
+	let mut schemas = HashMap::<String, PostgresSchema>::new();
+	for name in schema_files {
+		let schema = filedb::read::<Map<String, Value>>("schema", name)
+			.expect(format!("failed to load schema; schema: {name}").as_str());
+		let schema = schema
+			.iter()
+			.map(|(name, schema)| {
+				let schema = PostgresSchema::new(name.clone(), schema)
+					.expect(format!("failed to create postgres schema; schema: {name}").as_str());
+				(name.clone(), schema)
+			})
+			.collect::<HashMap<String, PostgresSchema>>();
+		schemas.extend(schema);
+	}
+	Ok(schemas)
+}
+
 #[cfg(test)]
 mod postgres {
-	use serde_json::{json, Map, Value};
-
 	use crate::libs::postgres::{create_insert_query, get_query_value};
+	use serde_json::{json, Map, Value};
 
 	#[test]
 	fn create_insert_query_test() {

@@ -64,7 +64,7 @@ impl SlackPlugin {
 				let level = received.get("level").unwrap().as_str().unwrap();
 				let message = received.get("message").unwrap().as_str().unwrap();
 
-				let SlackConfig {active, hooks } = &config;
+				let SlackConfig { active, hooks } = &config;
 				if *active {
 					if let Some(hook) = hooks.get(level) {
 						let mut body: HashMap<&str, String> = HashMap::new();
@@ -73,7 +73,9 @@ impl SlackPlugin {
 							log::error!("this error will be ignored; {}; level: {level}, message: {message}", e.to_string());
 						}
 					} else {
-						log::error!("this error will be ignored; unsupported level; level: {level}");
+						log::error!(
+							"this error will be ignored; unsupported level; level: {level}"
+						);
 					}
 				}
 			}

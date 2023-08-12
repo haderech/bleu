@@ -1,7 +1,3 @@
-use std::fmt::Debug;
-
-use jsonrpc_core::Value;
-
 use crate::{
 	error::error::ExpectedError,
 	libs::{
@@ -9,8 +5,11 @@ use crate::{
 		serde::{get_array, get_object},
 	},
 };
+use jsonrpc_core::Value;
+use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PostgresSchema {
 	pub schema_name: String,
 	pub attributes: Vec<Attribute>,
@@ -19,7 +18,7 @@ pub struct PostgresSchema {
 	pub insert_query: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Attribute {
 	pub name: String,
 	pub description: String,
@@ -29,7 +28,7 @@ pub struct Attribute {
 }
 
 impl PostgresSchema {
-	pub fn from(schema_name: String, values: &Value) -> Result<PostgresSchema, ExpectedError> {
+	pub fn new(schema_name: String, values: &Value) -> Result<PostgresSchema, ExpectedError> {
 		if !values.is_object() {
 			return Err(ExpectedError::TypeError("input values is not object type.".to_string()))
 		}
@@ -192,11 +191,9 @@ impl PostgresSchema {
 
 #[cfg(test)]
 mod postgres_test {
-	use std::{collections::HashMap, fs};
-
-	use serde_json::Value;
-
 	use crate::types::postgres::PostgresSchema;
+	use serde_json::Value;
+	use std::{collections::HashMap, fs};
 
 	#[test]
 	fn create_table_test() {
@@ -206,7 +203,7 @@ mod postgres_test {
 
 		let mut result_map = HashMap::new();
 		for (schema_name, values) in schema_map {
-			let schema = PostgresSchema::from(schema_name.clone(), values).unwrap();
+			let schema = PostgresSchema::new(schema_name.clone(), values).unwrap();
 			result_map.insert(schema_name.clone(), schema);
 		}
 		assert_eq!(result_map.len(), 1);
