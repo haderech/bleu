@@ -1,7 +1,7 @@
 use crate::{
 	error::error::ExpectedError,
 	libs::{
-		postgres::convert_type,
+		postgres::postgres_type,
 		serde::{get_array, get_object},
 	},
 };
@@ -106,28 +106,25 @@ impl PostgresSchema {
 		let mut query_line: Vec<String> = Vec::new();
 		query_line.push(format!("{}_id serial8", schema_name));
 		for attribute in attributes.iter() {
-			let converted_type = convert_type(attribute.type_.clone()).unwrap();
+			let ty = postgres_type(&attribute.type_).unwrap();
 			if attribute.max_length.is_none() {
 				query_line.push(format!(
 					"{} {} {}",
 					attribute.name,
-					converted_type,
+					ty,
 					Self::null_or_not(attribute.nullable)
 				));
 			} else {
 				query_line.push(format!(
 					"{} {}({}) {}",
 					attribute.name,
-					converted_type,
+					ty,
 					attribute.max_length.unwrap(),
 					Self::null_or_not(attribute.nullable)
 				));
 			}
 		}
-		query_line.push(format!(
-			"CONSTRAINT {schema_name}_pk PRIMARY KEY ({schema_name}_id)",
-			schema_name = schema_name
-		));
+		query_line.push(format!("CONSTRAINT {schema_name}_pk PRIMARY KEY ({schema_name}_id)"));
 
 		for raw_keys in uniques.iter() {
 			let unique_vec: Vec<String> = raw_keys

@@ -22,6 +22,7 @@ pub enum ExpectedError {
 	IoError(String),
 	JsonRpcError(String),
 	ConnectionError(String),
+	UnsupportedType(String),
 }
 
 impl From<smtp::Error> for ExpectedError {
@@ -114,6 +115,7 @@ impl Display for ExpectedError {
 			ExpectedError::IoError(err) => write!(f, "{}", err),
 			ExpectedError::JsonRpcError(err) => write!(f, "{}", err),
 			ExpectedError::ConnectionError(err) => write!(f, "{}", err),
+			ExpectedError::UnsupportedType(err) => write!(f, "{}", err),
 		}
 	}
 }

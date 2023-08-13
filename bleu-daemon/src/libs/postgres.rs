@@ -6,23 +6,17 @@ use crate::{
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
-pub fn convert_type(_type: String) -> Result<String, ExpectedError> {
-	let converted = if _type == "string" {
-		"varchar"
-	} else if _type == "integer" {
-		"bigint"
-	} else if _type == "number" {
-		"double precision"
-	} else if _type == "boolean" {
-		"boolean"
-	} else if _type == "object" {
-		"json"
-	} else if _type == "array" {
-		"varchar"
-	} else {
-		return Err(ExpectedError::TypeError(String::from("unsupported type!")))
+pub fn postgres_type(ty: &str) -> Result<String, ExpectedError> {
+	let postgres_type = match ty {
+		"string"  => "varchar",
+		"integer" => "bigint",
+		"number" => "double precision",
+		"boolean" => "boolean",
+		"object" => "json",
+		"array" => "varchar",
+		_ => return Err(ExpectedError::UnsupportedType(format!("unsupported type; type: {}", ty))),
 	};
-	Ok(String::from(converted))
+	Ok(postgres_type.to_string())
 }
 
 pub fn create_table(
