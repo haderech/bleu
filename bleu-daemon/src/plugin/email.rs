@@ -38,14 +38,14 @@ impl Plugin for EmailPlugin {
 		let username = APP
 			.options
 			.value_of("email::smtp-username")
-			.expect("email::smtp-username not exist");
+			.expect("smtp-username not exist");
 		let password = APP
 			.options
 			.value_of("email::smtp-password")
-			.expect("email::smtp-password not exist");
-		let relay = APP.options.value_of("email::smtp-relay").expect("email::smtp-relay not exist");
-		let from = APP.options.value_of("email::from").expect("email::from not exist");
-		let reply_to = APP.options.value_of("email::reply-to").expect("email::reply-to not exist");
+			.expect("smtp-password not exist");
+		let relay = APP.options.value_of("email::smtp-relay").expect("smtp-relay not exist");
+		let from = APP.options.value_of("email::from").expect("from not exist");
+		let reply_to = APP.options.value_of("email::reply-to").expect("reply-to not exist");
 		self.config = Some(EmailConfig { username, password, relay, from, reply_to });
 	}
 
