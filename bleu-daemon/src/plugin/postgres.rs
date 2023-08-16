@@ -2,7 +2,7 @@ use crate::{
 	error::error::ExpectedError,
 	libs::{
 		self,
-		postgres::{create_table, insert_value, load_schema},
+		postgres::{create_table, insert, load_schema},
 		serde::{get_object, get_string},
 	},
 	message,
@@ -81,7 +81,7 @@ impl PostgresPlugin {
 				let schema_name = get_string(parsed_msg, "schema").unwrap();
 				let selected_schema = schema_map.get(&schema_name).unwrap();
 				let values = get_object(parsed_msg, "value").unwrap();
-				if let Err(e) = insert_value(pool.clone(), selected_schema, values) {
+				if let Err(e) = insert(pool.clone(), selected_schema, values) {
 					log::error!("this error will be ignored; {}", e.to_string());
 				}
 			}

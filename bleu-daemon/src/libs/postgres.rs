@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 pub fn postgres_type(ty: &str) -> Result<String, ExpectedError> {
 	let postgres_type = match ty {
-		"string"  => "varchar",
+		"string" => "varchar",
 		"integer" => "bigint",
 		"number" => "double precision",
 		"boolean" => "boolean",
@@ -23,34 +23,25 @@ pub fn create_table(
 	pool: Pool,
 	schema_map: &HashMap<String, PostgresSchema>,
 ) -> Result<(), r2d2_postgres::postgres::Error> {
-	let mut client = pool.get().unwrap();
+	let mut client = pool.get().expect("failed to get connection from pool");
 	for (_, schema) in schema_map.iter() {
-		if let Err(err) = client.execute(schema.create_table.as_str(), &[]) {
-			let _ = error_handler(err)?;
+		if let Err(e) = client.execute(schema.create_table.as_str(), &[]) {
+			if !e.to_string().contains("already exists") {
+				return Err(e)
+			}
 		}
 		for create_index in schema.create_index.iter() {
-			if let Err(err) = client.execute(create_index.as_str(), &[]) {
-				let _ = error_handler(err)?;
+			if let Err(e) = client.execute(create_index.as_str(), &[]) {
+				if !e.to_string().contains("already exists") {
+					return Err(e)
+				}
 			}
 		}
 	}
 	Ok(())
 }
 
-pub fn error_handler(
-	err: r2d2_postgres::postgres::Error,
-) -> Result<(), r2d2_postgres::postgres::Error> {
-	let err_str = err.to_string();
-	if err_str.contains("already exists") {
-		log::warn!("{}", err_str);
-		Ok(())
-	} else {
-		log::error!("{}", err_str);
-		Err(err)
-	}
-}
-
-pub fn insert_value(
+pub fn insert(
 	pool: Pool,
 	schema: &PostgresSchema,
 	values: &Map<String, Value>,
