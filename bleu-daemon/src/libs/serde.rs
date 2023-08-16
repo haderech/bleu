@@ -4,27 +4,21 @@ use std::str::FromStr;
 
 #[allow(dead_code)]
 pub fn find_value(values: &Map<String, Value>, name: &str) -> Value {
-	if values.get(name).is_some() {
-		values.get(name).unwrap().clone()
+	if let Some(value) = values.get(name) {
+		value.clone()
 	} else {
 		for (_, value) in values.iter() {
 			match value {
-				Value::Object(object) => {
-					let value = find_value(object, name);
-					if value.is_null() {
-						continue
-					} else {
-						return value
-					}
+				Value::Object(values) => match find_value(values, name) {
+					Value::Null => continue,
+					value => return value,
 				},
-				Value::Array(vector) =>
-					for element in vector {
-						if element.is_object() {
-							let value = find_value(element.as_object().unwrap(), name);
-							if value.is_null() {
-								continue
-							} else {
-								return value
+				Value::Array(values) =>
+					for value in values.iter() {
+						if let Value::Object(values) = value {
+							match find_value(values, name) {
+								Value::Null => continue,
+								value => return value,
 							}
 						}
 					},
@@ -42,25 +36,28 @@ pub fn get_value_by_path<'a>(
 ) -> Result<&'a Value, ExpectedError> {
 	let split = path.split(".");
 	if split.clone().count() == 0 {
-		return Err(ExpectedError::InvalidError("path cannot be empty.".to_string()))
+		return Err(ExpectedError::ParsingError(format!("empty path; path: {path}")))
 	}
 	let mut params = params;
-	let last = split.clone().last().unwrap();
+	let last = split
+		.clone()
+		.last()
+		.ok_or(ExpectedError::ParsingError(format!("empty path; path: {path}")))?;
 	for name in split {
 		if name == last {
-			let target = params
-				.get(name)
-				.ok_or(ExpectedError::ParsingError(format!("{} does not exist.", name)))?;
+			let target = params.get(name).ok_or(ExpectedError::ParsingError(format!(
+				"value does not exist; name: {name}"
+			)))?;
 			return Ok(target)
 		} else {
 			params = params
 				.get(name)
-				.ok_or(ExpectedError::ParsingError(format!("{} does not exist.", name)))?
+				.ok_or(ExpectedError::ParsingError(format!("value does not exist; name: {name}")))?
 				.as_object()
-				.ok_or(ExpectedError::ParsingError(format!("{} is not object.", name)))?;
+				.ok_or(ExpectedError::ParsingError(format!("invalid value type; name: {name}")))?;
 		}
 	}
-	Err(ExpectedError::NoneError(format!("value does not exist in the path. path={}", path)))
+	Err(ExpectedError::NoneError(format!("value does not exist in path; path: {}", path)))
 }
 
 #[allow(dead_code)]
@@ -94,7 +91,7 @@ pub fn filter(values: &Map<String, Value>, filter: String) -> Result<bool, Expec
 		if vec_item == ")" {
 			while calc_stack.last().is_some() && calc_stack.last().unwrap() != "(" {
 				if bool_stack.len() < 2 {
-					return Err(ExpectedError::InvalidError("filter format error.".to_string()))
+					return Err(ExpectedError::ParsingError("invalid filter format".to_string()))
 				}
 				let calc_ret = filter_calc(&mut bool_stack, &mut calc_stack)?;
 				bool_stack.push(calc_ret);
@@ -114,7 +111,7 @@ pub fn filter(values: &Map<String, Value>, filter: String) -> Result<bool, Expec
 	}
 	let ret = bool_stack
 		.pop()
-		.ok_or(ExpectedError::InvalidError("invalid filter condition.".to_string()))?;
+		.ok_or(ExpectedError::ParsingError("invalid filter condition".to_string()))?;
 	Ok(ret)
 }
 
@@ -122,8 +119,8 @@ pub fn filter(values: &Map<String, Value>, filter: String) -> Result<bool, Expec
 fn filter_value(values: &Map<String, Value>, key_value: &String) -> Result<bool, ExpectedError> {
 	let mut split_kv = key_value.split("=");
 	if split_kv.clone().count() != 2 {
-		return Err(ExpectedError::TypeError(
-			"invalid filter condition format. example='key=val'".to_string(),
+		return Err(ExpectedError::ParsingError(
+			"invalid filter condition format; example='key=val'".to_string(),
 		))
 	}
 	let key = split_kv.next().unwrap().trim();
@@ -150,13 +147,13 @@ fn filter_calc(
 ) -> Result<bool, ExpectedError> {
 	let calc_op = calc_stack
 		.pop()
-		.ok_or(ExpectedError::InvalidError("invalid filter condition.".to_string()))?;
+		.ok_or(ExpectedError::InvalidError("invalid filter condition".to_string()))?;
 	let top = bool_stack
 		.pop()
-		.ok_or(ExpectedError::InvalidError("invalid filter condition.".to_string()))?;
+		.ok_or(ExpectedError::InvalidError("invalid filter condition".to_string()))?;
 	let second = bool_stack
 		.pop()
-		.ok_or(ExpectedError::InvalidError("invalid filter condition.".to_string()))?;
+		.ok_or(ExpectedError::InvalidError("invalid filter condition".to_string()))?;
 	if calc_op == "&" {
 		Ok(top & second)
 	} else {
