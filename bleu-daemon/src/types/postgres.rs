@@ -1,10 +1,4 @@
-use crate::{
-	error::error::ExpectedError,
-	libs::{
-		postgres::postgres_type,
-		serde::{get_array, get_object},
-	},
-};
+use crate::{error::error::ExpectedError, libs::postgres::postgres_type};
 use jsonrpc_core::Value;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -28,43 +22,58 @@ pub struct Attribute {
 }
 
 impl PostgresSchema {
-	pub fn new(schema_name: String, values: &Value) -> Result<PostgresSchema, ExpectedError> {
-		if !values.is_object() {
-			return Err(ExpectedError::TypeError("input values is not object type.".to_string()))
-		}
-		let map = values.as_object().unwrap();
-		let raw_attributes = get_object(map, "attributes")?;
+	pub fn new(schema_name: String, values: &Value) -> Result<Self, ExpectedError> {
+		let map = values.as_object().ok_or(ExpectedError::ParsingError(format!(
+			"invalid value type; schema: {schema_name}"
+		)))?;
+		let raw_attributes = map
+			.get("attributes")
+			.ok_or(ExpectedError::ParsingError(format!(
+				"attributes does not exist; schema: {schema_name}"
+			)))?
+			.as_object()
+			.ok_or(ExpectedError::ParsingError(format!(
+				"invalid attributes type; schema: {schema_name}"
+			)))?;
 
 		let mut attributes: Vec<Attribute> = Vec::new();
 		for (key, value) in raw_attributes {
-			let parsed_value = value.as_object().unwrap();
+			let parsed_value = value.as_object().ok_or(ExpectedError::ParsingError(format!(
+				"invalid attribute; schema: {schema_name}, attribute: {key}"
+			)))?;
 			let size = match parsed_value.get("maxLength") {
 				None => None,
-				Some(size) => Some(size.as_u64().unwrap() as u32),
+				Some(size) => {
+					let size = size.as_u64().ok_or(ExpectedError::ParsingError(format!(
+						"invalid size type; schema: {schema_name}, attribute: {key}"
+					)))?;
+					Some(size as u32)
+				},
 			};
 			let description = match parsed_value.get("description") {
 				None => key.clone(),
-				Some(description) => description.as_str().unwrap().to_string(),
+				Some(description) => description
+					.as_str()
+					.ok_or(ExpectedError::ParsingError(format!(
+						"invalid description type; schema: {schema_name}, attribute: {key}"
+					)))?
+					.to_string(),
 			};
-			let type_value = match parsed_value.get("type") {
-				None =>
-					return Err(ExpectedError::NoneError(
-						"schema attribute must include type.".to_string(),
-					)),
-				Some(type_value) => type_value,
-			};
-			let (type_, nullable) = match type_value {
+			let ty = parsed_value.get("type").ok_or(ExpectedError::ParsingError(format!(
+				"type does not exist; schema: {schema_name}, attribute: {key}"
+			)))?;
+			let (type_, nullable) = match ty {
 				Value::Array(v) => {
 					let v_str: Vec<String> =
 						v.iter().map(|it| it.as_str().unwrap().to_string()).collect();
 					if v_str.len() > 2 {
-						return Err(ExpectedError::InvalidError(
-							"type array size cannot be bigger than 2.".to_string(),
-						))
+						return Err(ExpectedError::ParsingError(format!(
+							"type array size cannot be bigger than 2; schema: {schema_name}, attribute: {key}"
+						)))
 					} else if v_str.len() > 1 && v_str[1] != "null" {
-						return Err(ExpectedError::InvalidError(
-							"second value of types must be null.".to_string(),
-						))
+						return Err(ExpectedError::ParsingError(format!(
+							"second value of types must be null; schema: {schema_name}, attribute: {key}"
+						)))
 					} else if v_str.len() > 1 && v_str[1] == "null" {
 						(v_str.get(0).unwrap().clone(), true)
 					} else {
@@ -73,9 +82,9 @@ impl PostgresSchema {
 				},
 				Value::String(v) => (v.clone(), false),
 				_ =>
-					return Err(ExpectedError::TypeError(
-						"type only can be string or array.".to_string(),
-					)),
+					return Err(ExpectedError::ParsingError(format!(
+						"invalid type; schema: {schema_name}, attribute: {key}"
+					))),
 			};
 
 			let attribute =
@@ -83,8 +92,24 @@ impl PostgresSchema {
 			attributes.push(attribute);
 		}
 
-		let uniques = get_array(map, "uniques")?;
-		let indexes = get_array(map, "indexes")?;
+		let uniques = map
+			.get("uniques")
+			.ok_or(ExpectedError::ParsingError(format!(
+				"uniques does not exist; schema: {schema_name}"
+			)))?
+			.as_array()
+			.ok_or(ExpectedError::ParsingError(format!(
+				"invalid uniques; schema: {schema_name}"
+			)))?;
+		let indexes = map
+			.get("indexes")
+			.ok_or(ExpectedError::ParsingError(format!(
+				"indexes does not exist; schema: {schema_name}"
+			)))?
+			.as_array()
+			.ok_or(ExpectedError::ParsingError(format!(
+				"invalid indexes; schema: {schema_name}"
+			)))?;
 		let create_table = Self::create_table(schema_name.clone(), &attributes, uniques);
 		let create_index = Self::create_index(schema_name.clone(), indexes);
 		let insert_query = Self::insert_query(schema_name.clone(), &attributes);
@@ -203,6 +228,6 @@ mod postgres_test {
 			let schema = PostgresSchema::new(schema_name.clone(), values).unwrap();
 			result_map.insert(schema_name.clone(), schema);
 		}
-		assert_eq!(result_map.len(), 1);
+		assert_eq!(result_map.len(), 4);
 	}
 }

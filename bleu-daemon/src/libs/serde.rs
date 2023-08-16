@@ -12,30 +12,6 @@ pub fn get_string(values: &Map<String, Value>, name: &str) -> Result<String, Exp
 	Ok(value)
 }
 
-pub fn get_object<'a>(
-	values: &'a Map<String, Value>,
-	name: &str,
-) -> Result<&'a Map<String, Value>, ExpectedError> {
-	let value = values
-		.get(name)
-		.ok_or(ExpectedError::ParsingError(format!("{} does not exist.", name)))?
-		.as_object()
-		.ok_or(ExpectedError::ParsingError(format!("{} is not object.", name)))?;
-	Ok(value)
-}
-
-pub fn get_array<'a>(
-	values: &'a Map<String, Value>,
-	name: &str,
-) -> Result<&'a Vec<Value>, ExpectedError> {
-	let value = values
-		.get(name)
-		.ok_or(ExpectedError::ParsingError(format!("{} does not exist.", name)))?
-		.as_array()
-		.ok_or(ExpectedError::ParsingError(format!("{} is not array.", name)))?;
-	Ok(value)
-}
-
 #[allow(dead_code)]
 pub fn find_value(values: &Map<String, Value>, name: &str) -> Value {
 	if values.get(name).is_some() {

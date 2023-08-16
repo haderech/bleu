@@ -20,20 +20,20 @@ pub fn postgres_type(ty: &str) -> Result<String, ExpectedError> {
 }
 
 pub fn create_table(
-	pool: Pool,
+	pool: &Pool,
 	schema_map: &HashMap<String, PostgresSchema>,
-) -> Result<(), r2d2_postgres::postgres::Error> {
-	let mut client = pool.get().expect("failed to get connection from pool");
+) -> Result<(), ExpectedError> {
+	let mut client = pool.get().map_err(|e| ExpectedError::PostgresError(e.to_string()))?;
 	for (_, schema) in schema_map.iter() {
 		if let Err(e) = client.execute(schema.create_table.as_str(), &[]) {
 			if !e.to_string().contains("already exists") {
-				return Err(e)
+				return Err(e.into())
 			}
 		}
 		for create_index in schema.create_index.iter() {
 			if let Err(e) = client.execute(create_index.as_str(), &[]) {
 				if !e.to_string().contains("already exists") {
-					return Err(e)
+					return Err(e.into())
 				}
 			}
 		}
@@ -42,11 +42,11 @@ pub fn create_table(
 }
 
 pub fn insert(
-	pool: Pool,
+	pool: &Pool,
 	schema: &PostgresSchema,
 	values: &Map<String, Value>,
 ) -> Result<(), ExpectedError> {
-	let mut client = pool.get().unwrap();
+	let mut client = pool.get().map_err(|e| ExpectedError::PostgresError(e.to_string()))?;
 	let value_names = schema
 		.attributes
 		.iter()
@@ -85,21 +85,16 @@ pub fn get_query_value(values: &Map<String, Value>, target_name: &str) -> String
 pub fn load_schema(
 	schema_files: Vec<&str>,
 ) -> Result<HashMap<String, PostgresSchema>, ExpectedError> {
-	let mut schemas = HashMap::<String, PostgresSchema>::new();
+	let mut full_schemas = HashMap::<String, PostgresSchema>::new();
 	for name in schema_files {
-		let schema = filedb::read::<Map<String, Value>>("schema", name)
-			.expect(format!("failed to load schema; schema: {name}").as_str());
-		let schema = schema
-			.iter()
-			.map(|(name, schema)| {
-				let schema = PostgresSchema::new(name.clone(), schema)
-					.expect(format!("failed to create postgres schema; schema: {name}").as_str());
-				(name.clone(), schema)
-			})
-			.collect::<HashMap<String, PostgresSchema>>();
-		schemas.extend(schema);
+		let schemas = filedb::read::<Map<String, Value>>("schema", name)
+			.map_err(|e| ExpectedError::IoError(format!("{}; file: {name}", e.to_string())))?;
+		for (name, schema) in schemas.iter() {
+			let postgres_schema = PostgresSchema::new(name.clone(), schema)?;
+			full_schemas.insert(name.clone(), postgres_schema);
+		}
 	}
-	Ok(schemas)
+	Ok(full_schemas)
 }
 
 #[cfg(test)]
