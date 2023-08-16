@@ -19,6 +19,16 @@ pub struct EmailPlugin {
 
 impl Plugin for EmailPlugin {
 	fn new() -> Self {
+		APP.options
+			.arg(clap::Arg::new("email::smtp-username").long("smtp-username").takes_value(true));
+		APP.options
+			.arg(clap::Arg::new("email::smtp-password").long("smtp-password").takes_value(true));
+		APP.options
+			.arg(clap::Arg::new("email::smtp-relay").long("smtp-relay").takes_value(true));
+		APP.options.arg(clap::Arg::new("email::from").long("from").takes_value(true));
+		APP.options
+			.arg(clap::Arg::new("email::reply-to").long("reply-to").takes_value(true));
+
 		EmailPlugin { receiver: None, config: None }
 	}
 
