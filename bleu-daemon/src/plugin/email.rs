@@ -35,14 +35,10 @@ impl Plugin for EmailPlugin {
 	fn init(&mut self) {
 		self.receiver = Some(APP.channels.subscribe("email"));
 
-		let username = APP
-			.options
-			.value_of("email::smtp-username")
-			.expect("smtp-username not exist");
-		let password = APP
-			.options
-			.value_of("email::smtp-password")
-			.expect("smtp-password not exist");
+		let username =
+			APP.options.value_of("email::smtp-username").expect("smtp-username not exist");
+		let password =
+			APP.options.value_of("email::smtp-password").expect("smtp-password not exist");
 		let relay = APP.options.value_of("email::smtp-relay").expect("smtp-relay not exist");
 		let from = APP.options.value_of("email::from").expect("from not exist");
 		let reply_to = APP.options.value_of("email::reply-to").expect("reply-to not exist");
