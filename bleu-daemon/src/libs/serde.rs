@@ -2,16 +2,6 @@ use crate::error::error::ExpectedError;
 use serde_json::{Map, Value};
 use std::str::FromStr;
 
-pub fn get_string(values: &Map<String, Value>, name: &str) -> Result<String, ExpectedError> {
-	let value = values
-		.get(name)
-		.ok_or(ExpectedError::ParsingError(format!("{} does not exist.", name)))?
-		.as_str()
-		.ok_or(ExpectedError::ParsingError(format!("{} is not string.", name)))?
-		.to_string();
-	Ok(value)
-}
-
 #[allow(dead_code)]
 pub fn find_value(values: &Map<String, Value>, name: &str) -> Value {
 	if values.get(name).is_some() {
